@@ -55,3 +55,16 @@ Há testes de navegação com Chromium automatizado durante o desenvolvimento; v
 - Provas oficiais do Inep: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
 
 **ENEM INTELLIGENCE:** mais do que simulados, um acompanhamento didático verificável — com limitações identificadas.
+
+
+## V4 — Simulados de 10 a 100 questões inéditas (04/11/2026)
+
+- Banco autoral: **208 questões** (64 existentes + 144 novas), com situações contextualizadas, cálculos e alguns recursos visuais originais. Os 72 itens antigos continuam exclusivamente na recuperação.
+- Escolha **10, 20, 30, 40, 50, 60, 70, 80, 90 ou 100**; o número é permitido apenas quando há questões inéditas suficientes para os filtros escolhidos.
+- O histórico persistente `seenIds` reserva as questões ao iniciar uma prova; o sorteio exclui as já iniciadas, concluídas e importadas. Backups antigos não reiniciam a relação de perguntas já vistas.
+- Quando o saldo for insuficiente, a prova não começa: o banco é finito e a plataforma não inventa questões para completar uma quantidade pedida. Em assuntos muito específicos pode haver menos de 10 itens inéditos.
+- A navegação foi aprimorada com barra rápida no celular, localização da página, salto por número de questão e botão para próxima questão pendente.
+- Compatibilidade preservada com o armazenamento `enem-intelligence-v2`, resultados antigos, redações e recuperação V1/V2/V3.
+- A prevenção de repetição vale enquanto os dados locais ou um backup importado forem mantidos. Limpar o navegador ou trocar de aparelho sem backup pode apagar a relação de questões usadas.
+
+O conteúdo adicional é mantido em `src/extra_questions.js`, integrado pelo `scripts/build.py`. Todas as questões são autorais e não são itens oficiais do Inep.

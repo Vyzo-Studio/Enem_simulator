@@ -53,3 +53,11 @@ Comandos:
 Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA conversacional, correção automática de redação, banco de concursos por banca, backup na nuvem, execução em 100% dos navegadores e classificação das provas oficiais ainda dependem de trabalho e infraestrutura adicionais. Nenhuma dessas integrações foi apresentada como concluída.
 
 **Implantação:** status final deve ser confirmado pelas execuções reais de GitHub Actions após o commit v3; testes locais não equivalem a publicação pública.
+
+
+## V4 — Testes de não repetição e navegação (04/11/2026)
+
+- Banco ampliado: 208 questões autorais e 72 legadas para recuperação; checagens de sintaxe, alternativas distintas, IDs e gabaritos válidos, recursos visuais e consistência do HTML com os fontes.
+- Teste local em Chromium/Playwright: seleção 10–100 por dez; primeiro simulado de 100 itens; marcação, navegação, salto para pendente e para número; exportação de backup; recuperação em nova sessão com respostas e posição intactas; confirmação/cancelamento da finalização; correção e histórico.
+- Segundo simulado de 100 itens realizado sem qualquer ID repetido do primeiro. Com 7 restantes, novas provas de 10+ são bloqueadas, sem preenchimento por repetições. Importar um backup antigo não diminuiu o conjunto de IDs já vistos.
+- Verificação de barra mobile e ausência de rolagem horizontal indevida em 390 px. Testes no Chromium não equivalem à garantia de funcionamento em todos os dispositivos; não há sincronização automática entre navegadores e o banco permanece finito.

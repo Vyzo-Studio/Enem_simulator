@@ -8,6 +8,7 @@
   <title>ENEM Intelligence | Simulador de provas</title>
   <link rel="stylesheet" href="src/styles.css">
   <script src="src/questions.js" defer></script>
+  <script src="src/extra_questions.js" defer></script>
   <script src="src/legacy.js" defer></script>
   <script src="src/app.js" defer></script>
   <script src="src/mentor.js" defer></script>
@@ -20,13 +21,14 @@
   </header>
   <div class="shell">
     <nav class="sidebar" id="side-nav" aria-label="Navegação principal">
-      <p class="side-label">PLATAFORMA</p>
+      <p class="side-label">ACESSO RÁPIDO</p>
       <button data-nav="home" class="navitem active"><span>⌂</span> Visão geral</button>
       <button data-nav="profile" class="navitem"><span>◎</span> Meu objetivo</button>
       <button data-nav="explorer" class="navitem"><span>⌕</span> Explorador de provas</button>
       <button data-nav="setup" class="navitem"><span>▣</span> Simulados</button>
       <button data-nav="learn" class="navitem"><span>◈</span> Professor e aulas</button>
       <button data-nav="revisions" class="navitem"><span>⟳</span> Revisões e flashcards</button>
+      <p class="side-label">PROGRESSO E ESTUDO</p>
       <button data-nav="history" class="navitem"><span>▤</span> Meu desempenho</button>
       <button data-nav="planner" class="navitem"><span>◇</span> Plano de estudos</button>
       <button data-nav="essay" class="navitem"><span>✎</span> Redação</button>
@@ -36,6 +38,7 @@
       <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
     </nav>
     <main id="main" class="main" tabindex="-1">
+      <div class="breadcrumb" id="path-location" aria-live="polite">ENEM Intelligence / Início</div>
       <div id="alert-slot" aria-live="polite"></div>
       <section id="view-home" class="view"></section>
       <section id="view-profile" class="view hidden"></section>
@@ -53,6 +56,13 @@
       <footer class="foot">Questões autorais elaboradas para estudo — não são itens oficiais do Inep. Percentual de acertos ≠ nota TRI.</footer>
     </main>
   </div>
+  <nav class="mobile-nav" aria-label="Navegação rápida no celular">
+    <button data-nav="home" class="active" aria-label="Início">⌂<span>Início</span></button>
+    <button data-nav="setup" aria-label="Simulados">▣<span>Simulados</span></button>
+    <button data-nav="learn" aria-label="Professor">◎<span>Professor</span></button>
+    <button data-nav="history" aria-label="Desempenho">▥<span>Resultados</span></button>
+    <button id="mobile-more" aria-label="Abrir o menu completo">☰<span>Mais</span></button>
+  </nav>
   <div id="dialog-root" class="modal-overlay hidden" role="presentation"></div>
 </body>
 </html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1830">
+  <meta name="description" content="ENEM Intelligence: simulados autorais com textos de apoio, gráficos, correção comentada e salvamento automático.">
+  <title>ENEM Intelligence | Simulador de provas</title>
+  <link rel="stylesheet" href="src/styles.css">
+  <script src="src/questions.js" defer></script>
+  <script src="src/legacy.js" defer></script>
+  <script src="src/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Ir para conteúdo</a>
+  <header class="topbar">
+    <a href="#inicio" class="brand" data-nav="home" aria-label="ENEM Intelligence - início"><span class="logo">E<span>·</span></span><span><strong>ENEM <em>INTELLIGENCE</em></strong><small>Simulados & aprendizagem</small></span></a>
+    <div class="top-actions"><span id="save-pill" class="save-pill" role="status" aria-live="polite">Carregando…</span><button class="icon-btn" id="theme-btn" aria-label="Alternar modo escuro">◐</button><button class="icon-btn mobile-menu" id="menu-btn" aria-expanded="false" aria-controls="side-nav">☰</button></div>
+  </header>
+  <div class="shell">
+    <nav class="sidebar" id="side-nav" aria-label="Navegação principal">
+      <p class="side-label">PLATAFORMA</p>
+      <button data-nav="home" class="navitem active"><span>⌂</span> Visão geral</button>
+      <button data-nav="setup" class="navitem"><span>▣</span> Simulados</button>
+      <button data-nav="history" class="navitem"><span>▤</span> Meu desempenho</button>
+      <button data-nav="planner" class="navitem"><span>◇</span> Plano de estudos</button>
+      <button data-nav="essay" class="navitem"><span>✎</span> Redação</button>
+      <button data-nav="data" class="navitem"><span>⇩</span> Backup e dados</button>
+      <div class="side-note"><strong>Prova sem surpresas</strong><span>As respostas são salvas ao marcar. O gabarito só é revelado após finalizar.</span></div>
+      <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
+    </nav>
+    <main id="main" class="main" tabindex="-1">
+      <div id="alert-slot" aria-live="polite"></div>
+      <section id="view-home" class="view"></section>
+      <section id="view-setup" class="view hidden"></section>
+      <section id="view-exam" class="view hidden"></section>
+      <section id="view-result" class="view hidden"></section>
+      <section id="view-history" class="view hidden"></section>
+      <section id="view-planner" class="view hidden"></section>
+      <section id="view-essay" class="view hidden"></section>
+      <section id="view-data" class="view hidden"></section>
+      <footer class="foot">Questões autorais elaboradas para estudo — não são itens oficiais do Inep. Percentual de acertos ≠ nota TRI.</footer>
+    </main>
+  </div>
+  <div id="dialog-root" class="modal-overlay hidden" role="presentation"></div>
+</body>
+</html>

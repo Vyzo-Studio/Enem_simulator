@@ -10,21 +10,27 @@
   <script src="src/questions.js" defer></script>
   <script src="src/legacy.js" defer></script>
   <script src="src/app.js" defer></script>
+  <script src="src/mentor.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Ir para conteúdo</a>
   <header class="topbar">
-    <a href="#inicio" class="brand" data-nav="home" aria-label="ENEM Intelligence - início"><span class="logo">E<span>·</span></span><span><strong>ENEM <em>INTELLIGENCE</em></strong><small>Simulados & aprendizagem</small></span></a>
+    <a href="#inicio" class="brand" data-nav="home" aria-label="ENEM Intelligence - início"><span class="logo">E<span>·</span></span><span><strong>ENEM <em>INTELLIGENCE</em></strong><small>Seu professor para provas e concursos</small></span></a>
     <div class="top-actions"><span id="save-pill" class="save-pill" role="status" aria-live="polite">Carregando…</span><button class="icon-btn" id="theme-btn" aria-label="Alternar modo escuro">◐</button><button class="icon-btn mobile-menu" id="menu-btn" aria-expanded="false" aria-controls="side-nav">☰</button></div>
   </header>
   <div class="shell">
     <nav class="sidebar" id="side-nav" aria-label="Navegação principal">
       <p class="side-label">PLATAFORMA</p>
       <button data-nav="home" class="navitem active"><span>⌂</span> Visão geral</button>
+      <button data-nav="profile" class="navitem"><span>◎</span> Meu objetivo</button>
+      <button data-nav="explorer" class="navitem"><span>⌕</span> Explorador de provas</button>
       <button data-nav="setup" class="navitem"><span>▣</span> Simulados</button>
+      <button data-nav="learn" class="navitem"><span>◈</span> Professor e aulas</button>
+      <button data-nav="revisions" class="navitem"><span>⟳</span> Revisões e flashcards</button>
       <button data-nav="history" class="navitem"><span>▤</span> Meu desempenho</button>
       <button data-nav="planner" class="navitem"><span>◇</span> Plano de estudos</button>
       <button data-nav="essay" class="navitem"><span>✎</span> Redação</button>
+      <button data-nav="writing" class="navitem"><span>✐</span> Oficina de redação</button>
       <button data-nav="data" class="navitem"><span>⇩</span> Backup e dados</button>
       <div class="side-note"><strong>Prova sem surpresas</strong><span>As respostas são salvas ao marcar. O gabarito só é revelado após finalizar.</span></div>
       <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
@@ -32,6 +38,11 @@
     <main id="main" class="main" tabindex="-1">
       <div id="alert-slot" aria-live="polite"></div>
       <section id="view-home" class="view"></section>
+      <section id="view-profile" class="view hidden"></section>
+      <section id="view-explorer" class="view hidden"></section>
+      <section id="view-learn" class="view hidden"></section>
+      <section id="view-revisions" class="view hidden"></section>
+      <section id="view-writing" class="view hidden"></section>
       <section id="view-setup" class="view hidden"></section>
       <section id="view-exam" class="view hidden"></section>
       <section id="view-result" class="view hidden"></section>

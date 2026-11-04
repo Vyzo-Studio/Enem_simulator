@@ -1,59 +1,46 @@
-# ENEM INTELLIGENCE — Simulador Digital (v2)
+# ENEM INTELLIGENCE — Universal Exam Mentor v3 (incremental)
 
-Uma plataforma educacional estática e responsiva para praticar questões autorais em formato de simulado, com **textos de apoio, gráficos, tabelas, diagramas, cinco alternativas, gabarito somente ao finalizar e correção comentada**.
+Plataforma educativa independente, executada no navegador, hospedável no GitHub Pages. A evolução v3 **não reconstrói o sistema v2**: mantém o banco atual, o motor de simulados, os dados já salvos, a correção, a redação e o recurso de recuperar respostas antigas.
 
-> **Importante:** este site é um projeto independente. Não é produzido nem homologado pelo Inep. As 64 questões novas são autorais e contextualizadas; não se apresentam como questões oficiais. O percentual de acertos **não** corresponde a uma nota TRI.
+> **IMPORTANTE:** questões do banco são autorais, não questões oficiais do Inep. Não existe nota TRI oficial, avaliação automática por IA nem pesquisa de editais em tempo real nesta versão. Resultados são indicadores pedagógicos locais.
 
-## Funcionalidades implementadas
+## O que foi acrescentado na v3
 
-- Diagnóstico com questões das quatro áreas do ENEM.
-- Prova de Linguagens + Humanas ou de Natureza + Matemática **em amostra**.
-- Filtros por área, disciplina, assunto e língua estrangeira (Inglês/Espanhol).
-- Navegação por número, avanço e retrocesso, itens pendentes e marcação para revisão.
-- Contador de tempo decorrido; limite opcional com encerramento automático.
-- Alternativas editáveis até a finalização, inclusive opção de deixar em branco.
-- **Salvamento automático a cada resposta** no armazenamento local do navegador, com fallback para armazenamento da sessão.
-- **Backup JSON durante a prova**; importação de arquivos para retomar o gabarito.
-- Recuperação de uma prova antiga da chave `enem-intelligence-v1` quando ainda existir no mesmo navegador, utilizando o banco arquivado de 72 itens originais.
-- Finalização por confirmação **dentro da própria página** (sem depender de `window.confirm`).
-- Correção com gabarito, sua resposta, explicação, percentual de acertos sobre respondidas e cobertura.
-- Histórico, acompanhamento por área, sugestões de revisão, rascunho de redação e modo escuro.
-- Compatibilidade com desktop, celular e navegação por teclado.
+- **Meu objetivo:** cadastro de tipo de prova, prova/órgão, cargo ou curso, edição, banca opcional, data, horas, dias, nível, dificuldades e preferência de estudo, com salvamento automático.
+- **Explorador de provas:** diretório de fontes oficiais e um campo para colar o conteúdo programático de um edital. A identificação de matérias é apenas uma busca local por palavras: não valida edital, vagas, regras ou banca.
+- **Professor guiado:** revisão de tópicos do banco autoral, explicações e exemplos contextualizados, registro de anotações e prática sobre o mesmo assunto. **Não é um chatbot de IA.**
+- **Revisões e flashcards:** 16 cartões didáticos com resposta revelada quando solicitada, autoavaliação e agenda 1/3/7/14/30 dias. Revisão das questões erradas e tentativa de reteste com questões ainda não respondidas do mesmo assunto, apenas quando existirem.
+- **Plano de estudo individual:** depende do perfil e de ao menos um diagnóstico ENEM. Gera blocos por data e minutos com base no histórico, horários e dias disponíveis. Um assunto só pode ser considerado dominado após evidência suficiente; não existe certeza automática.
+- **Oficina de redação:** temas inéditos para treino, editor, salvamento de versões, sorteio sem repetição imediata e checklist das cinco competências. **Sem nota gerada por IA**, que dependeria de serviço autorizado.
+- **Correção:** acesso direto ao conteúdo correspondente em cada questão corrigida, além das explicações anteriores.
+- **Integridade:** backup pré-finalização adicional na chave `enem-intelligence-recovery-<id>`, sem apagar o histórico; dados novos armazenados junto do mesmo objeto v2.
+- **Mobile:** menu com rolagem independente para acomodar novas seções.
 
-## Site no GitHub Pages
+## Funcionalidades anteriores mantidas
 
-O projeto é publicado automaticamente pelo workflow `.github/workflows/pages.yml`, **desde que o GitHub Pages esteja habilitado** no repositório.
+- 64 questões novas contextualizadas (16 por área), 72 questões legadas utilizadas exclusivamente em possíveis recuperações.
+- Simulados por área, disciplina, assunto e amostras dos dois dias do ENEM, língua estrangeira única; 5 alternativas.
+- Simulado em andamento com autosalvamento, cronômetro opcional, progresso, navegação, marcador para revisão e confirmação de finalização no próprio site.
+- Correção comentada, respostas em branco identificadas separadamente, indicadores de desempenho, histórico, modo claro e escuro, backup e importação JSON, redação e plano básico.
 
-Caso a página ainda não esteja disponível, abra **Settings → Pages → Build and deployment → Source → GitHub Actions**. Depois verifique a aba **Actions** e o resultado do fluxo “Quality checks and GitHub Pages”.
+## Segurança e compatibilidade
 
-Endereço esperado quando o GitHub Pages estiver habilitado e a implantação terminar com sucesso:
+A chave principal **permanece `enem-intelligence-v2`**, sem criar um novo armazenamento incompatível. O estado v3 usa o campo opcional `mentor` com versão independente. O código continua lendo a chave `enem-intelligence-v1` para possíveis resgates. A exportação JSON inclui questões, provas, histórico, redação e os dados v3; a importação preserva `mentor` quando presente. O sistema não envia respostas ou documentos para servidores.
 
-`https://vyzo-studio.github.io/Enem_simulator/`
+A privacidade depende também das configurações do navegador/dispositivo; não há contas nem sincronização em nuvem. É recomendável baixar backup JSON durante uma prova longa. A versão antiga fica preservada na branch `backup-enem-v2-nov2026`.
 
-O endereço acima é um caminho previsto, não uma confirmação independente de que o serviço já está ativo.
+## Requisitos que ainda dependem de infraestrutura ou curadoria
 
-## Segurança e recuperação de respostas
+- Professor IA com linguagem livre, geração e correção automática confiável: requer backend, provedor autorizado, gestão de custos e proteção de credenciais.
+- Avaliar redações e gerar nota por competência com IA: ainda não implementado; só há guia de autocorreção.
+- Pesquisa viva de concursos e leitura automática de PDF: demanda serviço de pesquisa/documentos; atualmente o estudante consulta fontes oficiais e pode colar trechos do edital.
+- Recomendações de vídeos com título, canal, duração, curtidas e visualizações verificados: a aplicação abre **busca do YouTube**, sem inventar métricas. Integração com YouTube Data API exigiria autorização e backend.
+- Provas de concurso com CERTO/ERRADO, redação técnica e regras por banca: exigem edital validado e banco próprio. O banco ENEM **não** é exibido como avaliação específica de outro concurso.
+- 180 itens oficiais, TRI, pesquisa longitudinal oficial 2021–2025 e análise psicométrica: não implementados nem simulados.
 
-A aplicação não utiliza servidor ou conta. O histórico fica **apenas no navegador e dispositivo utilizados**. Fechar uma aba não apaga obrigatoriamente os dados armazenados, mas janela anônima, limpeza dos dados do site, bloqueio de armazenamento ou troca de dispositivo podem impedir a recuperação.
+## Desenvolvimento
 
-1. Durante a prova, use **Baixar backup (.json)** para obter uma cópia do seu progresso.
-2. Ao reabrir a página no mesmo navegador, o sistema procura uma prova em andamento e a retoma com as respostas salvas.
-3. Para outro dispositivo, use **Backup e dados → Importar backup**.
-4. Provas antigas da v1 só poderão ser recuperadas se os dados da v1 ainda existirem no mesmo contexto de armazenamento. O aplicativo não inventa respostas perdidas.
-
-## Estrutura do repositório
-
-- `index.html` — **distribuição independente**: HTML, CSS e JavaScript em um único arquivo.
-- `src/template.html` — estrutura HTML editável.
-- `src/styles.css` — estilos.
-- `src/questions.js` — banco novo de 64 questões autorais.
-- `src/legacy.js` — banco anterior, preservado para resgate de provas antigas.
-- `src/app.js` — navegação, simulado, persistência, correção, histórico e backup.
-- `scripts/build.py` — reconstrói o `index.html` independente a partir de `src/`.
-- `tests/qa.mjs` — valida sintaxe, integridade do bundle, banco de questões e módulos.
-- `.github/workflows/pages.yml` — validação e deploy.
-
-Para desenvolver:
+Arquivos editáveis: `src/template.html`, `src/styles.css`, `src/questions.js`, `src/legacy.js`, `src/app.js` e `src/mentor.js`. `scripts/build.py` gera a distribuição autossuficiente `index.html`.
 
 ```bash
 python3 scripts/build.py
@@ -61,18 +48,10 @@ node tests/qa.mjs
 python3 scripts/build.py --check
 ```
 
-Os testes locais de fluxo com navegador também foram realizados antes da publicação: início, respostas, navegação, backup, recarregamento simulado, cancelamento da finalização, correção, histórico, plano, redação, temas, importação, layout mobile e recuperação legada.
+Há testes de navegação com Chromium automatizado durante o desenvolvimento; ver `QA_REPORT.md` para escopo e resultados. O site é publicado pelo GitHub Pages do repositório a partir da branch `main`; o workflow `.github/workflows/pages.yml` contém apenas a verificação de qualidade.
 
-## Limitações atuais
+- Repositório: https://github.com/Vyzo-Studio/Enem_simulator
+- Site previsto: https://vyzo-studio.github.io/Enem_simulator/
+- Provas oficiais do Inep: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
 
-- O banco novo validado contém **64 questões**, com 16 por área (uma das questões de Linguagens é de Inglês e outra de Espanhol; a prova seleciona somente uma língua). Consequentemente, o modo por dia é uma **amostra**, não uma aplicação de 90 itens.
-- Ainda não foi concluída uma classificação estatística questão a questão das cinco provas oficiais de 2021–2025.
-- A redação oferece editor e orientações, mas não avaliação real por IA nem nota oficial.
-- Não há sincronização em nuvem.
-- Os dados de desempenho não são usados para calcular nota TRI oficial ou estimativas sem fundamento.
-- As figuras são diagramas e gráficos originais gerados pela própria interface, não fotografias de provas anteriores.
-
-Referências oficiais para estudo: [Provas e gabaritos do Inep](https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos).
-
----
-**ENEM INTELLIGENCE** · Estude com estratégia. Evolua com inteligência.
+**ENEM INTELLIGENCE:** mais do que simulados, um acompanhamento didático verificável — com limitações identificadas.

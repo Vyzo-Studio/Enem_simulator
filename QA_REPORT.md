@@ -1,47 +1,55 @@
-# Relatório de verificação — ENEM Intelligence v2
-Data: 04/11/2026
+# Auditoria e testes — ENEM Intelligence v3
 
-## Escopo efetivamente testado
-Testes locais automatizados com Chromium e Playwright, utilizando DOM real e armazenamento local simulado para validar fluxos do navegador. O ambiente de testes bloqueava navegação de rede/localhost; por isso, os testes foram feitos com a interface carregada por `page.set_content` e os mesmos módulos JavaScript/CSS distribuídos no arquivo publicado.
+**Data:** 04/11/2026  
+**Base preservada:** v2, commit `35ea3878e973c50d48941fee767a4e67150195fa`, branch de segurança `backup-enem-v2-nov2026`.
 
-### Casos com resultado satisfatório
-1. Renderização da interface e carregamento das 64 questões.
-2. Seleção do diagnóstico e início da prova.
-3. Registro da alternativa marcada.
-4. Navegação entre questões sem perder as alternativas anteriores.
-5. Download de backup durante a prova.
-6. Reabertura do aplicativo com mesmas questões, respostas e posição.
-7. Exibição da confirmação para finalizar (sem `window.confirm`).
-8. Cancelamento da finalização e retorno ao gabarito.
-9. Finalização e exibição da correção comentada.
-10. Cálculo de acertos, erros e questões não respondidas.
-11. Histórico preservado após reabertura.
-12. Plano de estudos gerado a partir do histórico disponível.
-13. Texto de redação salvo e recuperado.
-14. Filtro específico por área.
-15. Troca entre tema claro e escuro.
-16. Importação de backup JSON.
-17. Abertura do menu em tela pequena.
-18. Detecção e recuperação de prova antiga simulada com IDs A001/A002.
-19. Alteração de alternativa e marcação para revisar.
-20. Remoção de resposta e contagem da questão como não respondida.
-21. Seleção exclusiva de espanhol sem misturar questões de inglês.
-22. Renderização de gráfico SVG.
-23. Encerramento automático quando acaba o tempo definido.
-24. Verificação de ausência de rolagem horizontal indevida em 390 px.
-25. Revisão sintática com Node.js dos módulos JavaScript.
-26. Integridade do bundle, 5 alternativas, gabaritos válidos, IDs únicos, equilíbrio 16/área e pelo menos 10 figuras — por testes estáticos.
+## Testes estáticos executados
 
-## Confirmação no GitHub Actions
-O job `quality` passou integralmente nas execuções verificadas de 04/11/2026.
+Comandos:
 
-## Limitações honestas
-- A implantação pública no GitHub Pages **ainda exige ativação do Pages pelo proprietário**. O job de implantação falhou na etapa `configure-pages` com `Resource not accessible by integration`; não é falha dos testes nem do site.
-- Os testes no navegador foram automatizados em Chromium; não foram executados em todos os navegadores e dispositivos físicos.
-- O site tem 64 questões novas, não 180 questões oficiais; modos de ENEM por dia são amostras.
-- Não foi realizado estudo estatístico exaustivo dos itens oficiais 2021–2025.
-- Não há servidor de contas, sincronização de dados ou nota TRI oficial.
-- Nenhum software pode garantir resgate de respostas se o próprio navegador não as armazenou, se dados do site forem apagados ou se houver troca de origem sem backup.
+- `node tests/qa.mjs`
+- `python3 scripts/build.py --check`
+- `node --check src/app.js`
+- `node --check src/mentor.js`
 
-## Próximo passo de publicação
-Em **Settings → Pages**, escolher **GitHub Actions** como fonte de implantação e reexecutar o fluxo **Quality checks and GitHub Pages** na aba Actions.
+**Resultado local:** passaram. O QA verifica a sintaxe dos módulos e a integridade do HTML compilado, 64 itens autorais, 72 itens legados, diversidade visual, integridade básica dos gabaritos e estruturas de persistência e migração.
+
+## Testes reais de navegador
+
+**Ambiente:** Chromium disponível no container, Playwright Python, DOM real usando `page.set_content`. Como as rotas locais/externas estão bloqueadas nesse ambiente, o armazenamento `localStorage` foi simulado através de uma implementação JavaScript em memória, preservada entre duas páginas para testar retomada. Isso **não comprova** funcionamento do armazenamento real em todos os navegadores ou origens.
+
+**Fluxos com resultado satisfatório:**
+
+1. Abertura da interface, console sem erros.
+2. Cadastro inicial em quatro etapas, salvamento de campos, conclusão.
+3. Explorador com colagem de trecho e reconhecimento indicativo de matérias.
+4. Aula de um assunto, conclusão e criação de agenda de revisão.
+5. Flashcard: revelar resposta, marcar lembrança e agendar revisão.
+6. Oficina de redação: digitar, salvar versão e sortear outro tema.
+7. Configuração de simulado com quatro questões, início e registro de respostas.
+8. Navegação entre questões preservando as alternativas.
+9. Exportação de backup JSON com prova em andamento.
+10. Reinicialização em outra página a partir do estado salvo, com questões e respostas intactas.
+11. Confirmação de finalização, cancelamento sem perda de respostas.
+12. Finalização definitiva, correção e histórico.
+13. Verificação de que os novos dados do mentor sobreviveram à retomada.
+14. Criação de backup de recuperação pré-finalização.
+15. Geração de plano de 7 dias após diagnóstico e abertura da aula correspondente.
+16. Navegação mobile a 390 px sem rolagem horizontal indevida.
+
+**Não foram testados** em todos os navegadores/dispositivos físicos, nem o funcionamento de uma API de IA ou pesquisa online — tais serviços ainda não existem na aplicação.
+
+## Decisões de preservação
+
+- `STORE = 'enem-intelligence-v2'`: mantido.
+- Compatibilidade de `enem-intelligence-v1` e banco legado preservada.
+- `schema: 2` mantém formato v2 e inclui campo independente `mentor.version=1`.
+- Importação JSON importa também `mentor`, sem apagar esse campo ao ler backups antigos que não o contêm.
+- Prova em andamento não é descartada ao navegar para outra seção.
+- Antes de corrigir, é gravado um snapshot adicional, caso o browser permita.
+
+## Limitações abertas
+
+Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA conversacional, correção automática de redação, banco de concursos por banca, backup na nuvem, execução em 100% dos navegadores e classificação das provas oficiais ainda dependem de trabalho e infraestrutura adicionais. Nenhuma dessas integrações foi apresentada como concluída.
+
+**Implantação:** status final deve ser confirmado pelas execuções reais de GitHub Actions após o commit v3; testes locais não equivalem a publicação pública.

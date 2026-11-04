@@ -35,3 +35,7 @@ assert(app.includes('enem-intelligence-recovery-'), 'Cópia de recuperação ant
 for(let p of ['profile','explorer','learn','revisions','writing'])assert(html.includes('id="view-'+p+'"'),'Tela ausente '+p);
 assert(!/sk-[a-z0-9]{20,}/i.test(html),'Segredo potencial inserido no site público');
 assert(app.includes('function unseenFor(')&&app.includes('seenIds')&&app.includes('const COUNTS='),'Controle de questões inéditas ausente');assert(html.includes('class="mobile-nav"'),'Navegação mobile ausente');console.log('PASS: banco 208+72, questões inéditas, seletor 10-100 e compatibilidade V3');
+
+assert(app.includes('id="cfg-time-mode"'),'Seleção de modos de tempo ausente');
+assert(app.includes("if(ex.timed&&remaining(ex)<=0){finishExam('tempo encerrado');return}"),'Retomada de prova com prazo expirado não tratada');
+assert(html.includes('timer-low'),'Alerta visual de tempo ausente');

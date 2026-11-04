@@ -61,3 +61,13 @@ Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA c
 - Teste local em Chromium/Playwright: seleção 10–100 por dez; primeiro simulado de 100 itens; marcação, navegação, salto para pendente e para número; exportação de backup; recuperação em nova sessão com respostas e posição intactas; confirmação/cancelamento da finalização; correção e histórico.
 - Segundo simulado de 100 itens realizado sem qualquer ID repetido do primeiro. Com 7 restantes, novas provas de 10+ são bloqueadas, sem preenchimento por repetições. Importar um backup antigo não diminuiu o conjunto de IDs já vistos.
 - Verificação de barra mobile e ausência de rolagem horizontal indevida em 390 px. Testes no Chromium não equivalem à garantia de funcionamento em todos os dispositivos; não há sincronização automática entre navegadores e o banco permanece finito.
+
+
+## Testes de cronômetro e contagem regressiva — 04/11/2026
+
+- Alternância de modos na configuração, com duração exibida só no modo regressivo.
+- Cronômetro crescente continua ativo após 4 horas simuladas; duração real armazenada após finalizar.
+- Regressivo encerra automaticamente após prazo; a resposta marcada é preservada, as demais ficam em branco.
+- Prova com prazo expirado e recuperada em nova sessão é automaticamente corrigida.
+- Testes executados no Chromium/Playwright, mais verificação do HTML gerado e análise estática.
+- Persistência continua no navegador; backups JSON são recomendados.

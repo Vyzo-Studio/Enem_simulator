@@ -38,3 +38,7 @@
  .exam-top{top:70px}
 }
 @media(max-width:380px){.mobile-nav button span{font-size:9px}.q-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
+/* Contagem regressiva: atenção visual apenas nos cinco minutos finais */
+#exam-timer.timer-low{color:#b91c1c;background:#fff1f2;border-color:#fda4af;font-weight:700}
+[data-theme="dark"] #exam-timer.timer-low{color:#fecaca;background:#641b2b;border-color:#fb7185}

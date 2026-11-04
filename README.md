@@ -68,3 +68,8 @@ Há testes de navegação com Chromium automatizado durante o desenvolvimento; v
 - A prevenção de repetição vale enquanto os dados locais ou um backup importado forem mantidos. Limpar o navegador ou trocar de aparelho sem backup pode apagar a relação de questões usadas.
 
 O conteúdo adicional é mantido em `src/extra_questions.js`, integrado pelo `scripts/build.py`. Todas as questões são autorais e não são itens oficiais do Inep.
+
+
+## Modos de tempo do simulado
+
+Na configuração, escolha **Cronômetro crescente** (começa em zero, mede o tempo decorrido e não finaliza a prova automaticamente) ou **Contagem regressiva** (prazo de 1 a 360 minutos com correção automática ao chegar a zero). Quando o prazo termina, as alternativas já marcadas são preservadas e as não respondidas permanecem em branco. Se a prova for retomada depois do término do prazo, a finalização ocorre imediatamente. Dados antigos com o campo `timed` continuam compatíveis.

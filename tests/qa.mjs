@@ -30,7 +30,7 @@ for(const token of ['function renderProfile()','function renderExplorer()','func
  if(token==='schema')continue;
  assert(mentor.includes(token),'Módulo v3 ausente: '+token);
 }
-assert(app.includes('mentor:x.mentor&&typeof x.mentor'), 'Importação não preserva novos dados');
+assert(app.includes('mentor:{...fromMentor,...myMentor')&&app.includes('mergedEssay')&&app.includes('savedExams')&&app.includes('const byId=new Map('),'Importação deve mesclar e preservar históricos, mentor, provas e rascunhos');
 assert(app.includes('enem-intelligence-recovery-'), 'Cópia de recuperação antes da correção ausente');
 for(let p of ['profile','explorer','learn','revisions','writing'])assert(html.includes('id="view-'+p+'"'),'Tela ausente '+p);
 assert(!/sk-[a-z0-9]{20,}/i.test(html),'Segredo potencial inserido no site público');

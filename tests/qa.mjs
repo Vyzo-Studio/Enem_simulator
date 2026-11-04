@@ -39,3 +39,13 @@ assert(app.includes('function unseenFor(')&&app.includes('seenIds')&&app.include
 assert(app.includes('id="cfg-time-mode"'),'Seleção de modos de tempo ausente');
 assert(app.includes("if(ex.timed&&remaining(ex)<=0){finishExam('tempo encerrado');return}"),'Retomada de prova com prazo expirado não tratada');
 assert(html.includes('timer-low'),'Alerta visual de tempo ausente');
+
+
+// Verificações adicionais V5 de layout e segurança.
+const v5app=read('src/app.js'),v5css=read('src/styles.css'),v5mentor=read('src/mentor.js'),v5template=read('src/template.html');
+for(const token of ['dashboard-hero','setup-layout','exam-map-panel','toggle-map','writing-tabs','function applyImport(x,mode=','function renderRecoveryExtras()','pendingExternal']) assert(v5app.includes(token),'Componente V5 ausente: '+token);
+for(const token of ['nav-shade','nav-group','nav-svg','data-nav="essay"']) assert(v5template.includes(token),'Navegação V5 ausente: '+token);
+assert(v5mentor.includes('Salvar e sortear'),'Troca de tema de redação sem proteção');
+assert(!v5mentor.includes('m.studyMinutes+=25'),'Tempo fictício registrado como estudo');
+assert(v5css.includes('body.exam-map-open .q-sidebar'),'Mapa de prova mobile ausente');
+console.log('PASS: recursos V5, proteção de rascunhos, estrutura responsiva e compatibilidade com versões anteriores.');

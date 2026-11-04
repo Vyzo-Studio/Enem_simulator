@@ -73,3 +73,21 @@ O conteúdo adicional é mantido em `src/extra_questions.js`, integrado pelo `sc
 ## Modos de tempo do simulado
 
 Na configuração, escolha **Cronômetro crescente** (começa em zero, mede o tempo decorrido e não finaliza a prova automaticamente) ou **Contagem regressiva** (prazo de 1 a 360 minutos com correção automática ao chegar a zero). Quando o prazo termina, as alternativas já marcadas são preservadas e as não respondidas permanecem em branco. Se a prova for retomada depois do término do prazo, a finalização ocorre imediatamente. Dados antigos com o campo `timed` continuam compatíveis.
+
+
+## ENEM Intelligence V5 — reformulação visual e navegação
+
+A V5 reorganiza a interface preservando as funções existentes e a chave de armazenamento `enem-intelligence-v2`. Foi mantido o banco de 208 questões autorais e 72 questões antigas para recuperação.
+
+- Dashboard com objetivo informado, botão para retomar simulado, atividades pendentes, revisões e desempenho real.
+- Cinco destinos principais: Início, Estudar, Simulados, Redação, Resultados; opções complementares recolhíveis. Menu lateral rolável e navegação mobile.
+- Configuração do simulado em três etapas: conteúdo, 10–100 questões e cronômetro crescente/regressivo, com resumo visível.
+- Durante a prova, o mapa de questões abre em uma gaveta no celular; o enunciado aparece primeiro. Controle de tamanho do texto e botões de navegação ficam acessíveis.
+- Redação unificada na navegação com duas abas: Rascunho rápido e Temas e versões. Os dois históricos de escrita são preservados sem migração destrutiva.
+- Antes de trocar tema com rascunho preenchido, o texto é salvo como versão.
+- Importação com escolha explícita entre **Mesclar** e **Substituir**, backup anterior automático, retenção de provas e rascunhos conflitantes.
+- Alterações por outra aba geram bloqueio de gravação concorrente e opção de baixar cópia antes de sincronizar.
+- Em falha de persistência ao finalizar, inicia download de backup dos resultados.
+- CSS responsivo e design system ajustados para 320–1440 px, temas claro/escuro, ícones SVG sem dependência de CDN.
+
+**Limites:** o app continua estático no GitHub Pages, sem login ou sincronização em nuvem, sem IA real de redação e sem questões oficiais declaradas como tais. A recuperação depende de dados disponíveis no navegador ou em backups JSON. Testes de navegador realizados localmente com Chromium e armazenamento emulado; validação de todos os dispositivos físicos e WCAG 2.2 AA não concluída.

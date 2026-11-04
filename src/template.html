@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1830">
-  <meta name="description" content="ENEM Intelligence: simulados autorais com textos de apoio, gráficos, correção comentada e salvamento automático.">
-  <title>ENEM Intelligence | Simulador de provas</title>
+  <meta name="description" content="ENEM Intelligence: simulados digitais, redação, plano de estudos e revisão guiada. Salve respostas e acompanhe sua evolução.">
+  <title>ENEM Intelligence | Estude, pratique e evolua</title>
   <link rel="stylesheet" href="src/styles.css">
   <script src="src/questions.js" defer></script>
   <script src="src/extra_questions.js" defer></script>
@@ -17,24 +17,30 @@
   <a class="skip" href="#main">Ir para conteúdo</a>
   <header class="topbar">
     <a href="#inicio" class="brand" data-nav="home" aria-label="ENEM Intelligence - início"><span class="logo">E<span>·</span></span><span><strong>ENEM <em>INTELLIGENCE</em></strong><small>Seu professor para provas e concursos</small></span></a>
-    <div class="top-actions"><span id="save-pill" class="save-pill" role="status" aria-live="polite">Carregando…</span><button class="icon-btn" id="theme-btn" aria-label="Alternar modo escuro">◐</button><button class="icon-btn mobile-menu" id="menu-btn" aria-expanded="false" aria-controls="side-nav">☰</button></div>
+    <div class="top-actions"><span id="save-pill" class="save-pill" role="status" aria-live="polite">Carregando…</span><button class="icon-btn" id="theme-btn" aria-label="Alternar modo escuro">◐</button><button class="icon-btn mobile-menu" id="menu-btn" aria-expanded="false" aria-controls="side-nav" aria-label="Abrir menu">☰</button></div>
   </header>
+  <div id="nav-shade" class="nav-shade" aria-hidden="true"></div>
   <div class="shell">
     <nav class="sidebar" id="side-nav" aria-label="Navegação principal">
-      <p class="side-label">ACESSO RÁPIDO</p>
-      <button data-nav="home" class="navitem active"><span>⌂</span> Visão geral</button>
-      <button data-nav="profile" class="navitem"><span>◎</span> Meu objetivo</button>
-      <button data-nav="explorer" class="navitem"><span>⌕</span> Explorador de provas</button>
-      <button data-nav="setup" class="navitem"><span>▣</span> Simulados</button>
-      <button data-nav="learn" class="navitem"><span>◈</span> Professor e aulas</button>
-      <button data-nav="revisions" class="navitem"><span>⟳</span> Revisões e flashcards</button>
-      <p class="side-label">PROGRESSO E ESTUDO</p>
-      <button data-nav="history" class="navitem"><span>▤</span> Meu desempenho</button>
-      <button data-nav="planner" class="navitem"><span>◇</span> Plano de estudos</button>
-      <button data-nav="essay" class="navitem"><span>✎</span> Redação</button>
-      <button data-nav="writing" class="navitem"><span>✐</span> Oficina de redação</button>
-      <button data-nav="data" class="navitem"><span>⇩</span> Backup e dados</button>
-      <div class="side-note"><strong>Prova sem surpresas</strong><span>As respostas são salvas ao marcar. O gabarito só é revelado após finalizar.</span></div>
+      <div class="sidebar-title"><span class="sidebar-overline">MINHA JORNADA</span><strong>Aprenda no seu ritmo</strong></div>
+      <p class="side-label">PRINCIPAL</p>
+      <button data-nav="home" class="navitem active"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span class="nav-text">Início</span></button>
+      <button data-nav="learn" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="nav-text">Estudar</span></button>
+      <button data-nav="setup" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4M7 13h7m-7 4h5"/><path d="m15 9 2 2 3-4"/></svg><span class="nav-text">Simulados</span></button>
+      <button data-nav="essay" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg><span class="nav-text">Redação</span></button>
+      <button data-nav="history" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 16 4-5 3 2 5-7"/></svg><span class="nav-text">Resultados</span></button>
+      <p class="side-label sidebar-extras-title">EXPLORAR E ORGANIZAR</p>
+      <details class="nav-group" open><summary>Meu estudo <span aria-hidden="true">⌄</span></summary><div class="nav-group-inner">
+        <button data-nav="planner" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span class="nav-text">Plano de estudos</span></button>
+        <button data-nav="revisions" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="14" height="16" rx="2"/><path d="M7 2h12a2 2 0 0 1 2 2v14"/></svg><span class="nav-text">Revisões e flashcards</span></button>
+      </div></details>
+      <details class="nav-group"><summary>Objetivo e provas <span aria-hidden="true">⌄</span></summary><div class="nav-group-inner">
+        <button data-nav="profile" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="nav-text">Meu objetivo</span></button>
+        <button data-nav="explorer" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="7"/><path d="m16 16 5 5"/></svg><span class="nav-text">Explorar provas</span></button>
+      </div></details>
+      <details class="nav-group"><summary>Dados e segurança <span aria-hidden="true">⌄</span></summary><div class="nav-group-inner">
+<button data-nav="data" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M4 18v3h16v-3"/></svg><span class="nav-text">Backup e recuperação</span></button>      </div></details>
+      <div class="side-note"><strong>Progresso protegido</strong><span>As alternativas são salvas durante a prova. Para simulados longos, baixe também um backup.</span></div>
       <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
     </nav>
     <main id="main" class="main" tabindex="-1">
@@ -57,11 +63,11 @@
     </main>
   </div>
   <nav class="mobile-nav" aria-label="Navegação rápida no celular">
-    <button data-nav="home" class="active" aria-label="Início">⌂<span>Início</span></button>
-    <button data-nav="setup" aria-label="Simulados">▣<span>Simulados</span></button>
-    <button data-nav="learn" aria-label="Professor">◎<span>Professor</span></button>
-    <button data-nav="history" aria-label="Desempenho">▥<span>Resultados</span></button>
-    <button id="mobile-more" aria-label="Abrir o menu completo">☰<span>Mais</span></button>
+    <button data-nav="home" class="active" aria-label="Início"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Início</span></button>
+    <button data-nav="learn" class="" aria-label="Estudar"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Estudar</span></button>
+    <button data-nav="setup" class="" aria-label="Simulados"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4M7 13h7m-7 4h5"/><path d="m15 9 2 2 3-4"/></svg><span>Simulados</span></button>
+    <button data-nav="history" class="" aria-label="Resultados"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 16 4-5 3 2 5-7"/></svg><span>Resultados</span></button>
+    <button id="mobile-more" aria-label="Abrir o menu completo" aria-expanded="false" aria-controls="side-nav"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Mais</span></button>
   </nav>
   <div id="dialog-root" class="modal-overlay hidden" role="presentation"></div>
 </body>

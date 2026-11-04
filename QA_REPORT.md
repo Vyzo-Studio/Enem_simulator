@@ -71,3 +71,16 @@ Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA c
 - Prova com prazo expirado e recuperada em nova sessão é automaticamente corrigida.
 - Testes executados no Chromium/Playwright, mais verificação do HTML gerado e análise estática.
 - Persistência continua no navegador; backups JSON são recomendados.
+
+
+## V5 — relatório de testes locais e atualização UX (04/11/2026)
+
+- Código modular validado com Node.js; bundle reconstruído idêntico à distribuição HTML.
+- Responsividade reproduzida em Chromium em 320, 390, 768, 1024 e 1440 px: sem rolagem horizontal nas telas Home e Configuração.
+- Prova mobile em 390 px: pergunta antes do mapa; gaveta do mapa abre e fecha; respostas salvas; retomada da prova ao remontar a página; finalização e correção exibidas.
+- Navegação principal e secundária preservada, com menu mobile e indicador de seção.
+- Redação: rascunho do editor antigo mantido; conteúdo da oficina arquivado como versão antes do sorteio de outro tema.
+- Backup importado em modo mesclagem: prova atual, gabarito, histórico, rascunho e prova importada preservados.
+- Conflito de armazenamento entre abas: bloqueio de escrita na cópia antiga, sem sobrescrita do estado persistido.
+- Testes Chromium executados com documento `page.set_content` e armazenamento local emulado; não são validação em dispositivo físico.
+- Limitações ainda existentes: sem backend de IA/redação, sincronização remota ou auditoria WCAG conclusiva.

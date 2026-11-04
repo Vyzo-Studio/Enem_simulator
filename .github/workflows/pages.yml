@@ -1,4 +1,7 @@
-name: Quality checks and GitHub Pages
+# GitHub Pages já está configurado para publicar diretamente da branch main.
+# A publicação é feita automaticamente pelo workflow nativo "pages build and deployment".
+# Esta rotina separada verifica a integridade sem tentar recriar o site Pages.
+name: Quality checks
 
 on:
   push:
@@ -7,12 +10,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   quality:
@@ -28,24 +25,3 @@ jobs:
         run: node tests/qa.mjs
       - name: Check generated HTML matches source modules
         run: python3 scripts/build.py --check
-
-  deploy:
-    needs: quality
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - name: Upload static website
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
-      - name: Deploy GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

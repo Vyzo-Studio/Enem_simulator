@@ -1,7 +1,9 @@
 """Fluxo de seleção de pesquisa com dados simulados; NÃO valida busca externa real."""
 from playwright.sync_api import sync_playwright,expect
-ns={'__file__':'/mnt/data/vyzo_v10_work/tests/v10_browser.py'}
-source=open('/mnt/data/vyzo_v10_work/tests/v10_browser.py',encoding='utf8').read().split('with sync_playwright() as p:')[0]
+from pathlib import Path
+TESTS=Path(__file__).resolve().parent
+ns={'__file__':str(TESTS/'v10_browser.py')}
+source=(TESTS/'v10_browser.py').read_text(encoding='utf8').split('with sync_playwright() as p:')[0]
 exec(source,ns)
 with sync_playwright() as playwright:
     browser=playwright.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])

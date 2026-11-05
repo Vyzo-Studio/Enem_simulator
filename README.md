@@ -91,3 +91,17 @@ A V5 reorganiza a interface preservando as funções existentes e a chave de arm
 - CSS responsivo e design system ajustados para 320–1440 px, temas claro/escuro, ícones SVG sem dependência de CDN.
 
 **Limites:** o app continua estático no GitHub Pages, sem login ou sincronização em nuvem, sem IA real de redação e sem questões oficiais declaradas como tais. A recuperação depende de dados disponíveis no navegador ou em backups JSON. Testes de navegador realizados localmente com Chromium e armazenamento emulado; validação de todos os dispositivos físicos e WCAG 2.2 AA não concluída.
+
+
+## V6 — Proteção de respostas e melhorias
+
+- Corrigida a finalização automática com janela de confirmação aberta.
+- Validação de histórico completo na importação de JSON; backups incompletos são recusados sem sobrescrever os dados.
+- Retirado corte silencioso dos últimos 150 simulados e do histórico de versões da redação.
+- Backup acessível na prova, mapa filtrável, atalhos A–E, setas e R, ampliação persistente de texto, tabelas alternativas para gráficos.
+- Adicionadas 16 questões avançadas autorais: 224 novas e 72 legadas exclusivamente para recuperação.
+- Sessões de estudo com início, pausa e encerramento, sem contagem automática de minutos fictícios.
+- PWA opcional com cache de arquivos públicos e página de privacidade.
+- Testes Chromium automatizados no fluxo de qualidade.
+
+**Limitações:** Sem IA conversacional, correção de redação por IA, contas, sincronização em nuvem ou cálculo TRI oficial. O banco necessita revisão editorial contínua.

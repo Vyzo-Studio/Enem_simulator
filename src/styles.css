@@ -70,3 +70,13 @@ body.exam-active .shell{display:block}body.exam-active .sidebar,body.exam-active
 .nav-shade{display:none}
 @media(max-width:780px){.nav-shade{display:block;position:fixed;inset:66px 0 0;background:#0410229a;opacity:0;pointer-events:none;z-index:50;transition:opacity .15s}body.nav-is-open .nav-shade{opacity:1;pointer-events:auto}.sidebar{box-shadow:16px 0 42px #0003}.exam-actions [data-act="finish"]{grid-column:auto}.exam-actions .button{white-space:normal}}
 @media(max-width:380px){.exam-actions .button{font-size:11px}}
+
+/* V6 — controles acessíveis e ergonomia de prova */
+.save-pill{cursor:pointer;background:transparent;font-family:inherit;font-weight:700;transition:background .2s}.save-pill:hover,.save-pill:focus-visible{background:#24415d;outline:2px solid #aac9ff;outline-offset:2px}
+.map-filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.map-filters .button{font-size:12px;padding:8px 11px;min-height:36px}
+.figure-data{font-size:13px;padding:8px 0}.figure-data summary{cursor:pointer;font-weight:700}.figure-data table{width:100%;border-collapse:collapse;margin-top:10px}.figure-data th,.figure-data td{border:1px solid var(--border);padding:6px;text-align:left}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.exam-toolbar{flex-wrap:wrap}.exam-toolbar [data-act="backup"]{font-weight:800}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #5b8cf7;outline-offset:2px}
+@media(max-width:600px){.exam-toolbar{gap:6px}.exam-toolbar .button{font-size:12px;padding:9px 10px;min-height:40px}.map-filters .button{flex:1 1 42%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}

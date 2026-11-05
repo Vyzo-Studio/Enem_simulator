@@ -1,27 +1,28 @@
-# GitHub Pages já está configurado para publicar diretamente da branch main.
-# A publicação é feita automaticamente pelo workflow nativo "pages build and deployment".
-# Esta rotina separada verifica a integridade sem tentar recriar o site Pages.
 name: Quality checks
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Configure Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate questions, answer keys, assets and source bundle
+      - name: Verify bank and JavaScript
         run: node tests/qa.mjs
-      - name: Check generated HTML matches source modules
+      - name: Check HTML bundle
         run: python3 scripts/build.py --check
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Browser regression
+        run: python3 tests/v6_browser.py

@@ -84,3 +84,8 @@ Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA c
 - Conflito de armazenamento entre abas: bloqueio de escrita na cópia antiga, sem sobrescrita do estado persistido.
 - Testes Chromium executados com documento `page.set_content` e armazenamento local emulado; não são validação em dispositivo físico.
 - Limitações ainda existentes: sem backend de IA/redação, sincronização remota ou auditoria WCAG conclusiva.
+
+
+## V6 — Resultados da regressão
+
+PASSARAM em Chromium: simulado, restauração de respostas com armazenamento simulado, expiração do prazo com modal aberto, JSON inválido rejeitado, histórico acima de 150 itens, filtro no mapa, atalhos, fonte persistente, timer de estudo e responsividade de 320–1440 px. Node e build QA passaram localmente. O sandbox bloqueou localhost, portanto a persistência foi simulada; não houve teste em Safari ou PWA no endereço público.

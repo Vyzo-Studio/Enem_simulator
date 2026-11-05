@@ -11,7 +11,7 @@ script=script.replace("import {getVerifiedStudent} from './v12-auth-core.mjs';",
 assert "const getVerifiedStudent=async()=>null;" in script
 html=html.replace('<link rel="stylesheet" href="./styles.css">','<style>'+css+'</style>')
 html=html.replace('<script src="./config.js"></script>','<script>'+config+'</script>')
-html=html.replace('<script type="module" src="./v12-entry.mjs"></script>','<script>'+script+'</script>')
+html=html.replace('<script type="module" src="./v12-entry.mjs"></script>','<script type="module">'+script+'</script>')
 with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
   for width in [320,360,390,768,1024,1440,1920]:

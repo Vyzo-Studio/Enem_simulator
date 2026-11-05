@@ -1,7 +1,7 @@
 {
-  "name": "ENEM Intelligence — Estudo e Simulados",
-  "short_name": "ENEM Intelligence",
-  "description": "Simulados autorais, redação e estudos com dados locais.",
+  "name": "VYZO ACADEMY — Estudos, Provas e Concursos",
+  "short_name": "VYZO ACADEMY",
+  "description": "Prepare-se para ENEM, vestibulares e concursos com simulados, redação, revisões e estudo guiado.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,15 +10,9 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "./assets/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "./assets/vyzo-academy.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

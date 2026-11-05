@@ -89,3 +89,11 @@ Pesquisa dinâmica de editais, extração PDF no navegador, API do YouTube, IA c
 ## V6 — Resultados da regressão
 
 PASSARAM em Chromium: simulado, restauração de respostas com armazenamento simulado, expiração do prazo com modal aberto, JSON inválido rejeitado, histórico acima de 150 itens, filtro no mapa, atalhos, fonte persistente, timer de estudo e responsividade de 320–1440 px. Node e build QA passaram localmente. O sandbox bloqueou localhost, portanto a persistência foi simulada; não houve teste em Safari ou PWA no endereço público.
+
+
+## Rebranding VYZO ACADEMY — 05/11/2026
+
+- Nova identidade: template, painel, breadcrumb, metadados, ícone SVG, PWA, privacidade e backups futuros.
+- Chaves de armazenamento v1/v2, IDs de questões e histórico não alterados.
+- Renomeação administrativa do repositório permanece tarefa separada.
+- Testes: reconstrução do HTML, verificação de bancos, compatibilidade legada e fluxos de navegador.

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1830">
-  <meta name="description" content="ENEM Intelligence: simulados digitais, redação, plano de estudos e revisão guiada. Salve respostas e acompanhe sua evolução.">
-  <title>ENEM Intelligence | Estude, pratique e evolua</title>
+  <meta name="description" content="VYZO ACADEMY: preparação para ENEM, vestibulares, concursos e outras provas, com simulados, redação e estudo guiado.">
+  <title>VYZO ACADEMY | Estude, pratique e evolua</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style id="bundled-styles">:root{--bg:#f4f7fc;--card:#fff;--wash:#f8fafe;--text:#182a44;--muted:#62738c;--border:#dce5f1;--navy:#0c1830;--blue:#2457e6;--accent:#f5b547;--good:#08785e;--bad:#b43842;--warn:#886111;--goodbg:#e6f7ef;--badbg:#ffedf0;--warnbg:#fff6e3;--shadow:0 12px 34px rgba(21,43,78,.045)}
 [data-theme=dark]{--bg:#0b1528;--card:#14223a;--wash:#182945;--text:#edf3ff;--muted:#a9bdd8;--border:#30435d;--navy:#081222;--blue:#85a6ff;--accent:#f5b547;--good:#69e2b6;--bad:#ff9ea4;--warn:#ffda8c;--goodbg:#10392f;--badbg:#462934;--warnbg:#49391e;--shadow:none}
@@ -51,7 +51,7 @@
 /* Contagem regressiva: atenção visual apenas nos cinco minutos finais */
 #exam-timer.timer-low{color:#b91c1c;background:#fff1f2;border-color:#fda4af;font-weight:700}
 [data-theme="dark"] #exam-timer.timer-low{color:#fecaca;background:#641b2b;border-color:#fb7185}
-/* ENEM Intelligence V5: sistema visual renovado, sem dependências externas. */
+/* VYZO ACADEMY: sistema visual renovado, sem dependências externas. */
 :root{--bg:#f3f6fb;--card:#fff;--wash:#f5f8ff;--text:#162841;--muted:#596c84;--border:#dce5f1;--navy:#0a1b37;--blue:#285de3;--accent:#ffbf64;--radius:17px;--shadow:0 9px 32px #162d5120}
 [data-theme=dark]{--bg:#0b1424;--card:#132239;--wash:#1b2e4c;--text:#f0f5ff;--muted:#b3c3d9;--border:#314663;--blue:#8facff;--shadow:0 12px 40px #0002}
 html{scroll-padding-top:84px}body{font-size:16px;overflow-x:clip}button,input,textarea,select{font-family:inherit}button{touch-action:manipulation}button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
@@ -112,7 +112,7 @@ window.LEGACY_BANK=[{"id":"A001","area":"Linguagens","subject":"Português","top
 </script>
   <script data-source="app.js">
 'use strict';
-/* ENEM Intelligence v2 — aplicação estática, sem envio de respostas a servidores. */
+/* VYZO ACADEMY — aplicação estática, sem envio de respostas a servidores. */
 (()=>{
 const STORE='enem-intelligence-v2', OLD='enem-intelligence-v1';
 const NEW=Array.isArray(window.QUESTION_BANK)?window.QUESTION_BANK:[];
@@ -164,7 +164,7 @@ function go(page){
   route=page;state.lastPage=page;document.body.classList.toggle('exam-active',page==='exam');document.body.classList.remove('exam-map-open');
   $$('.view').forEach(e=>e.classList.toggle('hidden',e.id!=='view-'+page));
   $$('.navitem, .mobile-nav [data-nav]').forEach(e=>{const active=e.dataset.nav===page||page==='writing'&&e.dataset.nav==='essay'||page==='exam'&&e.dataset.nav==='setup'||page==='result'&&e.dataset.nav==='history';e.classList.toggle('active',active);if(e.matches('.mobile-nav [data-nav]'))e.setAttribute('aria-current',active?'page':'false')});
-  const pageNames={home:'Início',setup:'Simulados',exam:'Prova em andamento',result:'Correção',history:'Desempenho',planner:'Plano de estudos',essay:'Redação',data:'Backup e dados',profile:'Meu objetivo',explorer:'Provas e concursos',learn:'Professor',revisions:'Revisões',writing:'Redação / Temas e versões'};if($('#path-location'))$('#path-location').textContent='ENEM Intelligence / '+(pageNames[page]||'Início');
+  const pageNames={home:'Início',setup:'Simulados',exam:'Prova em andamento',result:'Correção',history:'Desempenho',planner:'Plano de estudos',essay:'Redação',data:'Backup e dados',profile:'Meu objetivo',explorer:'Provas e concursos',learn:'Professor',revisions:'Revisões',writing:'Redação / Temas e versões'};if($('#path-location'))$('#path-location').textContent='VYZO ACADEMY / '+(pageNames[page]||'Início');
   $('#side-nav').classList.remove('open');document.body.classList.remove('nav-is-open');$('#menu-btn').setAttribute('aria-expanded','false');$('#mobile-more')?.setAttribute('aria-expanded','false');
   const currentItem=$('#side-nav .navitem[data-nav="'+(page==='writing'?'essay':page)+'"]');if(currentItem?.closest('details'))currentItem.closest('details').open=true;
   const renders={home:renderHome,setup:renderSetup,exam:renderExam,result:renderResult,history:renderHistory,planner:renderPlanner,essay:renderEssay,data:renderData,profile:()=>window.ENEM_MENTOR?.render('profile'),explorer:()=>window.ENEM_MENTOR?.render('explorer'),learn:()=>window.ENEM_MENTOR?.render('learn'),revisions:()=>window.ENEM_MENTOR?.render('revisions'),writing:()=>window.ENEM_MENTOR?.render('writing')};
@@ -237,7 +237,7 @@ function renderHome(){
  let days='';if(p.date){const diff=Math.ceil((new Date(p.date+'T12:00:00')-new Date())/86400000);if(Number.isFinite(diff))days=diff>=0?diff+' dia(s) para sua prova':'Data da prova já passou — atualize seu objetivo';}
  const weak=unique(state.history.flatMap(h=>(h.rows||[]).filter(r=>r.status==='wrong').map(r=>r.topic))).slice(0,4);
  $('#view-home').innerHTML=`
- <div class="dashboard-heading"><div><p class="eyebrow">ENEM INTELLIGENCE • V5</p><h1 class="page-title">Seu espaço de aprendizagem</h1><p class="lead">Continue de onde parou e concentre seus estudos no próximo passo.</p></div><button class="button secondary" data-act="backup">Fazer backup <span aria-hidden="true">↧</span></button></div>
+ <div class="dashboard-heading"><div><p class="eyebrow">VYZO ACADEMY</p><h1 class="page-title">Seu espaço de aprendizagem</h1><p class="lead">Continue de onde parou e concentre seus estudos no próximo passo.</p></div><button class="button secondary" data-act="backup">Fazer backup <span aria-hidden="true">↧</span></button></div>
  <section class="hero dashboard-hero"><div><div class="eyebrow">${profileDone?esc(p.exam||p.type||'Meu objetivo'):'Comece pelo seu objetivo'}</div><h2>${exam?'Seu simulado está salvo. Continue com segurança.':nextStudy?'Próxima atividade: '+esc(nextStudy.topic):profileDone?'Pronto para o próximo estudo.':'O seu caminho começa aqui.'}</h2><p>${exam?'Você marcou '+Object.values(exam.answers||{}).filter(Number.isInteger).length+' de '+exam.ids.length+' questões. Nenhuma resposta será descartada ao sair desta tela.':nextStudy?'Abra o professor, estude o assunto e depois pratique com novas questões.':profileDone?'Faça um diagnóstico para encontrar os conteúdos que merecem atenção.':'Defina sua prova e disponibilidade. Ou comece um simulado imediatamente.'}</p><div class="btnrow"><button class="button hero-primary" data-${exam?'act="resume"':nextStudy?'nav="learn"':'nav="profile"'}>${exam?'Retomar simulado':nextStudy?'Continuar estudando':profileDone?'Revisar meu objetivo':'Definir meu objetivo'} →</button><button class="button hero-secondary" data-nav="setup">${exam?'Ver meu simulado':'Criar simulado'}</button></div>${days?'<div class="hero-meta">'+esc(days)+'</div>':''}</div><div class="hero-art" aria-hidden="true"><span>✦</span><small>APRENDER · PRATICAR · EVOLUIR</small></div></section>
  ${pendingExternal?'<div class="notice warn"><strong>Dados alterados em outra aba.</strong> Exporte uma cópia antes de recarregar. <div class="btnrow"><button class="button secondary" data-act="backup">Baixar cópia</button><button class="button" data-act="sync-tab">Carregar versão mais recente</button></div></div>':''}
  <div class="grid cols3 metrics-grid"><article class="card metric-card"><span class="section-kicker">Simulados concluídos</span><div class="kpi">${state.history.length}</div><p class="small muted">Seu histórico continua disponível.</p></article><article class="card metric-card"><span class="section-kicker">Desempenho registrado</span><div class="kpi">${pct===null?'—':pct+'%'}</div><p class="small muted">${used} questões respondidas · não é nota TRI</p></article><article class="card metric-card"><span class="section-kicker">Questões inéditas</span><div class="kpi">${free}</div><p class="small muted">De ${validQuestions.length} autorais disponíveis, com sua língua escolhida.</p></article></div>
@@ -335,7 +335,7 @@ function renderRecoveryExtras(){
  const exams=Array.isArray(state.savedExams)?state.savedExams:[],drafts=Array.isArray(state.essay?.importedDrafts)?state.essay.importedDrafts:[];
  el.insertAdjacentHTML('beforeend',`<section class="card mentor-slab"><h2>Dados preservados de importações</h2><p class="muted small">A importação pode combinar históricos sem apagar a prova que você já está respondendo.</p><p>${exams.length} prova(s) importada(s) em espera · ${drafts.length} rascunho(s) preservado(s).</p><div class="stack">${exams.slice(-4).map((item,i)=>`<button class="button secondary" data-act="recover-import-exam" data-exam-import="${exams.length-Math.min(4,exams.length)+i}">Recuperar prova: ${esc(item.exam?.label||'Simulado')} (${item.exam?.ids?.length||0} questões)</button>`).join('')}${drafts.slice(-5).map((d,i)=>`<button class="button secondary" data-act="recover-draft" data-draft-index="${drafts.length-Math.min(5,drafts.length)+i}">Restaurar rascunho importado ${i+1}</button>`).join('')}</div></section>`);
 }
-function exportBackup(){download('ENEM_INTELLIGENCE_BACKUP_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({...state,exportedAt:Date.now(),app:'ENEM Intelligence v2'},null,2),'application/json')}
+function exportBackup(){download('VYZO_ACADEMY_BACKUP_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({...state,exportedAt:Date.now(),app:'VYZO ACADEMY v1'},null,2),'application/json')}
 function download(name,body,type){let url=URL.createObjectURL(new Blob([body],{type:type+';charset=utf-8'}));let a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
 function validateHistoryRecord(record){
  if(!record||typeof record!=='object'||typeof record.id!=='string'||!record.id.trim()||!Array.isArray(record.ids)||!record.ids.length||record.ids.length>100||new Set(record.ids).size!==record.ids.length||record.ids.some(id=>typeof id!=='string'||!id))throw Error('Histórico contém uma prova sem identificadores válidos. Nenhum dado foi alterado.');
@@ -632,13 +632,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
-  <link rel="icon" type="image/png" href="assets/icon-192.png">
-  <meta name="application-name" content="ENEM Intelligence">
+  <link rel="icon" type="image/svg+xml" href="assets/vyzo-academy.svg">
+  <meta name="application-name" content="VYZO ACADEMY">
 </head>
 <body>
   <a class="skip" href="#main">Ir para conteúdo</a>
   <header class="topbar">
-    <a href="#inicio" class="brand" data-nav="home" aria-label="ENEM Intelligence - início"><span class="logo">E<span>·</span></span><span><strong>ENEM <em>INTELLIGENCE</em></strong><small>Seu professor para provas e concursos</small></span></a>
+    <a href="#inicio" class="brand" data-nav="home" aria-label="VYZO ACADEMY - início"><span class="logo">V<span>·</span></span><span><strong>VYZO <em>ACADEMY</em></strong><small>Seu espaço para estudar, praticar e evoluir</small></span></a>
     <div class="top-actions"><button type="button" data-act="save-status" id="save-pill" class="save-pill" aria-label="Ver estado do salvamento e baixar backup" title="Ver estado do salvamento">Carregando…</button><button class="icon-btn" id="theme-btn" aria-label="Alternar modo escuro">◐</button><button class="icon-btn mobile-menu" id="menu-btn" aria-expanded="false" aria-controls="side-nav" aria-label="Abrir menu">☰</button></div>
   </header>
   <div id="nav-shade" class="nav-shade" aria-hidden="true"></div>
@@ -666,7 +666,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
     </nav>
     <main id="main" class="main" tabindex="-1">
-      <div class="breadcrumb" id="path-location" aria-live="polite">ENEM Intelligence / Início</div>
+      <div class="breadcrumb" id="path-location" aria-live="polite">VYZO ACADEMY / Início</div>
       <div id="alert-slot" aria-live="polite"></div>
       <section id="view-home" class="view"></section>
       <section id="view-profile" class="view hidden"></section>

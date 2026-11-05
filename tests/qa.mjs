@@ -52,3 +52,13 @@ assert(v5mentor.includes('Salvar e sortear'),'Troca de tema de redação sem pro
 assert(!v5mentor.includes('m.studyMinutes+=25'),'Tempo fictício registrado como estudo');
 assert(v5css.includes('body.exam-map-open .q-sidebar'),'Mapa de prova mobile ausente');
 console.log('PASS: recursos V5, proteção de rascunhos, estrutura responsiva e compatibilidade com versões anteriores.');
+
+// QA da nova marca e compatibilidade dos dados existentes.
+const brandManifest=JSON.parse(read('manifest.webmanifest'));
+assert(brandManifest.name.startsWith('VYZO ACADEMY'),'Marca PWA antiga');
+assert(html.includes('VYZO <em>ACADEMY</em>'),'Logo visual antiga');
+assert(html.includes('VYZO ACADEMY /'),'Breadcrumb antigo');
+assert(app.includes("const STORE='enem-intelligence-v2', OLD='enem-intelligence-v1'"),'Chaves de dados alteradas');
+assert(app.includes("'enem-intelligence-recovery-'"),'Rotina de recuperação alterada');
+assert(html.includes('assets/vyzo-academy.svg'),'Favicon da marca ausente');
+console.log('PASS: identidade VYZO ACADEMY e compatibilidade legada');

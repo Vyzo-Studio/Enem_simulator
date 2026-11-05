@@ -1,4 +1,4 @@
-# ENEM INTELLIGENCE — Universal Exam Mentor v3 (incremental)
+# VYZO ACADEMY — Universal Exam Mentor v3 (incremental)
 
 Plataforma educativa independente, executada no navegador, hospedável no GitHub Pages. A evolução v3 **não reconstrói o sistema v2**: mantém o banco atual, o motor de simulados, os dados já salvos, a correção, a redação e o recurso de recuperar respostas antigas.
 
@@ -54,7 +54,7 @@ Há testes de navegação com Chromium automatizado durante o desenvolvimento; v
 - Site previsto: https://vyzo-studio.github.io/Enem_simulator/
 - Provas oficiais do Inep: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
 
-**ENEM INTELLIGENCE:** mais do que simulados, um acompanhamento didático verificável — com limitações identificadas.
+**VYZO ACADEMY:** mais do que simulados, um acompanhamento didático verificável — com limitações identificadas.
 
 
 ## V4 — Simulados de 10 a 100 questões inéditas (04/11/2026)
@@ -75,7 +75,7 @@ O conteúdo adicional é mantido em `src/extra_questions.js`, integrado pelo `sc
 Na configuração, escolha **Cronômetro crescente** (começa em zero, mede o tempo decorrido e não finaliza a prova automaticamente) ou **Contagem regressiva** (prazo de 1 a 360 minutos com correção automática ao chegar a zero). Quando o prazo termina, as alternativas já marcadas são preservadas e as não respondidas permanecem em branco. Se a prova for retomada depois do término do prazo, a finalização ocorre imediatamente. Dados antigos com o campo `timed` continuam compatíveis.
 
 
-## ENEM Intelligence V5 — reformulação visual e navegação
+## VYZO ACADEMY V5 — reformulação visual e navegação
 
 A V5 reorganiza a interface preservando as funções existentes e a chave de armazenamento `enem-intelligence-v2`. Foi mantido o banco de 208 questões autorais e 72 questões antigas para recuperação.
 
@@ -105,3 +105,12 @@ A V5 reorganiza a interface preservando as funções existentes e a chave de arm
 - Testes Chromium automatizados no fluxo de qualidade.
 
 **Limitações:** Sem IA conversacional, correção de redação por IA, contas, sincronização em nuvem ou cálculo TRI oficial. O banco necessita revisão editorial contínua.
+
+
+## Nova identidade VYZO ACADEMY
+
+O nome exibido no site, nas páginas, nos metadados, no manifesto e nos novos backups foi atualizado para **VYZO ACADEMY**. O projeto continua preparando estudantes para ENEM, vestibulares, concursos e outras avaliações.
+
+**Dados preservados:** as chaves internas `enem-intelligence-v2` e `enem-intelligence-v1` não foram renomeadas, para manter as respostas, redações e o histórico existentes.
+
+**Renomeação administrativa:** a URL do repositório continua https://github.com/Vyzo-Studio/Enem_simulator até o proprietário alterar `Enem_simulator` para `Vyzo_Academy` em Settings → General → Repository name. Após isso, confira a URL do GitHub Pages e o cache do aplicativo instalável. Não divulgar a URL nova antes da confirmação.

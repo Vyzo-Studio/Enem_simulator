@@ -42,7 +42,7 @@
 /* Contagem regressiva: atenção visual apenas nos cinco minutos finais */
 #exam-timer.timer-low{color:#b91c1c;background:#fff1f2;border-color:#fda4af;font-weight:700}
 [data-theme="dark"] #exam-timer.timer-low{color:#fecaca;background:#641b2b;border-color:#fb7185}
-/* ENEM Intelligence V5: sistema visual renovado, sem dependências externas. */
+/* VYZO ACADEMY: sistema visual renovado, sem dependências externas. */
 :root{--bg:#f3f6fb;--card:#fff;--wash:#f5f8ff;--text:#162841;--muted:#596c84;--border:#dce5f1;--navy:#0a1b37;--blue:#285de3;--accent:#ffbf64;--radius:17px;--shadow:0 9px 32px #162d5120}
 [data-theme=dark]{--bg:#0b1424;--card:#132239;--wash:#1b2e4c;--text:#f0f5ff;--muted:#b3c3d9;--border:#314663;--blue:#8facff;--shadow:0 12px 40px #0002}
 html{scroll-padding-top:84px}body{font-size:16px;overflow-x:clip}button,input,textarea,select{font-family:inherit}button{touch-action:manipulation}button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:3px}

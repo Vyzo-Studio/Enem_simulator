@@ -81,7 +81,8 @@ with sync_playwright() as p:
         page.once('dialog',lambda d:d.accept())
         page.get_by_role('button',name='Finalizar avaliação').click()
         expect(page.get_by_text('Seu diagnóstico está pronto')).to_be_visible()
-        assert page.locator('table.v9-table').count()==2
+        expect(page.get_by_text('Desempenho por área')).to_be_visible()
+        assert page.locator('table.v9-table').count()>=3
         page.get_by_role('button',name='VER MEU PLANO PERSONALIZADO').click()
         expect(page.get_by_text('Plano bloqueado: diagnóstico inicial não concluído.')).to_have_count(1)
         assert page.locator('.v9-task').count()>0

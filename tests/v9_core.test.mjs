@@ -1,3 +1,4 @@
+import {isSupportedVisual} from '../academy/v11-composer.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Script,createContext} from 'node:vm';
@@ -10,7 +11,7 @@ const enem={id:'a',type:'ENEM',name:'ENEM 2026',subjects:['Matemática','Naturez
 const contest={id:'b',type:'Concurso público',name:'Banco',subjects:['Português'],priority:'medium',status:'preparing',provisional:false};
 const q=sampleDiagnostic(bank,enem,20);
 assert.equal(q.length,20);assert.equal(new Set(q.map(x=>x.id)).size,20);
-assert(!q.some(x=>x.visual));
+assert(q.every(x=>!x.visual||isSupportedVisual(x.visual)),'Gráficos válidos não podem ser excluídos do diagnóstico');
 assert.equal(suitableQuestions(bank,contest).length,0,'Não inventar itens específicos de concursos');
 assert(suitableQuestions(bank,{...contest,provisional:true}).length>=10);
 const a={id:'d1',goalId:'a',status:'in_progress',kind:'initial',ids:q.map(x=>x.id),answers:{},startedAt:Date.now()};

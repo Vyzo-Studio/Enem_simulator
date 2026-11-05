@@ -169,7 +169,7 @@ function enhance(original){
  input.addEventListener('input',()=>{active=0;renderSuggestions();});
  input.addEventListener('focus',renderSuggestions);
  input.addEventListener('keydown',ev=>{
-   if(ev.key==='Escape'){close();return;}
+   if(ev.key==='Escape'){ev.preventDefault();close();return;}
    if(ev.key==='Backspace'&&!input.value&&selected.length){ev.preventDefault();selected.pop();sync();return;}
    if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){
      ev.preventDefault();if(!open)renderSuggestions();
@@ -188,7 +188,7 @@ function enhance(original){
  drawChips();
 }
 let queued=false;
-function scan(){queued=false;document.querySelectorAll('input[name="subjects"],input[name^="subjects_"],select#cfg-subject').forEach(enhance);}
+function scan(){queued=false;document.querySelectorAll('input[name="subjects"],input[name^="subjects_"],select#cfg-subject,select#v13-subject').forEach(enhance);}
 function schedule(){if(queued)return;queued=true;queueMicrotask(scan);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{
  scan();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});

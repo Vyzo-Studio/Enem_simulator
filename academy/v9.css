@@ -29,3 +29,18 @@
 
 .v9-form,.v10-research,.v10-manual,.v10-search-row{min-width:0;max-width:100%}
 .v10-search-row input{width:100%;min-width:0}
+
+/* V13 — gráficos e tabelas recuperados no diagnóstico e no gabarito */
+.v11-figure{margin:16px 0;padding:12px;border:1px solid var(--border,#c4d5ea);border-radius:14px;background:#f7fbff;color:#1b2f4b;max-width:100%;overflow-x:auto}
+.v11-figure svg{display:block;width:100%;height:auto;max-width:700px;margin:0 auto;min-width:0}
+.v11-figure figcaption{text-align:center;font-size:.8rem;line-height:1.5;color:#3e526d;margin:7px 0 2px}
+.v11-figure table{border-collapse:collapse;min-width:100%;width:max-content;max-width:100%;font-size:.9rem}
+.v11-figure th,.v11-figure td{border:1px solid #bac7d7;padding:8px 11px;text-align:left}
+.v11-figure .figure-data{margin-top:9px}.v11-figure .figure-data summary{cursor:pointer;font-size:.85rem}
+.v13-composition{margin:17px 0;padding:15px;border:1px solid #b4cbef;border-radius:12px;background:#eef5ff;color:#1e395e}
+.v13-composition h3{margin:0 0 7px}.v13-composition p{color:inherit}.v13-quotas{display:flex;gap:8px;flex-wrap:wrap}
+.v13-quotas span{background:#fff;border:1px solid #bad0ea;border-radius:10px;padding:6px 9px;font-size:.88rem}
+body[data-theme=dark] .v13-composition{background:#182f4c;color:#e9f3ff;border-color:#46658b}
+body[data-theme=dark] .v13-quotas span{background:#1e3b5b;color:#e6f2ff;border-color:#536d90}
+body[data-theme=dark] .v11-figure{background:#ecf4ff;color:#1e375b}
+@media(max-width:390px){.v11-figure{padding:7px}.v11-figure table{font-size:.8rem}.v13-quotas span{font-size:.78rem}}

@@ -1,6 +1,7 @@
 /** VYZO ACADEMY V9 — avaliação inicial, cobertura curricular e agenda multi-provas. */
 import {allocateDaily,validMinutes} from './scheduler.mjs';
 import {evaluateDiagnostic} from './diagnostics.mjs';
+import {composeExam,isSupportedVisual} from './v11-composer.mjs';
 export const EXAM_TYPES=['ENEM','Vestibular','Concurso público','Concurso militar','Certificação profissional','Prova escolar','Outra prova'];
 export const AREAS=['Linguagens','Humanas','Natureza','Matemática'];
 export const WEEKDAYS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
@@ -10,35 +11,34 @@ export const isEnem=goal=>goal.type==='ENEM';
 export const hasEnoughEvidence=a=>a?.status==='completed'&&a.report?.answered>=Math.max(3,Math.ceil(a.ids.length*.3));
 export const isGoalEvaluated=(goal,assessments)=>assessments.some(a=>a.goalId===goal.id&&a.kind==='initial'&&hasEnoughEvidence(a));
 export function suitableQuestions(bank,goal,exclude=[]){
- if(!Array.isArray(bank))return [];
- if(!isEnem(goal)&&!goal.provisional) return [];
- const seen=new Set(exclude),valid=bank.filter(q=>q&&q.id&&!seen.has(q.id)&&q.options?.length===5&&Number.isInteger(q.answer)&&q.answer>=0&&q.answer<=4&&q.context&&q.stem&&q.explanation&&!q.visual);
+ if(!Array.isArray(bank)||!goal)return [];
+ if(!isEnem(goal)&&!goal.provisional)return [];
+ const seen=new Set(exclude),language=goal.foreignLanguage==='Espanhol'?'Espanhol':'Inglês';
+ const valid=bank.filter(q=>q&&typeof q.id==='string'&&!seen.has(q.id)&&
+  q.options?.length===5&&new Set(q.options).size===5&&
+  Number.isInteger(q.answer)&&q.answer>=0&&q.answer<=4&&
+  q.context&&q.stem&&q.explanation&&isSupportedVisual(q.visual)&&
+  (!isEnem(goal)||!['Inglês','Espanhol'].includes(q.subject)||q.subject===language));
  const subjects=(goal.subjects||[]).map(s=>String(s).trim()).filter(Boolean);
  if(isEnem(goal)){
-   if(!subjects.length || subjects.some(s=>canonical(s)==='todas'))return valid;
+   if(!subjects.length||subjects.some(s=>canonical(s)==='todas'))return valid;
    return valid.filter(q=>subjects.some(s=>contain(q.area,s)||contain(q.subject,s)));
  }
- // Uma prova sem banco específico pode utilizar somente habilidades gerais, com consentimento explícito.
- // Nunca descrever estas perguntas como itens oficiais, nem como específicas daquela banca.
  if(!subjects.length)return valid;
- const matched=valid.filter(q=>subjects.some(s=>contain(q.area,s)||contain(q.subject,s)));
- return matched.length?matched:valid;
+ const matches=valid.filter(q=>subjects.some(s=>contain(q.area,s)||contain(q.subject,s)));
+ return matches.length?matches:valid;
 }
-export function sampleDiagnostic(bank,goal,quantity,excluded=[]){
+export function sampleDiagnostic(bank,goal,quantity,excluded=[],options={}){
  const n=Number(quantity);
  if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha uma quantidade de 3 a 50 questões.');
  const pool=suitableQuestions(bank,goal,excluded);
- const groups=new Map();
- for(const q of pool){const key=q.topic||q.subject||'Geral';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(q);}
- const keys=[...groups.keys()].sort((a,b)=>groups.get(a).length-groups.get(b).length||a.localeCompare(b));
- const selected=[];
- while(selected.length<n){let advanced=false;for(const key of keys){const g=groups.get(key);if(g.length&&selected.length<n){selected.push(g.shift());advanced=true;}}if(!advanced)break;}
- return selected;
+ const opts={...options,language:options.language||goal.foreignLanguage||'Inglês'};
+ return composeExam(pool,goal,n,opts).questions;
 }
 export function analyzeAnswers(goal,assessment,bank){
  const results=evaluateDiagnostic(assessment.ids,assessment.answers,bank);
- const bySkill={};const index=new Map(bank.map(q=>[q.id,q]));
- for(const row of results.rows){const q=index.get(row.id),skill=q.skill||q.competence;if(!skill)continue;
+ const bySkill={},byArea={};const index=new Map(bank.map(q=>[q.id,q]));
+ for(const row of results.rows){const q=index.get(row.id),skill=q.skill||q.competence;const area=byArea[q.area]??={total:0,answered:0,correct:0,wrong:0,blank:0};area.total++;area[row.status]++;if(row.status!=='blank')area.answered++;if(!skill)continue;
  const obj=bySkill[skill]??={total:0,answered:0,correct:0,wrong:0,blank:0};obj.total++;obj[row.status]++;if(row.status!=='blank')obj.answered++;
  }
  const topics={};
@@ -47,7 +47,7 @@ export function analyzeAnswers(goal,assessment,bank){
    const label=s.answered<3?'Não avaliado suficientemente':rate<.5?'Precisa de revisão':rate<.8?'Em desenvolvimento':s.answered>=5?'Domínio demonstrado':'Em desenvolvimento';
    topics[name]={...s,accuracy:s.answered?Math.round(rate*100):null,label,evidence:s.answered<3?'Amostra insuficiente':s.answered<5?'Evidência limitada':'Evidência moderada'};
  }
- return {...results,bySkill,topics,examName:goal.name,kind:assessment.kind,measuredAt:Date.now()};
+ return {...results,bySkill,byArea,topics,examName:goal.name,kind:assessment.kind,measuredAt:Date.now()};
 }
 export function topicRecommendations(goal,report,bank){
  if(!report) return [];

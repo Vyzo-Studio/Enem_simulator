@@ -66,7 +66,7 @@ function dedupe(list){
  return selected;
 }
 function examType(original){
- const form=original.closest('form'),scope=original.closest('.card')||original.closest('section')||form;
+ const form=original.closest('form'),scope=original.closest('fieldset')||original.closest('.card')||original.closest('section')||form;
  const fromSelect=form?.querySelector('select[name="exam_type"]');
  const cardTitle=scope?.querySelector('h3')?.textContent||'';
  const fromInput=scope?.querySelector('input[name^="name_"]')?.value||form?.querySelector('input[name="exam_name"]')?.value||'';

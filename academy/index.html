@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#101d36">
+  <meta name="description" content="VYZO ACADEMY: sua jornada de estudos personalizada para ENEM, vestibulares, concursos e outras provas.">
+  <title>VYZO ACADEMY — Minha Jornada V8</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/vyzo-academy.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script src="../src/questions.js" defer></script>
+  <script src="../src/extra_questions.js" defer></script>
+  <script src="../src/advanced_questions.js" defer></script>
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="VYZO ACADEMY — Início"><span class="monogram" aria-hidden="true">V<span>·</span></span><span class="brand-copy"><b>VYZO ACADEMY</b><small>Seu percurso. Seus objetivos.</small></span></a>
+    <span class="top-status" id="cloud-status" role="status" aria-live="polite">Verificando conexão...</span>
+    <button id="mobile-menu" class="icon-button" type="button" aria-expanded="false" aria-controls="app-nav">☰ <span class="sr-only">Menu</span></button>
+  </header>
+  <div class="shell" id="shell">
+    <nav id="app-nav" class="sidebar" aria-label="Navegação da plataforma" hidden>
+      <div class="nav-label">SUA JORNADA</div>
+      <button data-page="home" class="nav-link" type="button">⌂ <span>Visão geral</span></button>
+      <button data-page="goals" class="nav-link" type="button">▣ <span>Minhas provas</span></button>
+      <button data-page="calendar" class="nav-link" type="button">▦ <span>Meu calendário</span></button>
+      <button data-page="diagnostics" class="nav-link" type="button">◎ <span>Diagnósticos</span></button>
+      <button data-page="essay" class="nav-link" type="button">✎ <span>Redações</span></button>
+      <div class="nav-label">CONTA E APOIO</div>
+      <button data-page="account" class="nav-link" type="button">◉ <span>Minha conta</span></button>
+      <a class="nav-anchor" href="../index.html" target="_blank" rel="noopener">↗ <span>Simulador clássico</span></a>
+      <p class="sidebar-note">Dados privados protegidos pelo Supabase Auth e por políticas de acesso no banco. Exporte seus materiais importantes.</p>
+    </nav>
+    <main id="conteudo" class="content" tabindex="-1">
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="main-view" aria-live="off"><div class="boot"><span class="spinner"></span> Inicializando VYZO ACADEMY...</div></div>
+      <footer class="footer">VYZO ACADEMY · Questões autorais, não oficiais do Inep · Os diagnósticos não produzem notas TRI.</footer>
+    </main>
+  </div>
+  <div class="bottom-nav" id="mobile-nav" hidden>
+    <button type="button" data-page="home">⌂ <span>Início</span></button>
+    <button type="button" data-page="goals">▣ <span>Provas</span></button>
+    <button type="button" data-page="calendar">▦ <span>Agenda</span></button>
+    <button type="button" data-page="diagnostics">◎ <span>Diagnóstico</span></button>
+    <button type="button" data-page="account">☻ <span>Conta</span></button>
+  </div>
+</body>
+</html>

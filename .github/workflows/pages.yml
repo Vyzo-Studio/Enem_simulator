@@ -1,7 +1,7 @@
 name: Quality checks
 on:
   push:
-    branches: [main]
+    branches: [main, v12-auth-gateway-preproduction]
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,3 +48,8 @@ jobs:
         run: python3 tests/v10_search_browser.py
       - name: Check Edge Function JavaScript syntax
         run: node --check --input-type=module < supabase/functions/academy-exam-research/index.ts
+
+      - name: Verify V12 authentication isolation and legacy recovery
+        run: node tests/v12_auth.test.mjs
+      - name: Browser V12 secure-entry regression
+        run: python3 tests/v12_browser.py

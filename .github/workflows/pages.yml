@@ -26,3 +26,9 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Browser regression
         run: python3 tests/v6_browser.py
+      - name: Validate V8 scheduler, diagnostics and RLS schema
+        run: node tests/v8_core.test.mjs
+      - name: Check V8 deployment guardrails
+        run: python3 tests/v8_integration_check.py
+      - name: Browser regression V8 (simulated backend)
+        run: python3 tests/browser_v8.py

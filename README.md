@@ -114,3 +114,12 @@ O nome exibido no site, nas páginas, nos metadados, no manifesto e nos novos ba
 **Dados preservados:** as chaves internas `enem-intelligence-v2` e `enem-intelligence-v1` não foram renomeadas, para manter as respostas, redações e o histórico existentes.
 
 **Renomeação administrativa:** a URL do repositório continua https://github.com/Vyzo-Studio/Enem_simulator até o proprietário alterar `Enem_simulator` para `Vyzo_Academy` em Settings → General → Repository name. Após isso, confira a URL do GitHub Pages e o cache do aplicativo instalável. Não divulgar a URL nova antes da confirmação.
+
+
+## VYZO ACADEMY V8 — nova jornada (configuração pendente)
+
+A nova arquitetura encontra-se no [portal V8](./academy/) em módulo independente, preservando o simulador anterior. **O login só será liberado após provisionar um Supabase dedicado** (com confirmação de e-mail e RLS) e testar as políticas entre dois usuários reais. A V8 não finge cadastro nem armazenamento em nuvem enquanto a configuração não está pronta.
+
+- [Instruções de ativação](./academy/DEPLOYMENT.md)
+- [Migração SQL segura](./supabase/migrations/202611050001_vyzo_academy_v8.sql)
+- [Relatório de testes](./V8_RELEASE_NOTES.md)

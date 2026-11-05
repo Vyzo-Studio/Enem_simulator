@@ -2,15 +2,15 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Script,createContext} from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const html=read('index.html'),qs=read('src/questions.js'),extra=read('src/extra_questions.js'),old=read('src/legacy.js'),app=read('src/app.js'),mentor=read('src/mentor.js'),styles=read('src/styles.css');
-for(const [file,source] of [['questions.js',qs],['extra_questions.js',extra],['legacy.js',old],['app.js',app],['mentor.js',mentor]]){
+const html=read('index.html'),qs=read('src/questions.js'),extra=read('src/extra_questions.js'),advanced=read('src/advanced_questions.js'),old=read('src/legacy.js'),app=read('src/app.js'),mentor=read('src/mentor.js'),styles=read('src/styles.css');
+for(const [file,source] of [['questions.js',qs],['extra_questions.js',extra],['advanced_questions.js',advanced],['legacy.js',old],['app.js',app],['mentor.js',mentor]]){
  new Script(source,{filename:file});
  assert(html.includes('<script data-source="'+file+'">\n'+source+'\n</script>'),'Bundle desatualizado: '+file);
 }
 assert(html.includes('<style id="bundled-styles">'+styles+'</style>'),'CSS desatualizado');
-const ctx=createContext({window:{}});new Script(qs).runInContext(ctx);new Script(extra).runInContext(ctx);
+const ctx=createContext({window:{}});new Script(qs).runInContext(ctx);new Script(extra).runInContext(ctx);new Script(advanced).runInContext(ctx);
 const bank=ctx.window.QUESTION_BANK;
-assert.equal(bank.length,208);let areas=new Map(),ids=new Set(),visual=0;
+assert.equal(bank.length,224);let areas=new Map(),ids=new Set(),visual=0;
 for(let q of bank){
  assert(!ids.has(q.id),'ID duplicado '+q.id);ids.add(q.id);
  assert(q.context?.length>50,'Contexto muito curto '+q.id);
@@ -23,7 +23,7 @@ for(let q of bank){
  areas.set(q.area,(areas.get(q.area)||0)+1);
 }
 assert(visual>=18,'Gráficos insuficientes');
-for(const a of ['Linguagens','Humanas','Natureza'])assert.equal(areas.get(a),48,'Distribuição '+a);assert.equal(areas.get('Matemática'),64);
+for(const a of ['Linguagens','Humanas','Natureza'])assert.equal(areas.get(a),52,'Distribuição '+a);assert.equal(areas.get('Matemática'),68);
 const oldctx=createContext({window:{}});new Script(old).runInContext(oldctx);assert.equal(oldctx.window.LEGACY_BANK.length,72,'Banco v1 alterado');
 for(const token of ['function persist()','function restore()','function finishPrompt()','function finishExam(','function exportBackup()','function recoverLegacy()','function renderResult()','function renderEssay()','function renderPlanner()','window.ENEM_BRIDGE','enem-intelligence-v2','enem-intelligence-v1'])assert(app.includes(token),'Quebra de compatibilidade: '+token);
 for(const token of ['function renderProfile()','function renderExplorer()','function renderLearn()','function renderRevisions()','function renderWriting()','function buildPlan(','function decorateResult()','function availableForPlan()','schema']){
@@ -37,7 +37,7 @@ assert(!/sk-[a-z0-9]{20,}/i.test(html),'Segredo potencial inserido no site públ
 assert(app.includes('function unseenFor(')&&app.includes('seenIds')&&app.includes('const COUNTS='),'Controle de questões inéditas ausente');assert(html.includes('class="mobile-nav"'),'Navegação mobile ausente');assert(bank.filter(q=>q.difficulty==='Avançada').length>=16,'Faltam questões avançadas');
 assert(app.includes('function validateHistoryRecord(record)')&&app.includes("dialog.classList.add('hidden')")&&app.includes('data-map-filter'),'Proteções V6 ausentes');
 assert(!app.includes('.slice(0,150)'),'Histórico com descarte silencioso');
-console.log('PASS: banco 208+72, questões inéditas, seletor 10-100 e compatibilidade V3');
+console.log('PASS: banco 224+72, questões inéditas, seletor 10-100 e compatibilidade V3');
 
 assert(app.includes('id="cfg-time-mode"'),'Seleção de modos de tempo ausente');
 assert(app.includes("if(ex.timed&&remaining(ex)<=0){finishExam('tempo encerrado');return}"),'Retomada de prova com prazo expirado não tratada');

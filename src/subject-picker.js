@@ -57,7 +57,7 @@ const ENEM=['Linguagens','Humanas','Natureza','Matemática'];
 const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const key=v=>normalize(v).replace(/[\s\p{P}]+/gu,'');
 const DATA=CATALOG.map(([label,value,aliases])=>({label,value,search:normalize(label+' '+value+' '+aliases)}));
-const safe=v=>String(v||'').replace(/[<>"'&]/g,'').trim().slice(0,90);
+const safe=v=>String(v||'').replace(/[<>"'&,]/g,'').trim().slice(0,90);
 const escapeHTML=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function findByText(v){return DATA.find(o=>key(o.value)===key(v)||key(o.label)===key(v));}
 function dedupe(list){
@@ -81,6 +81,8 @@ function records(original){
  if(examType(original)==='ENEM')return {list:ENEM,label:'Áreas de referência do ENEM — não substitui a matriz oficial',kind:'suggested'};
  return {list:[],label:'Informe a prova ou escolha matérias na pesquisa. Dados de edital só são oficiais após verificação.',kind:'none'};
 }
+const openPickers=new Set();
+document.addEventListener('pointerdown',event=>{for(const entry of openPickers){if(!entry.wrap.isConnected){openPickers.delete(entry);continue;}if(!entry.wrap.contains(event.target))entry.close();}});
 function enhance(original){
  if(original.dataset.v13Ready==='yes')return;
  const single=original.tagName==='SELECT';
@@ -162,8 +164,8 @@ function enhance(original){
  function add(name){
    if(!name)return;
    if(single)selected=[name];
-   else if(selected.length<24&&!selected.some(s=>key(s)===key(name)))selected.push(name);
-   else if(selected.length>=24)info.textContent='Limite de 24 matérias por prova.';
+   else if(selected.length<20&&!selected.some(s=>key(s)===key(name)))selected.push(name);
+   else if(selected.length>=20)info.textContent='Limite de 20 matérias por prova.';
    sync();input.value='';close();input.focus();
  }
  input.addEventListener('input',()=>{active=0;renderSuggestions();});
@@ -180,7 +182,7 @@ function enhance(original){
      else if(input.value.trim()){ev.preventDefault();add(input.value.trim());}
    }
  });
- document.addEventListener('pointerdown',e=>{if(!wrap.isConnected)return;if(!wrap.contains(e.target))close();});
+ openPickers.add({wrap,close});
  selectRecommended.addEventListener('click',()=>{selected=dedupe(single?source.list.slice(0,1):[...selected,...source.list]);sync();close();});
  personalize.addEventListener('click',()=>{input.focus();renderSuggestions();});
  clear.addEventListener('click',()=>{selected=[];sync();close();input.focus();});

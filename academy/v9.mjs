@@ -100,6 +100,19 @@ function assessmentSettings(goal,kind='initial'){
   language,seed:[goal?.id,kind,assessmentCount(),chosen,language,$('#v13-area')?.value,$('#v13-subject')?.value].join(':')};
 }
 function assessmentCount(){return Number($('#exam-length')?.value==='custom'?$('#custom-length')?.value:$('#exam-length')?.value);}
+function assessmentPool(goal,kind,count,language){
+ const excluded=state.assessments.filter(a=>a.goalId===goal.id).flatMap(a=>a.ids);
+ const available=suitableQuestions(BANK,{...goal,foreignLanguage:language},excluded);
+ if(kind!=='retest')return available;
+ const initial=latestInitial(goal.id,state.assessments);
+ const weak=new Set(Object.entries(initial?.report?.topics||{})
+  .filter(([,value])=>['Precisa de revisão','Em desenvolvimento'].includes(value.label)).map(([topic])=>topic));
+ const targeted=available.filter(q=>weak.has(q.topic));
+ if(targeted.length>=count)return targeted;
+ const subjects=new Set(Object.keys(initial?.report?.bySubject||{}));
+ const bySubject=available.filter(q=>subjects.has(q.subject));
+ return bySubject.length>=count?bySubject:available;
+}
 function updateCompositionPreview(){
  const slot=$('#v13-composition');if(!slot)return;
  const goal=state.goals.find(g=>g.id===selectedGoal),count=assessmentCount();
@@ -111,8 +124,7 @@ function updateCompositionPreview(){
  if($('#v13-exam-mode')&&!isEnem(goal))$('#v13-exam-mode').closest('.field').hidden=true;
  if(!Number.isInteger(count)||count<3||count>50){slot.textContent='Informe de 3 a 50 questões.';if(start)start.disabled=true;return;}
  try{
-  const excluded=state.assessments.filter(a=>a.goalId===goal.id).flatMap(a=>a.ids);
-  const pool=suitableQuestions(BANK,{...goal,foreignLanguage:choices.language},excluded);
+  const pool=assessmentPool(goal,mode,count,choices.language);
   const exam=composeExam(pool,goal,count,choices),areas=exam.blueprint.areas;
   slot.innerHTML='<h3>Composição do seu simulado</h3>'+
    '<p class="v9-mini">Prévia exata. Ao iniciar, o sistema usará estas cotas e questões. Sem nota TRI.</p>'+
@@ -123,13 +135,11 @@ function updateCompositionPreview(){
  }catch(error){slot.innerHTML='<p class="v9-warn" role="alert">'+h(error.message)+'</p>';if(start)start.disabled=true;}
 }
 function startAssessment(goal,count,kind='initial',targeted=false){
- const excluded=state.assessments.filter(a=>a.goalId===goal.id).flatMap(a=>a.ids);
  const opts=assessmentSettings(goal,kind),context={...goal,foreignLanguage:opts.language};
- let pool;
- if(kind==='retest'&&targeted){const initial=latestInitial(goal.id,state.assessments),wrong=new Set(Object.entries(initial?.report?.topics||{}).filter(([,s])=>s.label==='Precisa de revisão'||s.label==='Em desenvolvimento').map(([t])=>t));const available=suitableQuestions(BANK,context,excluded);pool=available.filter(q=>wrong.has(q.topic));if(pool.length<3)pool=available.filter(q=>Object.keys(initial?.report?.bySubject||{}).includes(q.subject));if(pool.length<3)pool=available;}
- else pool=suitableQuestions(BANK,context,excluded);
- if(pool.length<count){message(`Existem somente ${pool.length} questões inéditas adequadas. Selecione uma quantidade menor ou aguarde novas questões.`, 'error');return;}
- const built=composeExam(pool,context,count,opts),selected=built.questions;if(selected.length<count)throw Error('Não há questões suficientes para a avaliação escolhida.');
+ const pool=assessmentPool(goal,kind,count,opts.language);
+ if(pool.length<count){message('Há somente '+pool.length+' questões inéditas adequadas. Escolha uma quantidade menor.','error');return;}
+ const built=composeExam(pool,context,count,opts);
+ const selected=built.questions;
  const a={id:uid(),goalId:goal.id,kind,status:'in_progress',ids:selected.map(q=>q.id),answers:{},flagged:[],blueprint:built.blueprint,startedAt:Date.now(),updatedAt:Date.now(),report:null};
  state.assessments.push(a);selectedAssessment=a.id;questionPosition=0;page='exam';if(persist())render();
 }

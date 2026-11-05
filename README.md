@@ -148,3 +148,14 @@ Os alunos podem salvar e retomar a avaliação, ver explicações, estudar exemp
 ### Primeiro acesso ao projeto
 
 O aluno novo, sem armazenamento anterior da V1/V2, é encaminhado da raiz do site para `/academy/v9.html`. O usuário com dados antigos continua no simulador original. Para abrir o simulador original sem dados locais, use `index.html?classic=1`. Essa rota não converte automaticamente o histórico anterior.
+
+
+## V10 — Busca inteligente de provas
+
+A busca por nome está integrada ao primeiro passo do questionário em [academy/v9.html](./academy/v9.html). O aluno pode digitar o nome, selecionar entre opções com links de fontes oficiais quando o servidor estiver configurado, confirmar os detalhes e continuar para o diagnóstico V9. O plano continua bloqueado até o resultado de cada diagnóstico.
+
+**Estado real:** o projeto Supabase exclusivo e a função com API externa **não estão implantados**. A interface informa a indisponibilidade da pesquisa real e oferece configuração manual funcional, sem resultados simulados apresentados como verdadeiros. O backend e a migration estão somente no código, aguardando autorização de custos e implantação segura.
+
+- [Notas completas V10](./V10_RELEASE_NOTES.md)
+- [Checklist de implantação V10](./academy/V10_DEPLOYMENT.md)
+- [Função de pesquisa com web_search](./supabase/functions/academy-exam-research/index.ts)

@@ -39,3 +39,12 @@ jobs:
         run: node tests/v9_core.test.mjs
       - name: Browser regression V9 (local storage simulated)
         run: python3 tests/v9_browser.py
+
+      - name: Verify V10 research source validation
+        run: node tests/v10_research.test.mjs
+      - name: Browser regression V10 research and manual fallback
+        run: python3 tests/v10_browser.py
+      - name: Browser regression V10 candidate selection (simulated service)
+        run: python3 tests/v10_search_browser.py
+      - name: Check Edge Function JavaScript syntax
+        run: node --check --input-type=module < supabase/functions/academy-exam-research/index.ts

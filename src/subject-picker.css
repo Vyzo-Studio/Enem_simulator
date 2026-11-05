@@ -1,0 +1,32 @@
+/* VYZO ACADEMY V13 — auto completar matérias sem comprometer entradas legadas */
+.v13-subjects{position:relative;min-width:0;max-width:100%;display:grid;gap:8px;color:var(--text,#14243b);font:inherit}
+.v13-subjects .v13-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;padding:0!important;border:0!important;clip-path:inset(50%)!important}
+.v13-chips{display:flex;gap:7px;flex-wrap:wrap;min-width:0}
+.v13-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;font-weight:600;font-size:.86rem;line-height:1.3;padding:7px 7px 7px 10px;border:1px solid #bfd4f5;border-radius:999px;background:#eef5ff;color:#15345e;overflow-wrap:anywhere}
+.v13-remove{width:25px;height:25px;min-width:25px;display:grid;place-items:center;border:0;border-radius:50%;background:#d4e5ff;color:#203d6a;cursor:pointer;font:600 19px/1 sans-serif}
+.v13-remove:hover,.v13-remove:focus-visible{background:#bed8ff;outline:2px solid #295ac7;outline-offset:1px}
+.v13-entry{position:relative;min-width:0}
+.v13-search{box-sizing:border-box;width:100%;max-width:100%;min-height:46px;line-height:1.4;padding:10px 12px;border:1px solid #96a9c3;border-radius:11px;background:#fff;color:#152b47;font-size:1rem;appearance:none}
+.v13-search:focus-visible{outline:3px solid #80afff;outline-offset:1px;border-color:#285fce}
+.v13-list{position:relative;max-height:280px;overflow:auto;background:#fff;color:#172e50;border:1px solid #a8bad0;border-radius:12px;box-shadow:0 7px 24px #0c23451c;z-index:30;padding:4px}
+.v13-list[hidden]{display:none}
+.v13-option{display:block;width:100%;min-height:44px;text-align:left;cursor:pointer;padding:10px 12px;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;line-height:1.3}
+.v13-option:hover,.v13-option.is-active,.v13-option:focus-visible{background:#e6f0ff;outline:2px solid transparent}
+.v13-tools{display:flex;gap:5px 12px;flex-wrap:wrap}
+.v13-action{padding:6px 2px;border:0;border-bottom:1px solid transparent;background:transparent;color:#235cba;cursor:pointer;font:600 .82rem/1.3 inherit}
+.v13-action:hover,.v13-action:focus-visible{text-decoration:underline;outline-offset:2px}
+.v13-action:disabled{opacity:.4;cursor:default}
+.v13-help{margin:0;font-size:.82rem;line-height:1.45;color:var(--muted,#5b6a7d);overflow-wrap:anywhere}
+@media (prefers-color-scheme:dark){
+ body:not([data-theme=light]) .v13-search,body:not([data-theme=light]) .v13-list{background:#142337;color:#f0f5ff;border-color:#506581}
+ body:not([data-theme=light]) .v13-chip{background:#1c3652;color:#eaf5ff;border-color:#4c6990}
+ body:not([data-theme=light]) .v13-remove{background:#37516e;color:#f4f8ff}
+ body:not([data-theme=light]) .v13-option:hover,body:not([data-theme=light]) .v13-option.is-active{background:#294769}
+ body:not([data-theme=light]) .v13-action{color:#a9cfff}
+}
+body[data-theme=dark] .v13-search,body[data-theme=dark] .v13-list{background:#142337;color:#f0f5ff;border-color:#506581}
+body[data-theme=dark] .v13-chip{background:#1c3652;color:#eaf5ff;border-color:#4c6990}
+body[data-theme=dark] .v13-remove{background:#37516e;color:#f4f8ff}
+body[data-theme=dark] .v13-option:hover,body[data-theme=dark] .v13-option.is-active{background:#294769}
+body[data-theme=dark] .v13-action{color:#a9cfff}
+@media(max-width:390px){.v13-tools{gap:4px 10px}.v13-action{font-size:.78rem}.v13-chip{font-size:.8rem}}

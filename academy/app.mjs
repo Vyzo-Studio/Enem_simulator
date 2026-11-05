@@ -170,7 +170,7 @@ function renderOnboarding(){
  ${field('Instituição ou banca (se souber)','institution_'+i,'text')}
  ${field('Curso, cargo ou objetivo','objective_'+i,'text')}
  ${field('Data da prova (opcional)','date_'+i,'date')}
- ${field('Disciplinas, separadas por vírgula','subjects_'+i,'text',t==='ENEM'?'Português,Matemática,História,Geografia,Biologia,Química,Física,Redação':'')}
+ ${field('Quais matérias você deseja estudar?','subjects_'+i,'text',t==='ENEM'?'Português,Matemática,História,Geografia,Biologia,Química,Física,Redação':'')}
  <div class="field"><label for="prior-${i}">Prioridade</label><select name="priority_${i}" id="prior-${i}">${options(['medium','high','low'],'medium')}</select></div></div>`).join('')}
  <div class="row"><button type="button" class="btn secondary" data-action="onboard-back">Voltar</button><button class="btn" type="submit">Salvar minhas provas</button></div></form>`;}
  else {inner=`<form class="form" id="form-onboard-final"><h3>Como você prefere aprender?</h3><div class="checkbox-set">${['Videoaulas','Leitura e resumos','Exemplos resolvidos','Questões','Flashcards','Aprendizagem mista'].map(x=>`<label><input type="checkbox" name="pref" value="${esc(x)}">${esc(x)}</label>`).join('')}</div><h3>Quais áreas você acredita serem mais difíceis?</h3><div class="checkbox-set">${['Matemática','Interpretação','Redação','Memorização','Raciocínio lógico','Gestão do tempo'].map(x=>`<label><input type="checkbox" name="difficulty" value="${esc(x)}">${esc(x)}</label>`).join('')}</div><p class="small muted">Essas respostas são percepções pessoais. O diagnóstico será necessário para medir desempenho.</p><button type="submit" class="btn">Concluir e iniciar diagnósticos</button></form>`;}
@@ -224,7 +224,7 @@ function goalForm(g=null){return `<form class="card form" id="form-goal" ${g?`da
  <div class="field-row">${field('Cargo, curso ou objetivo','objective','text',g?.objective||'')}${field('Edição','edition','text',g?.edition||'')}</div>
  <div class="field-row">${field('Data (deixe vazia se não divulgada)','exam_date','date',g?.exam_date||'')}
  <div class="field"><label for="goal-priority">Prioridade</label><select id="goal-priority" name="priority">${['high','medium','low'].map(x=>`<option value="${x}" ${x===(g?.priority||'medium')?'selected':''}>${priorities[x]}</option>`).join('')}</select></div></div>
- ${field('Disciplinas separadas por vírgula','subjects','text',(g?.subjects||[]).join(', '))}
+ ${field('Quais matérias você deseja estudar?','subjects','text',(g?.subjects||[]).join(', '))}
  ${field('Link oficial do edital (opcional)','official_source','url',g?.official_source||'','placeholder="https://..."')}
  <label class="small"><input type="checkbox" name="allow_provisional" ${g?.allow_provisional?'checked':''}> Aceito um diagnóstico provisório de competências gerais se não existir banco específico para minha prova.</label>
  <div class="row"><button class="btn" type="submit">${g?'Salvar alterações':'Adicionar prova'}</button><button class="btn secondary" type="button" data-action="goal-cancel">Cancelar</button></div></form>`;}

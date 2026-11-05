@@ -1,7 +1,7 @@
 name: Quality checks
 on:
   push:
-    branches: [main]
+    branches: [main, feat-v13-subject-autocomplete]
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,3 +48,6 @@ jobs:
         run: python3 tests/v10_search_browser.py
       - name: Check Edge Function JavaScript syntax
         run: node --check --input-type=module < supabase/functions/academy-exam-research/index.ts
+
+      - name: V13 searchable subjects browser regression
+        run: python3 tests/v13_subjects_browser.py

@@ -57,7 +57,7 @@ function disableUI(reason){
   <div class="divider"></div>
   <h2>Quer experimentar um questionário agora?</h2>
   <p class="muted">A demonstração pública permite responder a 10 questões autorais e ver a correção, sem criar conta. Ela não salva respostas nem substitui o diagnóstico individual.</p>
-  <div class="row"><a class="btn" href="./demo.html">Responder 10 questões de demonstração</a><a class="btn secondary" href="../index.html">Simulados completos existentes</a></div>
+  <div class="row"><a class="btn" href="./v9.html">Começar questionário, diagnóstico e plano V9</a><a class="btn secondary" href="./demo.html">Amostra de 10 questões</a><a class="btn secondary" href="../index.html?classic=1">Simulados completos existentes</a></div>
   <p class="small muted">Quando um Supabase dedicado for configurado e testado, os formulários reais de cadastro e os diagnósticos por prova serão liberados automaticamente. Nenhuma senha será recebida ou armazenada nesta prévia.</p>
  </div></section>`);
 }

@@ -132,3 +132,19 @@ A nova arquitetura encontra-se no [portal V8](./academy/) em módulo independent
 - Questionário público demonstrativo: https://vyzo-studio.github.io/Vyzo_Academy/academy/demo.html
 
 O questionário demonstrativo contém 10 questões autorais, correção comentada e **não salva respostas**. Na ausência do Supabase dedicado, o portal apresenta uma **prévia desativada** do cadastro, nunca um formulário de senhas funcional. Após configurar uma instância exclusiva e testar o isolamento entre usuários, o portal habilita os formulários reais.
+
+
+## V9 — questionário → diagnóstico → plano baseado em desempenho
+
+**Início imediato no modo local:** https://vyzo-studio.github.io/Vyzo_Academy/academy/v9.html
+
+O aluno escolhe a(s) prova(s), informa matérias, minutos e dias disponíveis, nível autodeclarado e dificuldades. Depois faz um diagnóstico inicial de 10/20/30 ou 3–50 questões (dependendo da disponibilidade). A correção separa acertos, erros e itens em branco; avalia matérias e assuntos, destacando a baixa confiança com poucas respostas. O calendário é criado **somente após o diagnóstico individual de cada prova**, inclui cobertura de tópicos ainda não avaliados e respeita um orçamento global de tempo diário.
+
+Os alunos podem salvar e retomar a avaliação, ver explicações, estudar exemplos existentes, concluir tarefas, retestar com novas questões, ver tendências descritivas e exportar/importar backup V9. Quando uma segunda prova é diagnosticada, atividades futuras pendentes são supersedidas com histórico preservado e o tempo é redistribuído.
+
+**Importante:** este fluxo está em **modo local**, sem conta e sem sincronização. Os dados ficam em `localStorage` na chave `vyzo-academy-v9-guest-1`, independente de `enem-intelligence-v2`. O aluno deve evitar computadores compartilhados e manter backups. O portal Supabase V8 permanece separado e indisponível até que o backend dedicado seja configurado, sua migração aplicada e as políticas RLS verificadas entre usuários reais. Não existe IA externa nem ranking oficial, e avaliações provisórias de concursos não são declaradas específicas de uma banca.
+
+
+### Primeiro acesso ao projeto
+
+O aluno novo, sem armazenamento anterior da V1/V2, é encaminhado da raiz do site para `/academy/v9.html`. O usuário com dados antigos continua no simulador original. Para abrir o simulador original sem dados locais, use `index.html?classic=1`. Essa rota não converte automaticamente o histórico anterior.

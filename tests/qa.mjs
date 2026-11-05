@@ -62,3 +62,7 @@ assert(app.includes("const STORE='enem-intelligence-v2', OLD='enem-intelligence-
 assert(app.includes("'enem-intelligence-recovery-'"),'Rotina de recuperação alterada');
 assert(html.includes('assets/vyzo-academy.svg'),'Favicon da marca ausente');
 console.log('PASS: identidade VYZO ACADEMY e compatibilidade legada');
+
+assert(html.includes("location.replace('academy/v9.html')")&&html.includes("get('classic')==='1'"),'Novo estudante sem direcionamento seguro ao diagnóstico V9');
+assert(read('src/template.html').includes('academy/v9.html'),'A V9 não está acessível pelo menu');
+console.log('PASS: entrada V9 para novos estudantes com acesso ao simulador clássico');

@@ -97,3 +97,17 @@ PASSARAM em Chromium: simulado, restauração de respostas com armazenamento sim
 - Chaves de armazenamento v1/v2, IDs de questões e histórico não alterados.
 - Renomeação administrativa do repositório permanece tarefa separada.
 - Testes: reconstrução do HTML, verificação de bancos, compatibilidade legada e fluxos de navegador.
+
+
+## V9 — verificações do fluxo diagnóstico-primeiro (05/11/2026)
+
+- Banco 224 questões autorais preservado; questões com visual não renderizado são excluídas dos diagnósticos locais.
+- Formulário curto para objetivos múltiplos, identificação, matérias, dias/minutos e dificuldades subjetivas.
+- Diagnósticos por objetivo; bloqueio do plano até avaliação concluída. Questões em branco não contam como erro; evidência insuficiente não vira domínio.
+- Reprogramação sem apagar atividades históricas, respeitando os minutos diários somados.
+- Salvamento local de respostas, retomada, correção, estudo guiado com conteúdo existente, reteste com novas questões e backup JSON.
+- Testes de Node e Chromium em cinco larguras, com armazenamento simulado no ambiente; a infraestrutura Supabase real não foi configurada nem testada.
+- Scripts de regressão V8/legado mantidos no GitHub Actions.
+
+- O acesso inicial usa `academy/v9.html` quando não há dados anteriores; `index.html?classic=1` mantém uma entrada explícita ao simulador clássico.
+- Com menos de 30% de cobertura ou menos de 3 respostas, o diagnóstico não libera plano personalizado.

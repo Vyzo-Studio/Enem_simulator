@@ -16,6 +16,15 @@
   <script src="src/mentor.js" defer></script>
   <link rel="icon" type="image/svg+xml" href="assets/vyzo-academy.svg">
   <meta name="application-name" content="VYZO ACADEMY">
+  <script>
+  // O primeiro acesso começa pelo questionário; dados da versão antiga nunca são alterados.
+  (()=>{try{
+    if(new URLSearchParams(location.search).get('classic')==='1')return;
+    if(!localStorage.getItem('enem-intelligence-v2')&&!localStorage.getItem('enem-intelligence-v1'))
+      location.replace('academy/v9.html');
+  }catch(e){ /* Armazenamento indisponível: manter simulador antigo acessível. */ }})();
+  </script>
+
 </head>
 <body>
   <a class="skip" href="#main">Ir para conteúdo</a>
@@ -46,7 +55,8 @@
 <button data-nav="data" class="navitem"><svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M4 18v3h16v-3"/></svg><span class="nav-text">Backup e recuperação</span></button>      </div></details>
       <div class="side-note"><strong>Progresso protegido</strong><span>As alternativas são salvas durante a prova. Para simulados longos, baixe também um backup.</span></div>
       
-      <a class="side-link" href="academy/" aria-label="Portal V8 de estudos — configuração de contas pendente">V8 · Cadastro e diagnósticos ↗</a>
+      <a class="side-link" href="academy/v9.html" aria-label="Começar estudos: questionário, diagnóstico e plano V9">Começar estudos · Diagnóstico V9 ↗</a>
+      <a class="side-link" href="academy/" aria-label="Área de conta pessoal V8, ainda sem configuração de nuvem">Contas em nuvem · Configuração pendente ↗</a>
       <a class="side-link" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos" target="_blank" rel="noopener noreferrer">Provas oficiais do Inep ↗</a>
     </nav>
     <main id="main" class="main" tabindex="-1">

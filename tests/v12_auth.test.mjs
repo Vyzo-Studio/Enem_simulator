@@ -11,7 +11,7 @@ assert(!isVerifiedStudent({...u('a'),email_confirmed_at:null}),'Email não confi
 assert(!isVerifiedStudent({...u('a'),is_anonymous:true}),'Usuário anônimo');
 assert(!isVerifiedStudent({id:'x',email:'sem_email',email_confirmed_at:'2026-11-05'}));
 assert.equal(await getVerifiedStudent({auth:{getUser:async()=>({data:{user:null},error:null})}}),null);
-assert.equal(await getVerifiedStudent({auth:{getUser:async()=>({data:{user:u('a')},error:null})}}).id,'a');
+assert.equal((await getVerifiedStudent({auth:{getUser:async()=>({data:{user:u('a')},error:null})}})).id,'a');
 assert.equal(await getVerifiedStudent({auth:{getUser:async()=>({data:{user:u('a')},error:new Error('sessão expirada')})}}),null);
 for(const route of ['/','/index.html','/academy/','/academy/index.html','/academy/v9.html','/academy/demo.html','/academy/v12.html','/Vyzo_Academy/academy/v9.html'])
  assert(privateRoute(route),'Rota privada não listada '+route);

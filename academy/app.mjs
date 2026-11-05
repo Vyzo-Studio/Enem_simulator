@@ -41,7 +41,25 @@ function go(page){
  data.page=page;nav();render();window.scrollTo({top:0,behavior:'instant'});
 }
 function disableUI(reason){
- nav();main(`<section class="auth-shell"><div class="card stack"><div class="eyebrow">CONFIGURAÇÃO DE SEGURANÇA</div><h1>VYZO ACADEMY V8</h1><div class="callout warning">${esc(reason)}</div><p>A preparação multi-provas com contas reais requer um projeto Supabase dedicado, banco com políticas RLS e URLs autorizadas. Não é seguro usar o banco de dados de outro cliente.</p><a class="btn secondary" href="../index.html">Continuar no simulador existente</a><p class="muted small">O código do novo sistema foi preparado, mas nenhum cadastro será simulado enquanto não houver autenticação real.</p></div></section>`);
+ nav();
+ main(`<section class="auth-shell" style="max-width:750px"><div class="card stack">
+  <div class="eyebrow">VYZO ACADEMY V8 · ACESSO DOS ESTUDANTES</div>
+  <h1>Crie sua conta e organize seus estudos.</h1>
+  <p class="lede">A nova área terá login, várias provas por estudante, questionários diagnósticos e planejamento pessoal.</p>
+  <div class="callout warning" role="status"><strong>Cadastro ainda indisponível.</strong> ${esc(reason)} Os formulários abaixo são apenas uma prévia e não aceitam dados pessoais.</div>
+  <div class="auth-tabs" role="tablist" aria-label="Funcionalidades previstas para a conta"><button type="button" class="active" disabled aria-selected="true">Criar conta</button><button type="button" disabled>Entrar</button><button type="button" disabled>Esqueci a senha</button></div>
+  <form class="form" aria-label="Prévia desativada do cadastro"><fieldset disabled style="border:0;margin:0;padding:0;display:grid;gap:12px;min-width:0">
+   <div class="field"><label for="preview-name">Nome para exibição</label><input id="preview-name" type="text" placeholder="Seu nome" autocomplete="off"></div>
+   <div class="field"><label for="preview-email">E-mail</label><input id="preview-email" type="email" placeholder="voce@exemplo.com" autocomplete="off"></div>
+   <div class="field"><label for="preview-password">Senha</label><input id="preview-password" type="password" placeholder="Mínimo de 12 caracteres" autocomplete="off"></div>
+   <button type="button" class="btn" disabled>Criar minha conta — ativação pendente</button>
+  </fieldset></form>
+  <div class="divider"></div>
+  <h2>Quer experimentar um questionário agora?</h2>
+  <p class="muted">A demonstração pública permite responder a 10 questões autorais e ver a correção, sem criar conta. Ela não salva respostas nem substitui o diagnóstico individual.</p>
+  <div class="row"><a class="btn" href="./demo.html">Responder 10 questões de demonstração</a><a class="btn secondary" href="../index.html">Simulados completos existentes</a></div>
+  <p class="small muted">Quando um Supabase dedicado for configurado e testado, os formulários reais de cadastro e os diagnósticos por prova serão liberados automaticamente. Nenhuma senha será recebida ou armazenada nesta prévia.</p>
+ </div></section>`);
 }
 async function setup(){
  if(!configReady()){setStatus('Nuvem não configurada');disableUI('As credenciais públicas do projeto exclusivo ainda não foram configuradas em academy/config.js.');return;}

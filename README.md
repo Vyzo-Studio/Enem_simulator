@@ -123,3 +123,12 @@ A nova arquitetura encontra-se no [portal V8](./academy/) em módulo independent
 - [Instruções de ativação](./academy/DEPLOYMENT.md)
 - [Migração SQL segura](./supabase/migrations/202611050001_vyzo_academy_v8.sql)
 - [Relatório de testes](./V8_RELEASE_NOTES.md)
+
+
+## Acesso à V8 após renomeação do repositório
+
+- Simulador completo existente: https://vyzo-studio.github.io/Vyzo_Academy/
+- Portal de cadastro e diagnósticos: https://vyzo-studio.github.io/Vyzo_Academy/academy/
+- Questionário público demonstrativo: https://vyzo-studio.github.io/Vyzo_Academy/academy/demo.html
+
+O questionário demonstrativo contém 10 questões autorais, correção comentada e **não salva respostas**. Na ausência do Supabase dedicado, o portal apresenta uma **prévia desativada** do cadastro, nunca um formulário de senhas funcional. Após configurar uma instância exclusiva e testar o isolamento entre usuários, o portal habilita os formulários reais.

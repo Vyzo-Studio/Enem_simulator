@@ -10,7 +10,7 @@ Esta implementação é um módulo novo dentro do repositório existente, em `/a
 1. Confirmar a organização Supabase de destino e obter o orçamento do projeto, antes de criar. **Não reutilizar Haus Barber, GNG Barbearia ou Santomen.**
 2. Criar um projeto Supabase dedicado denominado `Vyzo_Academy` em região apropriada (por exemplo `sa-east-1`, conforme disponibilidade e preço confirmado).
 3. Em Auth > Providers, habilitar Email/Password e **Confirm email**, além das políticas de senhas, limitações de taxa e mecanismos antiabuso. O Supabase Auth faz hashing e recuperação; NÃO criar tabela de senha.
-4. Em Auth > URL Configuration, configurar `Site URL` como `https://vyzo-studio.github.io/Enem_simulator/academy/` e adicionar **exatamente** a URL pública do módulo em Redirect URLs. Se o repositório for renomeado, mudar URLs primeiro e testar confirmação e recuperação.
+4. Em Auth > URL Configuration, configurar `Site URL` como `https://vyzo-studio.github.io/Vyzo_Academy/academy/` e adicionar **exatamente** a URL pública do módulo em Redirect URLs. Se o repositório for renomeado, mudar URLs primeiro e testar confirmação e recuperação.
 5. Rever o conteúdo de `supabase/migrations/202611050001_vyzo_academy_v8.sql` e executar **apenas** no novo projeto dedicado. Conceder API Data apenas ao esquema público, com RLS obrigatória. Testar políticas de usuário A x B antes de liberar cadastro público.
 6. Buscar `Project URL` e **publishable key** no dashboard do projeto dedicado. Preencher apenas estes dois campos públicos em `academy/config.js`. **Nunca** usar `sb_secret_`, service-role, token de acesso de banco, chave de IA ou senha neste arquivo.
 7. Implementar e confirmar envio real de e-mails, domínio de remetente e limites de uso. Provedores de e-mail podem ter limites de produção.
@@ -45,3 +45,8 @@ Esta implementação é um módulo novo dentro do repositório existente, em `/a
 - Redirect URLs: https://supabase.com/docs/guides/auth/redirect-urls
 - Supabase RLS: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase JS: https://supabase.com/docs/reference/javascript/installing
+
+
+### Descoberta do novo portal
+
+Após o repositório ter sido renomeado para `Vyzo_Academy`, os links públicos passam a estar em `/Vyzo_Academy/`. A página inicial oferece acesso em destaque ao portal `/academy/` e ao questionário público `/academy/demo.html`, que permite experimentar 10 itens sem cadastro e sem persistência. Os formulários pré-configuração ficam **desativados**, nunca recebem senhas nem criam contas fictícias.

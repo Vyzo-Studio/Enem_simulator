@@ -51,3 +51,12 @@ O portal é lançado como **V8 — infraestrutura em preparação**, em endereç
 - Questões 224 + 72 legadas, simulado 10–100, cronômetro crescente/regressivo, correção, backup e importação.
 - A V8 não altera as chaves de armazenamento da V6: `enem-intelligence-v2` e `enem-intelligence-v1`.
 - O arquivo `/index.html` do legado permanece como principal até a nova autenticação estar pronta.
+
+
+## Ajuste de visibilidade — portal e questionário
+
+- Link destacado na página inicial para a área de contas e diagnósticos.
+- Prévia visual de cadastro desativada enquanto não houver Supabase dedicado.
+- Questionário demonstrativo público com 10 itens, respostas e correção no final, sem salvar dados nem confundir com diagnóstico da conta.
+- URLs atualizadas após renomeação do repositório para `Vyzo_Academy`.
+- Testes de navegador do questionário incluídos no workflow GitHub Actions.

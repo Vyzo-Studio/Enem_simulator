@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Experimente 10 questões autorais da VYZO ACADEMY, sem criar conta.">
+  <title>Questionário demonstrativo — VYZO ACADEMY</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/vyzo-academy.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    .demo-wrap{max-width:890px;margin:0 auto}.demo-guide{margin:15px 0}.demo-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}.demo-progress{height:8px;background:#dce5f4;border-radius:20px;overflow:hidden;margin:15px 0}.demo-progress span{display:block;background:#3565ed;height:100%;transition:width .2s}.demo-answer{display:flex;gap:12px;align-items:flex-start;padding:15px;border:1px solid #dce4f1;border-radius:12px;cursor:pointer;margin:8px 0;line-height:1.5}.demo-answer:has(input:checked){border-color:#3565ed;background:#eef3ff}.demo-answer input{margin:4px 0 0;accent-color:#3565ed}.demo-answer:hover{background:#f5f8ff}.demo-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}.demo-correction{border-top:1px solid #dfe8f2;padding:19px 0}.demo-correction p{line-height:1.55}.demo-correction .correct{color:#13765c}.demo-correction .wrong{color:#a72d3f}.demo-correction .blank{color:#715e36}
+  </style>
+  <script src="../src/questions.js" defer></script>
+  <script src="../src/extra_questions.js" defer></script>
+  <script src="../src/advanced_questions.js" defer></script>
+  <script type="module" src="./demo.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para as questões</a>
+  <header class="topbar"><a class="brand" href="./" aria-label="VYZO ACADEMY — Portal"><span class="monogram" aria-hidden="true">V<span>·</span></span><span class="brand-copy"><b>VYZO ACADEMY</b><small>Questionário demonstrativo</small></span></a><a class="btn secondary" href="./">Ver área de contas</a></header>
+  <main id="conteudo" class="content demo-wrap" tabindex="-1">
+    <div class="eyebrow">EXPERIMENTE A PLATAFORMA</div>
+    <h1>Questionário demonstrativo</h1>
+    <p class="lede">Responda 10 questões autorais distribuídas por áreas do conhecimento. Veja a correção comentada ao terminar.</p>
+    <div class="callout demo-guide" role="note"><strong>Prévia pública, sem conta.</strong> Suas respostas não são salvas nem sincronizadas. Este exercício não substitui um diagnóstico personalizado para a sua prova.</div>
+    <div id="demo-root" aria-live="polite"><div class="boot">Preparando as questões...</div></div>
+    <footer class="footer"><a href="./">Portal V8</a> · <a href="../">Simulados completos</a> · Questões autorais, não oficiais do Inep.</footer>
+  </main>
+</body>
+</html>

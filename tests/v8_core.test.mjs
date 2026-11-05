@@ -52,3 +52,10 @@ assert(!/sb_secret_|service_role\s*[:=]/.test(config),'Não permitir segredos na
 assert(!/localStorage\.setItem\(\s*['"]password/.test(app));
 assert(app.includes('email_confirmed_at'));
 console.log('PASS V8: alocação global, calendário, conflitos, 224 itens autorais, diagnóstico, RLS, Auth e privacidade');
+
+const preview=read('academy/demo.html'),previewScript=read('academy/demo.mjs');
+new Script(previewScript,{filename:'academy/demo.mjs'});
+assert(preview.includes('Questionário demonstrativo')&&preview.includes('demo.mjs'));
+assert(previewScript.includes('Demonstração pública')&&!previewScript.includes('localStorage.setItem'));
+assert(app.includes('fieldset disabled')&&app.includes('demo.html'),'Cadastro sem Supabase deve permanecer desativado e mostrar questionário demonstrativo');
+console.log('PASS V8: prévia segura de conta, questionário público e código sem dados salvos');

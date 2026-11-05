@@ -32,3 +32,5 @@ jobs:
         run: python3 tests/v8_integration_check.py
       - name: Browser regression V8 (simulated backend)
         run: python3 tests/browser_v8.py
+      - name: Public questionnaire demo browser test
+        run: python3 tests/browser_demo.py

@@ -69,7 +69,10 @@ def build_html(mock=False):
 
 def suite():
  with sync_playwright() as p:
-  browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+  binary=Path('/usr/bin/chromium')
+  opts={'headless':True,'args':['--no-sandbox']}
+  if binary.is_file():opts['executable_path']=str(binary)
+  browser=p.chromium.launch(**opts)
   for size in [(320,740),(390,844),(768,900),(1024,768),(1440,900)]:
    page=browser.new_page(viewport={'width':size[0],'height':size[1]})
    errors=[];page.on('pageerror',lambda e:errors.append(str(e)))

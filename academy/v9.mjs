@@ -198,13 +198,13 @@ function renderReady(){const g=state.goals.find(x=>x.id===selectedGoal);if(!g){g
  const single=$('#v13-subject');if(single)single.innerHTML=[...new Set(BANK.map(q=>q.subject))].sort().map(name=>`<option value="${h(name)}">${h(name)}</option>`).join('');
   // Respeitar a seleção inicial: uma só área/matéria não vira prova geral sem aviso.
   if(isEnem(g)&&Array.isArray(g.subjects)&&g.subjects.length===1){
-   const selected=String(g.subjects[0]).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
-   const area=AREAS.find(a=>a.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase()===selected);
+   const selected=String(g.subjects[0]).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+   const area=AREAS.find(a=>a.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()===selected);
    const modeSelect=$('#v13-exam-mode');
    if(area&&modeSelect){modeSelect.value='area';$('#v13-area').value=area;}
    else if(single&&modeSelect){
      const valid=[...single.options].find(o=>{
-      const label=o.value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+      const label=o.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
       return label===selected||(selected==='lingua portuguesa'&&label==='portugues');
      });
      if(valid){modeSelect.value='subject';single.value=valid.value;}

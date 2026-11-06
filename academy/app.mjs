@@ -1,3 +1,4 @@
+import {scanLegacySources,importLegacyWithConsent} from './v12-auth-core.mjs';
 import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';
 import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';
 
@@ -18,7 +19,7 @@ const week=(dt)=>{const d=new Date(dt);d.setHours(12,0,0,0);return d;};
 const fmtClock=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const safeExternalUrl=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null}catch{return null}};
 const configReady=()=>/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(String(cfg.url||'')) && (/^sb_publishable_/.test(String(cfg.publishableKey||''))||/^eyJ/.test(String(cfg.publishableKey||'')));
-const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
+const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:(['signup','login','forgot'].includes(new URLSearchParams(location.search).get('auth'))?new URLSearchParams(location.search).get('auth'):'signup'),onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
 function say(message,type='info'){
  const el=$('#toast');el.textContent=message;el.dataset.type=type;
 }
@@ -68,14 +69,30 @@ async function setup(){
    data.client=createClient(cfg.url,cfg.publishableKey,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
    data.client.auth.onAuthStateChange((event,session)=>{
      if(event==='PASSWORD_RECOVERY'){data.recovery=true;setTimeout(()=>{data.authTab='reset';renderAuth();},0);return;}
-     if(['SIGNED_IN','SIGNED_OUT','USER_UPDATED','TOKEN_REFRESHED'].includes(event))setTimeout(()=>bootstrap().catch(e=>notifyError(e,'Restauração de sessão')),0);
+     if(event==='SIGNED_OUT'){
+       data.user=null;data.profile=null;data.goals=[];data.tasks=[];data.diagnostics=[];data.essays=[];
+       data.activeDiagnostic=null;data.activeEssay=null;data.essayPending=null;data.lastSync=null;
+       data.authTab='login';setStatus('Conta necessária');renderAuth();return;
+     }
+     if(['SIGNED_IN','USER_UPDATED','TOKEN_REFRESHED'].includes(event)){
+       if(data.user&&session?.user?.id&&data.user.id!==session.user.id){
+         data.user=null;data.profile=null;data.goals=[];data.tasks=[];data.diagnostics=[];data.essays=[];
+         data.activeDiagnostic=null;data.activeEssay=null;data.essayPending=null;data.lastSync=null;
+         nav();main('<div class="boot">Verificando a nova conta...</div>');
+       }
+       setTimeout(()=>bootstrap().catch(e=>notifyError(e,'Restauração de sessão')),0);
+     }
    });
    await bootstrap();
  }catch(e){setStatus('Conexão indisponível');disableUI('Não foi possível carregar o provedor de autenticação de forma segura.');}
 }
 async function bootstrap(){
  const {data:result,error}=await data.client.auth.getUser();
- if(error||!result?.user){data.user=null;data.profile=null;data.goals=[];data.tasks=[];data.essays=[];setStatus('Conta necessária');renderAuth();return;}
+ if(error||!result?.user||result.user.is_anonymous===true){
+   data.user=null;data.profile=null;data.goals=[];data.tasks=[];data.diagnostics=[];data.essays=[];
+   data.activeDiagnostic=null;data.activeEssay=null;data.essayPending=null;data.lastSync=null;
+   setStatus('Conta necessária');renderAuth();return;
+  }
  data.user=result.user;
  if(!data.user.email_confirmed_at){setStatus('Verifique seu e-mail');renderUnverified();return;}
  setStatus('Conectado à nuvem');
@@ -355,16 +372,34 @@ function renderAccount(){const p=data.profile||{};
  <p class="muted small">E-mail atual: ${esc(data.user?.email||'')}</p>${availableMarkup(p.availability)}<button class="btn">Salvar preferências</button></form></section>
  <section class="card stack"><h2>Segurança e privacidade</h2><form id="form-email-change" class="form">${field('Novo e-mail','email','email','','required')}<button class="btn secondary">Solicitar alteração de e-mail</button></form>
  <div class="divider"></div><button class="btn secondary" data-action="reset-email">Solicitar recuperação de senha</button>
- <button class="btn ghost" data-action="import-old">Importar histórico local anterior</button><p class="small muted">A importação é opcional e não apaga o arquivo original. Só inclui conteúdo de estudo, nunca credenciais.</p>
+ <div id="v12-migration-slot" aria-live="polite"></div><p class="small muted">A migração exige escolha e confirmação. A cópia do histórico é separada, não apaga o original nem converte automaticamente simulados antigos em diagnósticos.</p>
  <div class="divider"></div><button class="btn danger" data-action="logout">Sair da minha conta</button></section></div>`);
+ renderLegacyOptions();
 }
-async function importOld(){let raw;try{raw=localStorage.getItem('enem-intelligence-v2');}catch{}
- if(!raw){say('Não existe histórico antigo neste navegador.','error');return;}
- let old;try{old=JSON.parse(raw);}catch{say('O backup local não contém JSON válido.','error');return;}
- const allowed={schema:old.schema,history:old.history||[],essay:old.essay||{},mentor:old.mentor||{},seenIds:old.seenIds||[]};
- if(!confirm('Copiar seu histórico antigo para sua conta na nuvem? A cópia não apaga nem altera o original.'))return;
- const {error}=await data.client.from('academy_legacy_imports').insert({user_id:data.user.id,original_state:allowed});if(error)throw error;
- say('Histórico antigo copiado para uma área privada da sua conta. Ele permanece separado dos diagnósticos específicos de cada prova.');
+function renderLegacyOptions(){
+ const slot=$('#v12-migration-slot');
+ if(!slot)return;
+ let sources=[];
+ try{sources=scanLegacySources(localStorage);}catch(e){slot.textContent='Não foi possível inspecionar dados locais neste navegador.';return;}
+ if(!sources.length){slot.textContent='Nenhum histórico anterior encontrado neste navegador.';return;}
+ slot.innerHTML='<h3>Seus dados antigos neste navegador</h3>'+
+  '<p class="small muted">Se várias pessoas já usaram este navegador, selecione somente seus próprios dados. A cópia será atribuída à conta '+esc(data.user?.email||'')+'.</p>'+
+  sources.map(s=>s.blocked?'<div class="callout warning"><strong>'+esc(s.name)+'</strong>: '+esc(s.reason)+'</div>':
+  '<label class="checkbox-set" style="display:block;margin:8px 0"><input name="v12-legacy-source" type="checkbox" value="'+esc(s.key)+'"> '+esc(s.name)+
+  ' · '+Number(s.records||0)+' registro(s) · '+Math.ceil(s.bytes/1024)+' KB</label>').join('')+
+  '<button class="btn secondary" type="button" data-action="import-old">Confirmar cópia para minha conta</button>';
+}
+async function importOld(){
+ const keys=[...document.querySelectorAll('input[name="v12-legacy-source"]:checked')].map(x=>x.value);
+ if(!keys.length)throw Error('Escolha pelo menos um histórico para copiar.');
+ const account=data.user?.email||'sua conta';
+ if(!confirm('Confirmar a importação das '+keys.length+' origem(ns) selecionada(s) para '+account+'? Se outras pessoas usaram este navegador, confira os dados antes de continuar. Os originais não serão apagados.'))return;
+ const saved=await importLegacyWithConsent({
+  client:data.client,storage:localStorage,user:data.user,keys,confirmed:true
+ });
+ say(saved.every(x=>x.alreadySaved)?'Essas cópias já estavam protegidas na sua conta.':
+  'Backup do histórico salvo na nuvem. Ele permanece separado até a migração verificada dos recursos antigos.');
+ renderLegacyOptions();
 }
 function render(){
  if(!data.client){disableUI('Backend ainda não configurado.');return;}

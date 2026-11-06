@@ -44,3 +44,15 @@ body[data-theme=dark] .v13-composition{background:#182f4c;color:#e9f3ff;border-c
 body[data-theme=dark] .v13-quotas span{background:#1e3b5b;color:#e6f2ff;border-color:#536d90}
 body[data-theme=dark] .v11-figure{background:#ecf4ff;color:#1e375b}
 @media(max-width:390px){.v11-figure{padding:7px}.v11-figure table{font-size:.8rem}.v13-quotas span{font-size:.78rem}}
+
+/* V14 — disponibilidade por dia, legível e sem overflow no celular. */
+.v14-day-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,180px);align-items:center;gap:12px;border:1px solid var(--line,#d9dfeb);padding:10px;border-radius:12px;min-width:0}
+.v14-day-minutes{display:grid;gap:5px;font-size:.84rem;min-width:0}
+.v14-day-minutes input{display:block;box-sizing:border-box;max-width:100%;width:100%;min-width:0}
+@media(max-width:430px){.v14-day-row{grid-template-columns:minmax(0,1fr) minmax(100px,130px);gap:8px;padding:8px}.v14-day-minutes{font-size:.78rem}}
+
+/* V14 — biblioteca de estudos baseada no banco autoral. */
+.v14-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.v14-library-item{min-width:0;padding:16px;border:1px solid var(--line,#d9dfeb);border-radius:14px}
+.v14-library-item h3{margin:6px 0 8px;overflow-wrap:anywhere}
+.v14-library-item[hidden]{display:none!important}

@@ -1,5 +1,5 @@
 /* Cache apenas de arquivos públicos; nunca recebe redações ou respostas. */
-const CACHE='vyzo-academy-shell-v9legacy-20261105';
+const CACHE='vyzo-academy-shell-v14-20261106';
 const FILES=['./','./index.html','./manifest.webmanifest','./assets/vyzo-academy.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>(k.startsWith('enem-intelligence-shell-')||k.startsWith('vyzo-academy-shell-'))&&k!==CACHE).map(k=>caches.delete(k))))));

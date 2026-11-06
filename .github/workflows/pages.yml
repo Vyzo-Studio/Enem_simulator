@@ -1,7 +1,7 @@
 name: Quality checks
 on:
   push:
-    branches: [main, feat-v13-subject-autocomplete]
+    branches: [main, feat-v13-subject-autocomplete, feat-v14-education-foundations]
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +39,8 @@ jobs:
         run: node tests/v9_core.test.mjs
       - name: V13 validated balanced question composition
         run: node tests/v13_composer.test.mjs
+      - name: Verify V14 curricular matching and focused diagnostics
+        run: node tests/v14_core.test.mjs
       - name: Browser regression V9 (local storage simulated)
         run: python3 tests/v9_browser.py
 

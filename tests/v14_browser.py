@@ -43,6 +43,19 @@ with sync_playwright() as p:
         pending={'id':'pending','goalId':'g-v14','day':'2026-11-30','minutes':60,
                  'startMinute':540,'status':'pending','parts':{'theory':20,'example':10,'practice':20,'review':10}}
         errors=setup(page,seed(GOAL,[old],[pending]))
+        page.locator('.v9-nav button[data-page="plan"]').click()
+        expect(page.get_by_text('Disponibilidade semanal:',exact=False)).to_be_visible()
+        page.get_by_role('button',name='Remarcar').first.click()
+        page.locator('#v14-new-day').fill('2026-12-06') # Domingo, sem disponibilidade
+        page.get_by_role('button',name='Confirmar remarcação').click()
+        saved=page.evaluate('(k)=>JSON.parse(localStorage.getItem(k))',KEY)
+        assert saved['tasks'][0]['day']=='2026-11-30'
+        page.locator('#v14-new-day').fill('2026-12-01') # Terça-feira
+        page.get_by_role('button',name='Confirmar remarcação').click()
+        saved=page.evaluate('(k)=>JSON.parse(localStorage.getItem(k))',KEY)
+        assert saved['tasks'][0]['day']=='2026-12-01'
+        page.get_by_role('button',name='Semana').click()
+        page.get_by_role('button',name='Todas').click()
         page.locator('.v9-nav button[data-page="goals"]').click()
         page.get_by_role('button',name='Editar prova').click()
         expect(page.get_by_text('Editar prova',exact=True)).to_be_visible()

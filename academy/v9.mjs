@@ -3,6 +3,10 @@ import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,anal
 import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';
 import {composeExam} from './v11-composer.mjs';
 import {renderFigure} from './v11-visual.mjs';
+import {findSchoolPilot} from './v15-school-content.mjs';
+import {gradeSchoolPilot,selectSchoolNextStep} from './v15-school-engine.mjs';
+import {schoolPreviewHtml,schoolLessonHtml} from './v15-school-ui.mjs';
+import {officialPaperHtml} from './v15-official-papers.mjs';
 import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';
 const KEY='vyzo-academy-v9-guest-1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -162,8 +166,8 @@ function availableMinutes(){
   return [String(i),Math.max(0,Math.min(720,value))];
  }));
 }
-function status(goal){if(goal.status==='archived')return 'Arquivada';if(goal.type==='Prova escolar')return 'Conteúdo específico por série em preparação';if(goal.curriculumChangedAt&&!isGoalEvaluated(goal,state.assessments))return 'Grade alterada — novo diagnóstico necessário';const init=latestInitial(goal.id,state.assessments);if(init&&isGoalEvaluated(goal,state.assessments))return goal.status==='paused'?'Pausada':'Diagnóstico concluído';if(init)return 'Evidência insuficiente — refazer';const running=state.assessments.find(a=>a.goalId===goal.id&&a.kind==='initial'&&a.status==='in_progress');return running?'Diagnóstico em andamento':'Diagnóstico pendente';}
-function summaryGoal(goal){const done=goal.type!=='Prova escolar'&&isGoalEvaluated(goal,state.assessments),running=state.assessments.find(a=>a.goalId===goal.id&&a.status==='in_progress');return `<article class="v9-goal"><div><span class="v9-badge ${done?'ok':'muted'}">${h(status(goal))}</span><h3>${h(goal.name)}</h3><p>${h(goal.type)}${goal.type==='Prova escolar'?' · '+h(schoolGradeLabel(goal.educationStage,goal.schoolYear)):goal.examDate?' · '+h(prettyDate(goal.examDate)):' · Data não divulgada'} · ${h(goal.subjects.join(', ')||'Matérias a definir')}</p>${goal.provisional?'<p class="v9-mini">Avaliação provisória: habilidades gerais, não específicas da prova.</p>':''}</div><div class="v9-actions" style="margin:0">${goal.status==='archived'?'<span class="v9-mini">Objetivo arquivado. Restaure para retomar.</span>':goal.type==='Prova escolar'?`<button class="btn secondary" data-action="choose-assessment" data-id="${goal.id}">Ver situação do conteúdo</button>`:running?`<button class="btn" data-action="resume-assessment" data-id="${running.id}">Retomar avaliação</button>`:!done?`<button class="btn" data-action="choose-assessment" data-id="${goal.id}">Começar diagnóstico</button>`:`<button class="btn secondary" data-action="open-plan" data-id="${goal.id}">Ver plano</button><button class="btn secondary" data-action="open-report" data-id="${latestInitial(goal.id,state.assessments).id}">Ver diagnóstico</button>`}${done?`<button class="btn ghost" data-action="request-retest" data-id="${goal.id}">Novo teste</button>`:''}<button type="button" class="btn ghost" data-action="edit-goal" data-id="${goal.id}">${goal.type==='Prova escolar'?'Editar objetivo':'Editar prova'}</button></div></article>`;}
+function status(goal){if(goal.status==='archived')return 'Arquivada';if(goal.type==='Prova escolar')return findSchoolPilot(goal)?'Microaula de Matemática em revisão editorial':'Conteúdo específico por série em preparação';if(goal.curriculumChangedAt&&!isGoalEvaluated(goal,state.assessments))return 'Grade alterada — novo diagnóstico necessário';const init=latestInitial(goal.id,state.assessments);if(init&&isGoalEvaluated(goal,state.assessments))return goal.status==='paused'?'Pausada':'Diagnóstico concluído';if(init)return 'Evidência insuficiente — refazer';const running=state.assessments.find(a=>a.goalId===goal.id&&a.kind==='initial'&&a.status==='in_progress');return running?'Diagnóstico em andamento':'Diagnóstico pendente';}
+function summaryGoal(goal){const done=goal.type!=='Prova escolar'&&isGoalEvaluated(goal,state.assessments),running=state.assessments.find(a=>a.goalId===goal.id&&a.status==='in_progress');return `<article class="v9-goal"><div><span class="v9-badge ${done?'ok':'muted'}">${h(status(goal))}</span><h3>${h(goal.name)}</h3><p>${h(goal.type)}${goal.type==='Prova escolar'?' · '+h(schoolGradeLabel(goal.educationStage,goal.schoolYear)):goal.examDate?' · '+h(prettyDate(goal.examDate)):' · Data não divulgada'} · ${h(goal.subjects.join(', ')||'Matérias a definir')}</p>${goal.provisional?'<p class="v9-mini">Avaliação provisória: habilidades gerais, não específicas da prova.</p>':''}</div><div class="v9-actions" style="margin:0">${goal.status==='archived'?'<span class="v9-mini">Objetivo arquivado. Restaure para retomar.</span>':goal.type==='Prova escolar'?`<button class="btn secondary" data-action="choose-assessment" data-id="${goal.id}">${findSchoolPilot(goal)?'Acessar atividade-piloto':'Ver situação do conteúdo'}</button>`:running?`<button class="btn" data-action="resume-assessment" data-id="${running.id}">Retomar avaliação</button>`:!done?`<button class="btn" data-action="choose-assessment" data-id="${goal.id}">Começar diagnóstico</button>`:`<button class="btn secondary" data-action="open-plan" data-id="${goal.id}">Ver plano</button><button class="btn secondary" data-action="open-report" data-id="${latestInitial(goal.id,state.assessments).id}">Ver diagnóstico</button>`}${done?`<button class="btn ghost" data-action="request-retest" data-id="${goal.id}">Novo teste</button>`:''}<button type="button" class="btn ghost" data-action="edit-goal" data-id="${goal.id}">${goal.type==='Prova escolar'?'Editar objetivo':'Editar prova'}</button></div></article>`;}
 function renderHub(){const pending=state.goals.filter(g=>g.type==='Prova escolar'||!isGoalEvaluated(g,state.assessments));const finished=state.goals.filter(g=>g.type!=='Prova escolar'&&isGoalEvaluated(g,state.assessments));const todays=state.tasks.filter(t=>t.day===today());
  const recommended=state.tasks.filter(t=>t.status==='pending'&&state.goals.some(g=>g.id===t.goalId&&!['paused','archived'].includes(g.status)))
   .sort((a,b)=>a.day.localeCompare(b.day)||(a.startMinute||0)-(b.startMinute||0))[0];
@@ -174,7 +178,17 @@ function renderHub(){const pending=state.goals.filter(g=>g.type==='Prova escolar
   ' · '+recommended.minutes+' minutos · '+h(recommended.reason)+
   '</p><button class="btn" type="button" data-action="study-topic" data-goal="'+h(recommended.goalId)+
   '" data-topic="'+h(recommended.topic)+'">Estudar agora</button></section>':'';
- output(`${title('Sua jornada começa pelo diagnóstico','Você não precisa estudar às cegas: avaliamos o conhecimento, analisamos os erros e só então planejamos o que aprender.')}<section class="v9-hero"><p class="v9-overline" style="color:#b2c8ff">${pending.length?'ETAPA 2 DE 2 · AVALIAÇÃO INICIAL':'PLANEJAMENTO COM EVIDÊNCIAS'}</p><h1>${pending.length?(pending[0].type==='Prova escolar'?'Seu objetivo escolar está registrado.':'Agora vamos descobrir o que você já sabe.'):'Seu estudo já tem um ponto de partida.'}</h1><p>${pending.length?`${pending.length} prova(s) aguardam diagnóstico. Você pode escolher qual avaliar primeiro e continuar depois.`:'Planos personalizados são derivados das respostas dos seus diagnósticos. Questões não avaliadas continuam visíveis no planejamento.'}</p>${pending.length?`<button class="btn" data-action="choose-assessment" data-id="${pending[0].id}">${pending[0].type==='Prova escolar'?'Ver situação do conteúdo →':'Começar diagnóstico →'}</button>`:'<button class="btn" data-page="plan">Ver meu plano personalizado →</button>'}</section>${advice}<div class="v9-grid"><div class="v9-stat"><small>Provas cadastradas</small><strong>${state.goals.length}</strong></div><div class="v9-stat"><small>Diagnósticos concluídos</small><strong>${finished.length}</strong></div><div class="v9-stat"><small>Minutos disponíveis hoje</small><strong>${availableMinutes()[new Date().getDay()]||0}</strong></div><div class="v9-stat"><small>Atividades de hoje</small><strong>${todays.length}</strong></div></div><section class="v9-card" style="margin-top:20px"><div class="row between"><h2>Minhas provas</h2>${cta('+ Adicionar outra prova','add-goal','secondary')}</div>${state.goals.map(summaryGoal).join('')}</section>`);}
+ const schoolGoal=state.goals.find(g=>g.type==='Prova escolar'&&!['archived','paused'].includes(g.status)&&findSchoolPilot(g));
+ const schoolPilot=schoolGoal?findSchoolPilot(schoolGoal):null;
+ const lastSchool=schoolPilot?(state.schoolActivityHistory||[]).filter(a=>a.goalId===schoolGoal.id&&a.pilotId===schoolPilot.id).at(-1):null;
+ const nextSchool=schoolPilot?'<section class="v9-card" aria-label="Próximo passo escolar">'+
+  '<h2>O que vamos estudar hoje? · Escola</h2><p class="v9-lead">'+h(schoolGoal.name)+' · '+h(schoolPilot.topic)+'</p>'+
+  '<p>'+h(lastSchool?'Última tentativa: '+lastSchool.report.answered+' respondidas; '+lastSchool.report.correct+(lastSchool.report.correct===1?' acerto.':' acertos.'):'Comece pela explicação e por seis questões curtas.')+'</p>'+
+  '<p class="v9-mini">'+h(selectSchoolNextStep(schoolPilot,lastSchool?.report))+'</p>'+
+  '<p class="v9-mini">Microaula em revisão editorial · apenas este tópico disponível.</p>'+
+  '<button type="button" class="btn" data-action="school-open" data-id="'+h(schoolGoal.id)+'">'+
+  (lastSchool?'Continuar estudando':'Começar microaula')+'</button></section>':'';
+ output(`${title('Sua jornada começa pelo diagnóstico','Você não precisa estudar às cegas: avaliamos o conhecimento, analisamos os erros e só então planejamos o que aprender.')}<section class="v9-hero"><p class="v9-overline" style="color:#b2c8ff">${pending.length?'ETAPA 2 DE 2 · AVALIAÇÃO INICIAL':'PLANEJAMENTO COM EVIDÊNCIAS'}</p><h1>${pending.length?(pending[0].type==='Prova escolar'?'Seu objetivo escolar está registrado.':'Agora vamos descobrir o que você já sabe.'):'Seu estudo já tem um ponto de partida.'}</h1><p>${pending.length?`${state.goals.filter(g=>g.type!=='Prova escolar'&&!isGoalEvaluated(g,state.assessments)).length} prova(s) aguardam diagnóstico; atividades escolares-piloto podem ser iniciadas sem usar questões do ENEM.`:'Planos personalizados são derivados das respostas dos seus diagnósticos. Questões não avaliadas continuam visíveis no planejamento.'}</p>${pending.length?`<button class="btn" data-action="choose-assessment" data-id="${pending[0].id}">${pending[0].type==='Prova escolar'?(findSchoolPilot(pending[0])?'Acessar aula-piloto →':'Ver situação do conteúdo →'):'Começar diagnóstico →'}</button>`:'<button class="btn" data-page="plan">Ver meu plano personalizado →</button>'}</section>${nextSchool}${advice}<div class="v9-grid"><div class="v9-stat"><small>Provas cadastradas</small><strong>${state.goals.length}</strong></div><div class="v9-stat"><small>Diagnósticos concluídos</small><strong>${finished.length}</strong></div><div class="v9-stat"><small>Minutos disponíveis hoje</small><strong>${availableMinutes()[new Date().getDay()]||0}</strong></div><div class="v9-stat"><small>Atividades de hoje</small><strong>${todays.length}</strong></div></div><section class="v9-card" style="margin-top:20px"><div class="row between"><h2>Minhas provas</h2>${cta('+ Adicionar outra prova','add-goal','secondary')}</div>${state.goals.map(summaryGoal).join('')}</section>`);}
 function renderGoals(){output(`${title('Minhas provas','A evolução de cada prova fica separada. Somente provas diagnosticadas liberam o plano correspondente.')}<div class="v9-actions">${cta('+ Adicionar prova','add-goal')}</div>${state.goals.map(g=>summaryGoal(g)+`<div class="row" style="margin:0 0 18px 10px"><button class="btn ghost" data-action="toggle-goal" data-id="${g.id}">${g.status==='paused'?'Retomar estudos':g.status==='archived'?'Restaurar prova':'Pausar prova'}</button><button type="button" class="btn ghost" data-action="duplicate-goal" data-id="${g.id}">Duplicar configuração</button><button type="button" class="btn ghost" data-action="archive-goal" data-id="${g.id}" ${g.status==='archived'?'disabled':''}>Arquivar</button></div>`).join('')}`);}
 
 function renderEditGoal(){
@@ -234,15 +248,11 @@ function renderDiagnostics(){const all=[...state.assessments].sort((a,b)=>b.star
 function renderReady(){const g=state.goals.find(x=>x.id===selectedGoal);if(!g){go('hub');return;}
  const already=state.assessments.filter(a=>a.goalId===g.id).flatMap(a=>a.ids);const pool=suitableQuestions(BANK,g,already);
  if(g.type==='Prova escolar'){
-  const grade=schoolGradeLabel(g.educationStage,g.schoolYear);
-  output(title('Estudos escolares','Estrutura escolar identificada; ainda não há questões específicas desta série revisadas editorialmente.')+
-   '<div class="v9-card"><h2>'+h(g.name)+'</h2><p class="v9-lead">'+h(grade)+' · '+h((g.subjects||[]).join(', '))+'</p>'+
-   '<div class="v9-warn">O diagnóstico escolar específico desta série ainda não está disponível. Não usamos questões do ENEM como equivalentes, nem fabricamos resultados ou planos personalizados.</div>'+
-   '<div class="v9-actions"><button type="button" class="btn secondary" data-action="edit-goal" data-id="'+h(g.id)+'">Editar objetivo</button>'+
-   '<button type="button" class="btn secondary" data-page="goals">Minhas provas</button></div></div>');
+  output(title('Estudos escolares','Tópicos disponíveis em formato piloto; cada disciplina possui sua situação editorial.')+
+   schoolPreviewHtml(g,findSchoolPilot(g),h));
   return;
  }
- const provisional=!isEnem(g),warning=provisional?`<div class="v9-warn"><strong>Atenção:</strong> o banco atual contém questões autorais de estilo ENEM. ${g.provisional?'Você autorizou avaliação provisória de habilidades gerais. Os resultados NÃO representam a prova ou banca selecionada.':'Não temos questões específicas verificadas para essa prova. Você pode permitir uma avaliação geral provisória ou aguardar conteúdo adequado.'}</div>`:'';
+  const provisional=!isEnem(g),warning=provisional?`<div class="v9-warn"><strong>Atenção:</strong> o banco atual contém questões autorais de estilo ENEM. ${g.provisional?'Você autorizou avaliação provisória de habilidades gerais. Os resultados NÃO representam a prova ou banca selecionada.':'Não temos questões específicas verificadas para essa prova. Você pode permitir uma avaliação geral provisória ou aguardar conteúdo adequado.'}</div>`:'';
  output(`${title('Seu diagnóstico inicial está pronto','Antes do plano, vamos observar seus acertos, erros e assuntos ainda não avaliados.')}<div class="v9-card"><h2>${h(g.name)}</h2><p class="v9-lead">${h(g.type)} · ${h(g.subjects.join(', ')||'Seleção geral')} · ${pool.length} questões compatíveis com as condições escolhidas.</p>${warning}<div class="v9-info" style="margin:15px 0"><strong>Regras:</strong> sem gabarito antecipado, respostas alteráveis, salvamento automático, retomada e correção ao finalizar. Questões em branco não são consideradas erros conceituais.</div>${!isEnem(g)&&!g.provisional?`${cta('Autorizar avaliação provisória geral','enable-provisional')}`:''}${(isEnem(g)||g.provisional)?`<form id="start-diagnostic-form" class="v9-form"><div class="field"><label for="v13-exam-mode">Modalidade</label><select id="v13-exam-mode"><option value="general">ENEM geral — quatro áreas</option><option value="day1">ENEM — primeiro dia</option><option value="day2">ENEM — segundo dia</option><option value="area">Uma área</option><option value="subject">Uma matéria</option></select></div><div class="field" id="v13-area-field" hidden><label for="v13-area">Área</label><select id="v13-area"><option value="Linguagens">Linguagens</option><option value="Humanas">Humanas</option><option value="Natureza">Natureza</option><option value="Matemática">Matemática</option></select></div><div class="field" id="v13-subject-field" hidden><label for="v13-subject">Matéria</label><select id="v13-subject"></select></div><div class="field" id="v13-lang-field"><label for="v13-language">Língua estrangeira</label><select id="v13-language"><option>Inglês</option><option>Espanhol</option></select></div><div class="field"><label for="exam-length">Quantidade de questões</label><select id="exam-length" name="count">${[10,20,30].map(n=>`<option value="${n}" ${n>pool.length?'disabled':''} ${n===20&&pool.length>=20?'selected':''}>${n} questões ${n>pool.length?'(indisponível)':''}</option>`).join('')}<option value="custom">Personalizada (3–50)</option></select></div><div class="field" id="custom-length-wrap" hidden><label for="custom-length">Quantidade personalizada</label><input id="custom-length" type="number" name="custom_count" min="3" max="50" value="${Math.min(10,pool.length)}"></div><div class="field"><label for="v14-timer-mode">Controle de tempo</label><select id="v14-timer-mode"><option value="stopwatch">Cronômetro — pausa ao suspender</option><option value="countdown">Contagem regressiva — prazo contínuo</option><option value="untimed">Prática sem cronômetro</option></select><small>No cronômetro, sair da avaliação pausa o tempo ativo. Na contagem regressiva, o prazo continua mesmo após fechar a página, até a finalização automática.</small></div><div class="field" id="v14-time-limit-wrap" hidden><label for="v14-time-limit">Prazo em minutos</label><input type="number" id="v14-time-limit" min="1" max="360" value="60"></div><section id="v13-composition" class="v13-composition" aria-live="polite"></section><div class="row"><button class="btn" type="submit" ${pool.length<3?'disabled':''}>COMEÇAR DIAGNÓSTICO →</button><button type="button" class="btn secondary" data-page="diagnostics">Voltar</button></div></form>`:''}${pool.length<10?`<div class="v9-warn">Há apenas ${pool.length} questões disponíveis nas condições escolhidas. ${pool.length>=3?'Selecione uma quantidade personalizada menor.':'Não é possível iniciar uma avaliação com menos de 3 questões relevantes.'}</div>`:''}</div>`);
  const language=$('#v13-language');if(language)language.value=g.foreignLanguage||'Inglês';
  const single=$('#v13-subject');if(single)single.innerHTML=[...new Set(BANK.map(q=>q.subject))].sort().map(name=>`<option value="${h(name)}">${h(name)}</option>`).join('');
@@ -391,9 +401,44 @@ function renderPastPapers(){
   archive.years.map(y=>'<option value="'+y+'">'+y+'</option>').join('')+
   '</select></div><p id="v15-past-selection" class="v9-mini">Edição selecionada: '+archive.years[0]+'. Localize esse ano na página oficial.</p>'+
   '<div class="v9-actions"><a class="btn" href="'+h(archive.url)+'" target="_blank" rel="noopener noreferrer">Abrir provas e gabaritos oficiais no Inep</a></div>'+
-  '<p class="v9-mini">O link leva ao índice oficial de anos; não é um PDF direto nem um simulado já importado. Outros exames serão adicionados apenas com fontes verificadas.</p>'+
+  '<p class="v9-mini">Para algumas edições há links diretos oficialmente publicados. Nenhum PDF foi convertido em questões nesta versão.</p>'+
+  '<div id="v15-past-documents" aria-live="polite">'+officialPaperHtml(archive.years[0],h)+'</div>'+
   '</div>');
 }
+
+function schoolActivityKey(goal,pilot){return goal.id+'|'+pilot.id;}
+function renderSchoolPilot(){
+ const goal=state.goals.find(g=>g.id===selectedGoal),pilot=findSchoolPilot(goal);
+ if(!goal||!pilot){page='ready';renderReady();return;}
+ const key=schoolActivityKey(goal,pilot),draft=state.schoolActivityDrafts?.[key]?.answers||{},
+  last=(state.schoolActivityHistory||[]).filter(a=>a.goalId===goal.id&&a.pilotId===pilot.id).at(-1);
+ output(title('Matemática · '+pilot.topic,schoolGradeLabel(goal.educationStage,goal.schoolYear))+
+  schoolLessonHtml(goal,pilot,draft,last,h)+
+  (last?'<p class="v9-mini">'+h(selectSchoolNextStep(pilot,last.report))+'</p>':''));
+}
+function submitSchoolPilot(form){
+ const goal=state.goals.find(g=>g.id===selectedGoal),pilot=findSchoolPilot(goal);
+ if(!goal||!pilot)throw Error('Objetivo escolar indisponível.');
+ const data=new FormData(form),answers={};
+ for(const q of pilot.questions){
+  const value=data.get('school-choice:'+q.id);
+  if(value!==null&&Number.isInteger(Number(value))&&Number(value)>=0&&Number(value)<q.options.length)
+   answers[q.id]=Number(value);
+ }
+ const report=gradeSchoolPilot(pilot,answers),key=schoolActivityKey(goal,pilot);
+ const item={id:uid(),goalId:goal.id,pilotId:pilot.id,skillCode:pilot.skillCode,
+  contentVersion:pilot.contentVersion,stage:pilot.stage,grade:pilot.grade,
+  startedAt:state.schoolActivityDrafts?.[key]?.startedAt||Date.now(),
+  completedAt:Date.now(),answers,report};
+ state.schoolActivityHistory=Array.isArray(state.schoolActivityHistory)?state.schoolActivityHistory:[];
+ state.schoolActivityHistory.push(item);
+ state.schoolActivityDrafts=state.schoolActivityDrafts||{};
+ delete state.schoolActivityDrafts[key];
+ if(!persist())throw Error('Não foi possível salvar a tentativa. Faça backup antes de continuar.');
+ page='school-pilot';renderSchoolPilot();
+ message('Atividade corrigida. Questões em branco não são erros; tentativas anteriores permanecem registradas.');
+}
+
 function renderLibrary(){
  const rows=[],seen=new Set();
  for(const goal of state.goals.filter(g=>g.status!=='archived')){
@@ -459,7 +504,7 @@ function renderLesson(){const g=state.goals.find(x=>x.id===lessonGoal);if(!g||!s
 }
 function renderData(){output(`${title('Backup e privacidade','O progresso desta experiência fica somente neste navegador. Não há conta nem sincronização entre dispositivos.')}<div class="v9-card"><h2>Proteja seu progresso</h2><p>Faça backup antes de trocar de aparelho, limpar dados do navegador ou abrir em uma sessão privada.</p><div class="v9-actions">${cta('Baixar backup JSON','export')}${cta('Importar backup V9','show-import','secondary')}</div><input type="file" accept="application/json,.json" id="v9-import-file" hidden><p class="v9-mini">Chave local: ${KEY}. O backup não contém senhas. Não contém dados do antigo simulador, que permanece intacto no endereço original.</p></div>`);}
 function render(){if(!state.onboarding||page==='wizard'){page='wizard';renderWizard();return;}
- if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='library')renderLibrary();else if(page==='past-papers')renderPastPapers();else if(page==='revisions')renderRevisions();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
+ if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='school-pilot')renderSchoolPilot();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='library')renderLibrary();else if(page==='past-papers')renderPastPapers();else if(page==='revisions')renderRevisions();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
 }
 function go(to){if(page==='exam'&&to!=='exam'){const a=currentAssessment();if(a?.status==='in_progress'){pauseAssessmentClock(a);persist();}}if(!state.onboarding&&to!=='wizard'){page='wizard';renderWizard();return;}page=to;if(to==='plan')selectedGoal=null;render();window.scrollTo({top:0,behavior:'instant'});}
 function download(name,value){const b=new Blob([value],{type:'application/json;charset=utf-8'}),link=document.createElement('a'),url=URL.createObjectURL(b);link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
@@ -491,6 +536,7 @@ function onAction(el){const action=el.dataset.action,id=el.dataset.id;
    persist();render();message('Prova arquivada, sem excluir seus dados.');
   }
  else if(action==='choose-assessment'){selectedGoal=id;page='ready';render();}
+  else if(action==='school-open'){selectedGoal=id;page='school-pilot';render();}
  else if(action==='enable-provisional'){const g=state.goals.find(x=>x.id===selectedGoal);g.provisional=true;persist();render();}
  else if(action==='resume-assessment'){selectedAssessment=id;questionPosition=0;const a=currentAssessment();if(!a||a.status!=='in_progress')return;resumeAssessmentClock(a);persist();page='exam';render();tick();}
  else if(action==='jump'){questionPosition=Number(el.dataset.index);render();}
@@ -523,10 +569,22 @@ document.addEventListener('change',e=>{const el=e.target;
   if(research)research.hidden=school;
   if(manual)manual.hidden=school;
  }
- if(el.id==='v15-past-year'){const display=$('#v15-past-selection');if(display)display.textContent='Edição selecionada: '+el.value+'. Localize esse ano na página oficial.';}
+ if(el.id==='v15-past-year'){const display=$('#v15-past-selection'),documents=$('#v15-past-documents');if(display)display.textContent='Edição selecionada: '+el.value+'. Localize esse ano na página oficial.';if(documents)documents.innerHTML=officialPaperHtml(Number(el.value),h);}
  if(el.id.startsWith('v15-school-stage-')){
   const index=el.id.slice('v15-school-stage-'.length),target=$('#v15-school-year-'+index);
   if(target)target.innerHTML=schoolYears(el.value).map(y=>'<option value="'+y+'">'+y+'º ano</option>').join('');
+ }
+ if(el.name?.startsWith('school-choice:')){
+   const goal=state.goals.find(g=>g.id===selectedGoal),pilot=findSchoolPilot(goal);
+   const questionId=el.name.slice('school-choice:'.length);
+   const question=pilot?.questions.find(q=>q.id===questionId),choice=Number(el.value);
+   if(question&&Number.isInteger(choice)&&choice>=0&&choice<question.options.length){
+    state.schoolActivityDrafts=state.schoolActivityDrafts||{};
+    const key=schoolActivityKey(goal,pilot);
+    const draft=state.schoolActivityDrafts[key]||{startedAt:Date.now(),answers:{}};
+    draft.answers[questionId]=choice;draft.updatedAt=Date.now();state.schoolActivityDrafts[key]=draft;
+    if(!persist())message('Não foi possível salvar a escolha. Faça um backup.','error');
+   }
  }
  if(el.name==='answer'){const a=currentAssessment(),qid=a.ids[questionPosition];a.answers[qid]=Number(el.value);a.updatedAt=Date.now();if(persist()){render();message('Resposta salva neste navegador.');}}
  if(el.id==='review-toggle'){const a=currentAssessment(),qid=a.ids[questionPosition];a.flagged=a.flagged||[];a.flagged=el.checked?[...new Set([...a.flagged,qid])]:a.flagged.filter(x=>x!==qid);persist();render();}
@@ -543,7 +601,7 @@ document.addEventListener('input',e=>{
   $$('.v14-library-item').forEach(el=>{el.hidden=!el.dataset.search.includes(query);});
  }
 });
-document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form','edit-goal-form','v14-reschedule-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else if(f.id==='edit-goal-form'){saveGoalEdit(f);}else if(f.id==='v14-reschedule-form'){rescheduleTask(f.dataset.id,String(new FormData(f).get('new_day')||''));}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});
+document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form','edit-goal-form','v14-reschedule-form','v15-school-pilot-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='v15-school-pilot-form'){submitSchoolPilot(f);}else if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else if(f.id==='edit-goal-form'){saveGoalEdit(f);}else if(f.id==='v14-reschedule-form'){rescheduleTask(f.dataset.id,String(new FormData(f).get('new_day')||''));}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});
 window.addEventListener('storage',event=>{if(event.key===KEY&&event.newValue!==JSON.stringify(state)){conflict=true;message('Outra aba alterou seu progresso. Exporte um backup e atualize esta página antes de continuar.','error');}});
 let lastHeartbeat=0;
 function tick(){if(page!=='exam')return;const a=currentAssessment(),el=$('#v9-clock');if(!a||a.status!=='in_progress')return;

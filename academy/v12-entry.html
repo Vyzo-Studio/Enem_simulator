@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="VYZO ACADEMY: sua conta, seu diagnóstico e seu plano personalizado.">
+  <title>VYZO ACADEMY — Acesso seguro</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/vyzo-academy.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script type="module" src="./v12-entry.mjs"></script>
+  <style>
+    .v12-cover{max-width:890px;margin:5vh auto;padding:0 18px}
+    .v12-hero{background:linear-gradient(120deg,#142f62,#244d9e);color:white;padding:35px;border-radius:20px}
+    .v12-hero h1,.v12-hero p{color:white}
+    .v12-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .v12-note{margin:20px 0;line-height:1.65}
+    .v12-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:620px){.v12-steps{grid-template-columns:1fr}.v12-hero{padding:25px 18px}}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topbar"><div class="brand"><span class="monogram" aria-hidden="true">V<span>·</span></span><span class="brand-copy"><b>VYZO ACADEMY</b><small>Uma conta. Sua jornada de estudos.</small></span></div></header>
+  <main id="conteudo" class="v12-cover">
+    <section class="v12-hero">
+      <p class="eyebrow" style="color:#d5e5ff">APRENDIZAGEM PERSONALIZADA</p>
+      <h1>Seu espaço para aprender e evoluir.</h1>
+      <p>Identifique seus objetivos, descubra seus conhecimentos e estude com um plano feito para você.</p>
+    </section>
+    <section id="v12-state" aria-live="polite" class="card v12-note">
+      <div class="boot">Verificando a segurança do acesso...</div>
+    </section>
+    <section class="v12-steps" aria-label="Como funciona">
+      <div class="card"><strong>1. Sua conta</strong><p>Seus dados ficam vinculados exclusivamente ao seu acesso.</p></div>
+      <div class="card"><strong>2. Seu diagnóstico</strong><p>Responda questões alinhadas à prova escolhida.</p></div>
+      <div class="card"><strong>3. Seu plano</strong><p>Estude os assuntos prioritários depois da avaliação.</p></div>
+    </section>
+    <footer class="footer"><a href="../privacidade.html">Privacidade</a> · <a href="./termos.html">Termos de uso</a></footer>
+  </main>
+</body>
+</html>

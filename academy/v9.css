@@ -62,3 +62,17 @@ body[data-theme=dark] .v11-figure{background:#ecf4ff;color:#1e375b}
 .v15-path h2{margin:0 0 12px}
 .v10-research[hidden],.v10-manual[hidden],#v15-enem-suggestion[hidden]{display:none!important}
 #v15-enem-suggestion{margin:12px 0}
+
+/* V15.1 — prática escolar acessível, com alvos maiores para crianças. */
+.v15-school-pilot .v9-lead{line-height:1.75}
+.v15-school-example{border:1px solid var(--line,#d9dfeb);border-radius:14px;padding:14px 18px;margin:15px 0}
+.v15-school-example h3{margin:0 0 8px}
+.v15-school-example li{margin:8px 0}
+.v15-pilot-question{margin:18px 0;padding:16px;border:1px solid var(--line,#d9dfeb);border-radius:14px;min-width:0}
+.v15-pilot-question legend{font-weight:500;max-width:100%;padding:0 6px;line-height:1.5}
+.v15-pilot-answer{display:flex;align-items:center;gap:12px;min-height:48px;padding:9px 12px;margin:8px 0;border:1px solid var(--line,#d9dfeb);border-radius:12px;cursor:pointer;overflow-wrap:anywhere}
+.v15-pilot-answer:focus-within{outline:3px solid #4c7eeb;outline-offset:2px}
+.v15-pilot-answer input{width:19px;height:19px;flex-shrink:0}
+.v15-pilot-answer span{min-width:0;line-height:1.5}
+@media(max-width:410px){.v15-pilot-question{padding:10px}.v15-pilot-answer{padding:10px}.v15-school-example{padding:12px}}
+@media(prefers-reduced-motion:reduce){.v15-pilot-answer,.v15-school-example{scroll-behavior:auto;animation:none;transition:none}}

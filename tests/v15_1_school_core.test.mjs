@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {SCHOOL_PILOTS,findSchoolPilot,schoolPilotAvailability} from '../academy/v15-school-content.mjs';
+import {checkPilotCatalog,gradeSchoolPilot,pilotExpected,selectSchoolNextStep} from '../academy/v15-school-engine.mjs';
+import {schoolPreviewHtml,schoolLessonHtml} from '../academy/v15-school-ui.mjs';
+const audited=checkPilotCatalog(SCHOOL_PILOTS);
+assert.deepEqual(audited,{pilots:3,questions:18,skills:['EF03MA06','EF07MA08','EM13MAT302']});
+assert.deepEqual(SCHOOL_PILOTS.map(p=>[p.stage,p.grade]),[['fundamental1',3],['fundamental2',7],['medio',2]]);
+assert(SCHOOL_PILOTS.every(p=>p.editorialStatus==='em_revisao'));
+assert(SCHOOL_PILOTS.every(p=>p.verificationSource.startsWith('https://')));
+const fake={window:{}};vm.createContext(fake);
+for(const file of ['questions','extra_questions','advanced_questions'])vm.runInContext(readFileSync(new URL('../src/'+file+'.js',import.meta.url),'utf8'),fake);
+const oldIds=new Set(fake.window.QUESTION_BANK.map(q=>q.id));
+for(const pilot of SCHOOL_PILOTS){
+ assert(pilot.questions.every(q=>!oldIds.has(q.id)),'IDs escolares não podem sobrescrever ENEM');
+ const goal={id:'g',type:'Prova escolar',educationStage:pilot.stage,schoolYear:pilot.grade,subjects:['Matemática']};
+ assert.equal(findSchoolPilot(goal)?.id,pilot.id);
+ assert.equal(schoolPilotAvailability(goal),'piloto_em_revisao');
+ assert.equal(findSchoolPilot({...goal,subjects:['Português']}),null,'Não exibir Matemática quando não selecionada');
+ assert.equal(findSchoolPilot({...goal,schoolYear:pilot.grade+1}),null,'Não anunciar ano inteiro como disponível');
+ const answers=Object.fromEntries(pilot.questions.map(q=>[q.id,q.answer]));
+ const report=gradeSchoolPilot(pilot,answers);
+ assert.equal(report.correct,6);
+ assert.equal(report.blank,0);
+ assert.equal(report.wrong,0);
+ assert.equal(report.accuracy,100);
+ assert(!report.evidence.toLowerCase().includes('domínio demonstrado'));
+ const blank=gradeSchoolPilot(pilot,{});
+ assert.equal(blank.wrong,0);assert.equal(blank.blank,6);assert.equal(blank.accuracy,null);
+ const wrong=gradeSchoolPilot(pilot,{[pilot.questions[0].id]:(pilot.questions[0].answer+1)%pilot.questions[0].options.length});
+ assert.equal(wrong.wrong,1);assert.equal(wrong.blank,5);
+ assert.equal(wrong.answered,1);
+ assert(selectSchoolNextStep(pilot,wrong).includes('quatro'));
+ for(const q of pilot.questions){assert(q.explanation.length>25);assert.equal(q.options[q.answer].includes('R$')?Number(q.options[q.answer].replace(/[^\d]/g,'')):q.rule.kind==='compare'?q.options[q.answer]:Number(q.options[q.answer]),pilotExpected(q.rule));}
+ const h=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+ const html=schoolLessonHtml(goal,pilot,answers,{report},h);
+ assert(html.includes('id="v15-school-pilot-form"'));
+ assert.equal((html.match(/class="v15-pilot-question"/g)||[]).length,6);
+ assert(html.includes('Última atividade corrigida'));
+ assert(html.includes('Questão 6'));
+ assert(schoolPreviewHtml(goal,pilot,h).includes('Começar aula e atividade'));
+}
+const tampered=structuredClone(SCHOOL_PILOTS);
+tampered[0].questions[0].answer=0;
+assert.throws(()=>checkPilotCatalog(tampered),/Gabarito matematicamente incorreto/);
+console.log('PASS V15.1: 3 tópicos, 18 gabaritos matemáticos, respostas em branco, isolamento ENEM, versões e interface');

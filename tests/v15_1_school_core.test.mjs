@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {SCHOOL_PILOTS,findSchoolPilot,schoolPilotAvailability} from '../academy/v15-school-content.mjs';
 import {checkPilotCatalog,gradeSchoolPilot,pilotExpected,selectSchoolNextStep} from '../academy/v15-school-engine.mjs';
 import {schoolPreviewHtml,schoolLessonHtml} from '../academy/v15-school-ui.mjs';
+import {OFFICIAL_PAPERS,papersForYear,officialPaperHtml} from '../academy/v15-official-papers.mjs';
 const audited=checkPilotCatalog(SCHOOL_PILOTS);
 assert.deepEqual(audited,{pilots:3,questions:18,skills:['EF03MA06','EF07MA08','EM13MAT302']});
 assert.deepEqual(SCHOOL_PILOTS.map(p=>[p.stage,p.grade]),[['fundamental1',3],['fundamental2',7],['medio',2]]);
@@ -44,4 +45,17 @@ for(const pilot of SCHOOL_PILOTS){
 const tampered=structuredClone(SCHOOL_PILOTS);
 tampered[0].questions[0].answer=0;
 assert.throws(()=>checkPilotCatalog(tampered),/Gabarito matematicamente incorreto/);
+assert.equal(OFFICIAL_PAPERS.length,2);
+assert.equal(papersForYear(2024).length,2);
+assert.equal(papersForYear(2025).length,0);
+for(const record of OFFICIAL_PAPERS){
+ assert.equal(record.verifiedStatus,'vinculado_no_indice_oficial');
+ assert.equal(record.contentsReviewed,false);
+ assert.equal(record.interactiveReady,false);
+ assert.equal(new URL(record.paperUrl).hostname,'download.inep.gov.br');
+ assert.equal(new URL(record.keyUrl).hostname,'download.inep.gov.br');
+ assert(record.paperUrl.endsWith('.pdf')&&record.keyUrl.endsWith('.pdf'));
+}
+assert(officialPaperHtml(2024,s=>s).includes('Abrir gabarito (PDF oficial)'));
+assert(!officialPaperHtml(2025,s=>s).includes('Abrir prova (PDF oficial)'));
 console.log('PASS V15.1: 3 tópicos, 18 gabaritos matemáticos, respostas em branco, isolamento ENEM, versões e interface');

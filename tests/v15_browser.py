@@ -70,6 +70,11 @@ with sync_playwright() as p:
         assert report['answered']==2 and report['wrong']==1 and report['correct']==1 and report['blank']==4
         assert 'domínio' not in report['evidence'].lower()
         assert page.get_by_text('Última atividade corrigida').count()==1
+        page.locator('.v9-nav button[data-page="hub"]').click()
+        expect(page.get_by_role('heading',name='O que vamos estudar hoje? · Escola')).to_be_visible()
+        expect(page.get_by_text('Última tentativa: 2 respondidas; 1 acerto.')).to_be_visible()
+        page.get_by_role('button',name='Continuar estudando').click()
+        expect(page.get_by_text('Última atividade corrigida')).to_be_visible()
         page.locator('.v9-nav button[data-page="goals"]').click()
         page.get_by_role('button',name='Editar objetivo').click()
         assert page.locator('#v15-school-stage-edit').count()==1

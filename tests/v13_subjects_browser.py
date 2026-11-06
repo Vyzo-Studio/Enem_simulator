@@ -56,9 +56,29 @@ def test(page,width):
     # Simulador clássico: o select original não fica dentro de formulário
     page.locator('body').evaluate("(body)=>body.innerHTML='<div class=\"field\"><label for=\"cfg-subject\">Disciplina</label><select id=\"cfg-subject\"><option>Todas</option><option>Português</option><option>Matemática</option></select></div>'")
     expect(page.locator('.v13-subjects')).to_be_visible()
-    page.get_by_role('combobox',name='Pesquisar matéria').fill('mat')
+    single=page.get_by_role('combobox',name='Pesquisar matéria')
+    assert page.get_by_role('button',name='Selecionar matérias recomendadas').count()==0
+    single.fill('penal')
+    assert page.get_by_role('option',name='Direito Penal',exact=True).count()==0
+    single.press('Enter')
+    assert page.locator('#cfg-subject').input_value()=='Todas'
+    assert page.locator('#cfg-subject option').count()==3
+    single.fill('mat')
     page.get_by_role('option',name='Matemática',exact=True).click()
     assert page.locator('#cfg-subject').input_value()=='Matemática'
+    assert page.locator('#cfg-subject option').count()==3
+    # O seletor V13 de disciplina focalizada também não pode inventar opções.
+    page.locator('body').evaluate("""(body)=>body.innerHTML='<form><label for="v13-subject">Matéria</label><select id="v13-subject"><option value="Português">Português</option><option value="Química">Química</option></select></form>'""")
+    expect(page.locator('.v13-subjects')).to_be_visible()
+    single=page.get_by_role('combobox',name='Pesquisar matéria')
+    single.fill('direito')
+    assert page.get_by_role('option',name='Direito Penal',exact=True).count()==0
+    single.press('Enter')
+    assert page.locator('#v13-subject').input_value()=='Português'
+    assert page.locator('#v13-subject option').count()==2
+    single.fill('quimica')
+    page.get_by_role('option',name='Química',exact=True).click()
+    assert page.locator('#v13-subject').input_value()=='Química'
     assert not page.evaluate('document.documentElement.scrollWidth>innerWidth'),width
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--no-sandbox'])

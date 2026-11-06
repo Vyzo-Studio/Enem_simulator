@@ -55,7 +55,7 @@ with sync_playwright() as p:
         saved=page.evaluate('(k)=>JSON.parse(localStorage.getItem(k))',KEY)
         assert saved['tasks'][0]['day']=='2026-12-01'
         page.get_by_role('button',name='Semana').click()
-        page.get_by_role('button',name='Todas').click()
+        page.locator('button[data-action="plan-view"][data-view="all"]').click()
         page.locator('.v9-nav button[data-page="goals"]').click()
         page.get_by_role('button',name='Editar prova').click()
         expect(page.get_by_text('Editar prova',exact=True)).to_be_visible()

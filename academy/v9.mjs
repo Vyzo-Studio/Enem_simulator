@@ -77,6 +77,7 @@ function schoolFields(i,goal){
   years.map(n=>'<option value="'+n+'" '+(year===n?'selected':'')+'>'+n+'º ano</option>').join('')+
   '</select></div><p class="v9-mini">A etapa organiza seu objetivo. Questões específicas desta série ainda não foram validadas.</p>';
 }
+function isSchoolPath(id){return getLearningPath(id)?.type==='Prova escolar';}
 function pathSelector(){
  return '<section class="v15-path"><h2>Qual é o seu objetivo de aprendizagem?</h2>'+
   '<div class="field"><label for="v15-learning-path">Selecione seu objetivo</label>'+
@@ -87,7 +88,7 @@ function pathSelector(){
 function researchPreview(){
  const connected=cloudConfigured(window.VYZO_ACADEMY_CLOUD||{});
  const saved=draft.goals.filter(g=>Array.isArray(g.sources)&&g.sources.length);
- return pathSelector()+`<section class="v10-research" aria-label="Busca inteligente de provas">
+ return pathSelector()+`<section class="v10-research" aria-label="Busca inteligente de provas" ${isSchoolPath(draft.learningPath)?'hidden':''}>
   <div class="v10-kicker">BUSCA INTELIGENTE DE PROVAS</div>
   <h2>Qual prova ou concurso você deseja estudar?</h2>
   <p class="v9-lead">Digite o nome da prova. Quando a pesquisa segura estiver conectada, consultaremos fontes oficiais e mostraremos opções para você conferir.</p>
@@ -97,7 +98,7 @@ function researchPreview(){
   ${saved.length?`<div class="v10-selected"><h3>Provas escolhidas com fontes vinculadas</h3>${saved.map((g,i)=>`<div class="v10-selected-row"><div><strong>${h(g.name)}</strong><small>${h(g.edition||'Edição não confirmada')} · ${h(g.sourceStatus||'Conferir fonte')}</small></div><button type="button" class="btn secondary" data-action="v10-remove" data-name="${h(g.name)}" data-edition="${h(g.edition||'')}">Remover</button></div>`).join('')}</div>`:''}
   ${researchResults.length?`<div class="v10-found"><h3>Encontramos estas opções com links de fontes oficiais</h3><p class="v9-mini">Fonte vinculada não equivale a validação humana do edital. Confira cargo, ano, data e matérias.</p>${researchResults.map((r,i)=>`<article class="v10-result"><div class="v10-result-head"><strong>${h(r.name)}</strong><span class="v9-badge">${h(r.edition||'Edição não confirmada')}</span></div><p class="v9-mini">${h([r.institution,r.position,r.board].filter(Boolean).join(' · ')||'Dados adicionais não confirmados')} · ${h(r.examDate||'Data não confirmada')}</p><div class="v10-sources">${r.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Abrir fonte oficial')}</a>`).join('')}</div><button type="button" class="btn secondary" data-action="v10-select" data-index="${i}">Adicionar esta prova</button></article>`).join('')}</div>`:''}
  </section>
- <details class="v10-manual" ${!connected||draft.types.length||draft.goals.length?'open':''}><summary><strong>Configurar minha prova manualmente</strong> — alternativa quando a IA não estiver disponível</summary><div class="v9-choice-grid">${EXAM_TYPES.map(type=>`<label class="v9-choice"><input type="checkbox" name="exam_type" value="${h(type)}" ${draft.types.includes(type)?'checked':''}><strong>${h(type)}</strong></label>`).join('')}</div></details>
+ <details class="v10-manual" ${isSchoolPath(draft.learningPath)?'hidden':''} ${!connected||draft.types.length||draft.goals.length?'open':''}><summary><strong>Configurar minha prova manualmente</strong> — alternativa quando a IA não estiver disponível</summary><div class="v9-choice-grid">${EXAM_TYPES.map(type=>`<label class="v9-choice"><input type="checkbox" name="exam_type" value="${h(type)}" ${draft.types.includes(type)?'checked':''}><strong>${h(type)}</strong></label>`).join('')}</div></details>
  <p class="v9-mini">É possível adicionar mais de uma prova. Cada uma receberá seu próprio diagnóstico antes do plano de estudos.</p>`;
 }
 async function researchExam(){
@@ -202,7 +203,7 @@ function saveGoalEdit(form){
  const current=state.goals.find(g=>g.id===editingGoalId);
  if(!current)throw Error('Prova não encontrada.');
  const f=new FormData(form),name=String(f.get('name')||'').trim().slice(0,90),
-  examDate=String(f.get('examDate')||''),
+  examDate=f.has('examDate')?String(f.get('examDate')||''):String(current.examDate||''),
   subjects=[...new Set(String(f.get('subjects')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20),
   topics=[...new Set(String(f.get('topics')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,30),
   foreignLanguage=isEnem(current)&&f.get('foreignLanguage')==='Espanhol'?'Espanhol':'Inglês',
@@ -221,9 +222,9 @@ function saveGoalEdit(form){
   current.curriculumChangedAt=Date.now();
   for(const t of state.tasks)if(t.goalId===current.id&&t.status==='pending'){t.status='superseded';t.supersededAt=Date.now();}
  }
- Object.assign(current,{name,institution:String(f.get('institution')||'').trim().slice(0,110),
-  position:String(f.get('position')||'').trim().slice(0,100),
-  board:String(f.get('board')||'').trim().slice(0,100),edition:String(f.get('edition')||'').trim().slice(0,50),
+ Object.assign(current,{name,institution:f.has('institution')?String(f.get('institution')||'').trim().slice(0,110):String(current.institution||''),
+  position:f.has('position')?String(f.get('position')||'').trim().slice(0,100):String(current.position||''),
+  board:f.has('board')?String(f.get('board')||'').trim().slice(0,100):String(current.board||''),edition:f.has('edition')?String(f.get('edition')||'').trim().slice(0,50):String(current.edition||''),
   examDate,subjects,topics,educationStage,schoolYear,foreignLanguage,priority,status,updatedAt:Date.now()});
  persist();editingGoalId=null;page='goals';render();
  message(changed?'Dados salvos. Seu histórico continua disponível; complete um novo diagnóstico para atualizar o plano.':'Informações da prova atualizadas.');
@@ -517,6 +518,11 @@ document.addEventListener('change',e=>{const el=e.target;
  if(['exam-length','custom-length','v13-exam-mode','v13-area','v13-subject','v13-language'].includes(el.id))updateCompositionPreview();
  if(el.id==='v9-minutes'){$('#v9-custom-wrap').hidden=el.value!=='custom';}
   if(el.id==='v14-timer-mode')$('#v14-time-limit-wrap').hidden=el.value!=='countdown';
+ if(el.id==='v15-learning-path'){
+  const school=isSchoolPath(el.value),research=$('.v10-research'),manual=$('.v10-manual');
+  if(research)research.hidden=school;
+  if(manual)manual.hidden=school;
+ }
  if(el.id==='v15-past-year'){const display=$('#v15-past-selection');if(display)display.textContent='Edição selecionada: '+el.value+'. Localize esse ano na página oficial.';}
  if(el.id.startsWith('v15-school-stage-')){
   const index=el.id.slice('v15-school-stage-'.length),target=$('#v15-school-year-'+index);

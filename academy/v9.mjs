@@ -18,7 +18,7 @@ let storageFailure='',conflict=false;
 function load(){try{const s=localStorage.getItem(KEY);if(!s)return empty();const data=JSON.parse(s);if(data.schema!==9||!Array.isArray(data.goals)||!Array.isArray(data.assessments)||!Array.isArray(data.tasks))throw Error('Estrutura de dados inválida');return data;}catch(e){storageFailure='Os dados locais não puderam ser lidos. Nenhuma gravação será realizada até recuperar uma cópia.';return empty();}}
 let state=load();let page='hub',step=0,selectedGoal=null,questionPosition=0,selectedAssessment=null,lessonTopic=null,lessonGoal=null,previewReason=null;
 let draft=state.draft||{types:[],goals:[],minutes:120,weekdays:[1,2,3,4,5],confidence:'Não sei avaliar',difficulties:[],style:'Aprendizagem mista'};
-let mode='initial',newGoalWizard=false;
+let mode='initial',newGoalWizard=false,editingGoalId=null;
 let researchResults=[],researchQuery='',researchError='',researchBusy=false;
 step=Number.isInteger(state.wizardStep)?Math.max(0,Math.min(3,state.wizardStep)):0;
 function persist(){if(storageFailure||conflict)throw Error('Salvamento bloqueado: exporte seu backup antes de continuar.');state.revision=(state.revision||0)+1;state.draft=draft;try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(e){state.revision--;storageFailure='O navegador não permitiu salvar. Libere espaço ou autorize armazenamento e baixe um backup.';message(storageFailure,'error');return false;}}
@@ -80,10 +80,60 @@ function saveStep(form){const f=new FormData(form);
 }
 function endWizard(){state.wizardStep=0;const newGoals=draft.goals.map(g=>({...g,id:uid(),priority:'medium',status:'preparing',createdAt:Date.now()}));state.goals.push(...newGoals);state.profile={minutes:Number(draft.minutes),weekdays:draft.weekdays,confidence:draft.confidence,difficulties:draft.difficulties,style:draft.style};state.onboarding=true;draft={types:[],goals:[],minutes:state.profile.minutes,weekdays:[...state.profile.weekdays],confidence:state.profile.confidence,difficulties:[...state.profile.difficulties],style:state.profile.style};if(!persist())return;page='hub';render();message('Objetivos salvos. Agora vamos descobrir o que você já sabe.');}
 function availableMinutes(){return Object.fromEntries(Array.from({length:7},(_,i)=>[String(i),state.profile.weekdays.includes(i)?state.profile.minutes:0]));}
-function status(goal){const init=latestInitial(goal.id,state.assessments);if(init&&isGoalEvaluated(goal,state.assessments))return goal.status==='paused'?'Pausada':'Diagnóstico concluído';if(init)return 'Evidência insuficiente — refazer';const running=state.assessments.find(a=>a.goalId===goal.id&&a.kind==='initial'&&a.status==='in_progress');return running?'Diagnóstico em andamento':'Diagnóstico pendente';}
-function summaryGoal(goal){const done=isGoalEvaluated(goal,state.assessments),running=state.assessments.find(a=>a.goalId===goal.id&&a.status==='in_progress');return `<article class="v9-goal"><div><span class="v9-badge ${done?'ok':'muted'}">${h(status(goal))}</span><h3>${h(goal.name)}</h3><p>${h(goal.type)}${goal.examDate?' · '+h(prettyDate(goal.examDate)):' · Data não divulgada'} · ${h(goal.subjects.join(', ')||'Matérias a definir')}</p>${goal.provisional?'<p class="v9-mini">Avaliação provisória: habilidades gerais, não específicas da prova.</p>':''}</div><div class="v9-actions" style="margin:0">${running?`<button class="btn" data-action="resume-assessment" data-id="${running.id}">Retomar avaliação</button>`:!done?`<button class="btn" data-action="choose-assessment" data-id="${goal.id}">Começar diagnóstico</button>`:`<button class="btn secondary" data-action="open-plan" data-id="${goal.id}">Ver plano</button><button class="btn secondary" data-action="open-report" data-id="${latestInitial(goal.id,state.assessments).id}">Ver diagnóstico</button>`}${done?`<button class="btn ghost" data-action="request-retest" data-id="${goal.id}">Novo teste</button>`:''}</div></article>`;}
+function status(goal){if(goal.status==='archived')return 'Arquivada';if(goal.curriculumChangedAt&&!isGoalEvaluated(goal,state.assessments))return 'Grade alterada — novo diagnóstico necessário';const init=latestInitial(goal.id,state.assessments);if(init&&isGoalEvaluated(goal,state.assessments))return goal.status==='paused'?'Pausada':'Diagnóstico concluído';if(init)return 'Evidência insuficiente — refazer';const running=state.assessments.find(a=>a.goalId===goal.id&&a.kind==='initial'&&a.status==='in_progress');return running?'Diagnóstico em andamento':'Diagnóstico pendente';}
+function summaryGoal(goal){const done=isGoalEvaluated(goal,state.assessments),running=state.assessments.find(a=>a.goalId===goal.id&&a.status==='in_progress');return `<article class="v9-goal"><div><span class="v9-badge ${done?'ok':'muted'}">${h(status(goal))}</span><h3>${h(goal.name)}</h3><p>${h(goal.type)}${goal.examDate?' · '+h(prettyDate(goal.examDate)):' · Data não divulgada'} · ${h(goal.subjects.join(', ')||'Matérias a definir')}</p>${goal.provisional?'<p class="v9-mini">Avaliação provisória: habilidades gerais, não específicas da prova.</p>':''}</div><div class="v9-actions" style="margin:0">${goal.status==='archived'?'<span class="v9-mini">Objetivo arquivado. Restaure para retomar.</span>':running?`<button class="btn" data-action="resume-assessment" data-id="${running.id}">Retomar avaliação</button>`:!done?`<button class="btn" data-action="choose-assessment" data-id="${goal.id}">Começar diagnóstico</button>`:`<button class="btn secondary" data-action="open-plan" data-id="${goal.id}">Ver plano</button><button class="btn secondary" data-action="open-report" data-id="${latestInitial(goal.id,state.assessments).id}">Ver diagnóstico</button>`}${done?`<button class="btn ghost" data-action="request-retest" data-id="${goal.id}">Novo teste</button>`:''}<button type="button" class="btn ghost" data-action="edit-goal" data-id="${goal.id}">Editar prova</button></div></article>`;}
 function renderHub(){const pending=state.goals.filter(g=>!isGoalEvaluated(g,state.assessments));const finished=state.goals.filter(g=>isGoalEvaluated(g,state.assessments));const todays=state.tasks.filter(t=>t.day===today());output(`${title('Sua jornada começa pelo diagnóstico','Você não precisa estudar às cegas: avaliamos o conhecimento, analisamos os erros e só então planejamos o que aprender.')}<section class="v9-hero"><p class="v9-overline" style="color:#b2c8ff">${pending.length?'ETAPA 2 DE 2 · AVALIAÇÃO INICIAL':'PLANEJAMENTO COM EVIDÊNCIAS'}</p><h1>${pending.length?'Agora vamos descobrir o que você já sabe.':'Seu estudo já tem um ponto de partida.'}</h1><p>${pending.length?`${pending.length} prova(s) aguardam diagnóstico. Você pode escolher qual avaliar primeiro e continuar depois.`:'Planos personalizados são derivados das respostas dos seus diagnósticos. Questões não avaliadas continuam visíveis no planejamento.'}</p>${pending.length?`<button class="btn" data-action="choose-assessment" data-id="${pending[0].id}">Começar diagnóstico →</button>`:'<button class="btn" data-page="plan">Ver meu plano personalizado →</button>'}</section><div class="v9-grid"><div class="v9-stat"><small>Provas cadastradas</small><strong>${state.goals.length}</strong></div><div class="v9-stat"><small>Diagnósticos concluídos</small><strong>${finished.length}</strong></div><div class="v9-stat"><small>Minutos disponíveis hoje</small><strong>${availableMinutes()[new Date().getDay()]||0}</strong></div><div class="v9-stat"><small>Atividades de hoje</small><strong>${todays.length}</strong></div></div><section class="v9-card" style="margin-top:20px"><div class="row between"><h2>Minhas provas</h2>${cta('+ Adicionar outra prova','add-goal','secondary')}</div>${state.goals.map(summaryGoal).join('')}</section>`);}
-function renderGoals(){output(`${title('Minhas provas','A evolução de cada prova fica separada. Somente provas diagnosticadas liberam o plano correspondente.')}<div class="v9-actions">${cta('+ Adicionar prova','add-goal')}</div>${state.goals.map(g=>summaryGoal(g)+`<div class="row" style="margin:0 0 18px 10px"><button class="btn ghost" data-action="toggle-goal" data-id="${g.id}">${g.status==='paused'?'Retomar estudos':'Pausar prova'}</button></div>`).join('')}`);}
+function renderGoals(){output(`${title('Minhas provas','A evolução de cada prova fica separada. Somente provas diagnosticadas liberam o plano correspondente.')}<div class="v9-actions">${cta('+ Adicionar prova','add-goal')}</div>${state.goals.map(g=>summaryGoal(g)+`<div class="row" style="margin:0 0 18px 10px"><button class="btn ghost" data-action="toggle-goal" data-id="${g.id}">${g.status==='paused'?'Retomar estudos':g.status==='archived'?'Restaurar prova':'Pausar prova'}</button><button type="button" class="btn ghost" data-action="duplicate-goal" data-id="${g.id}">Duplicar configuração</button><button type="button" class="btn ghost" data-action="archive-goal" data-id="${g.id}" ${g.status==='archived'?'disabled':''}>Arquivar</button></div>`).join('')}`);}
+
+function renderEditGoal(){
+ const g=state.goals.find(x=>x.id===editingGoalId);
+ if(!g){go('goals');return;}
+ output(title('Editar prova','Atualize informações sem perder avaliações, redações ou atividades concluídas.')+
+  '<div class="v9-card"><form id="edit-goal-form" class="v9-form">'+
+  formField('Nome da prova','name',g.name,'text','required maxlength="90"')+
+  '<div class="field-row">'+
+  formField('Instituição','institution',g.institution||'','text','maxlength="110"')+
+  formField('Cargo ou curso','position',g.position||'','text','maxlength="100"')+
+  formField('Banca organizadora','board',g.board||'','text','maxlength="100"')+
+  formField('Edição ou ano','edition',g.edition||'','text','maxlength="50"')+
+  formField('Data da prova','examDate',g.examDate||'','date')+
+  '</div>'+formField('Quais matérias deseja estudar?','subjects',(g.subjects||[]).join(', '),'text','maxlength="400"')+
+  formField('Tópicos prioritários (opcional, separados por vírgula)','topics',(g.topics||[]).join(', '),'text','maxlength="400"')+
+  (isEnem(g)?formSelect('Língua estrangeira','foreignLanguage',['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):'')+
+  formSelect('Prioridade','priority',['high','medium','low'],g.priority||'medium')+
+  formSelect('Situação','status',['preparing','paused','archived'],g.status||'preparing')+
+  '<p class="v9-warn">Alterar matérias, tópicos ou idioma requer um novo diagnóstico para validar o plano. O histórico anterior será preservado; tarefas futuras desse objetivo serão substituídas após a atualização.</p>'+
+  '<div class="v9-actions"><button class="btn" type="submit">Salvar alterações</button>'+
+  '<button class="btn secondary" type="button" data-page="goals">Cancelar</button></div></form></div>');
+}
+function saveGoalEdit(form){
+ const current=state.goals.find(g=>g.id===editingGoalId);
+ if(!current)throw Error('Prova não encontrada.');
+ const f=new FormData(form),name=String(f.get('name')||'').trim().slice(0,90),
+  examDate=String(f.get('examDate')||''),
+  subjects=[...new Set(String(f.get('subjects')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20),
+  topics=[...new Set(String(f.get('topics')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,30),
+  foreignLanguage=isEnem(current)&&f.get('foreignLanguage')==='Espanhol'?'Espanhol':'Inglês',
+  priority=String(f.get('priority')||'medium'),status=String(f.get('status')||'preparing');
+ if(!name||!subjects.length)throw Error('Informe o nome e pelo menos uma matéria.');
+ if(examDate&&Number.isNaN(new Date(examDate+'T12:00:00').getTime()))throw Error('Data inválida.');
+ if(!['high','medium','low'].includes(priority)||!['preparing','paused','archived'].includes(status))throw Error('Configuração inválida.');
+ const changed=JSON.stringify({subjects:current.subjects||[],topics:current.topics||[],language:current.foreignLanguage||'Inglês'})!==
+  JSON.stringify({subjects,topics,language:foreignLanguage});
+ if(changed&&!confirm('As matérias, tópicos ou idioma mudaram. O diagnóstico anterior será preservado, mas será necessário um novo diagnóstico. Atividades futuras pendentes desta prova serão substituídas. Continuar?'))return;
+ if(changed){
+  current.curriculumHistory=[...(current.curriculumHistory||[]),{at:Date.now(),subjects:[...(current.subjects||[])],topics:[...(current.topics||[])],foreignLanguage:current.foreignLanguage||'Inglês'}].slice(-50);
+  current.curriculumChangedAt=Date.now();
+  for(const t of state.tasks)if(t.goalId===current.id&&t.status==='pending'){t.status='superseded';t.supersededAt=Date.now();}
+ }
+ Object.assign(current,{name,institution:String(f.get('institution')||'').trim().slice(0,110),
+  position:String(f.get('position')||'').trim().slice(0,100),
+  board:String(f.get('board')||'').trim().slice(0,100),edition:String(f.get('edition')||'').trim().slice(0,50),
+  examDate,subjects,topics,foreignLanguage,priority,status,updatedAt:Date.now()});
+ persist();editingGoalId=null;page='goals';render();
+ message(changed?'Dados salvos. Seu histórico continua disponível; complete um novo diagnóstico para atualizar o plano.':'Informações da prova atualizadas.');
+}
+
 function renderDiagnostics(){const all=[...state.assessments].sort((a,b)=>b.startedAt-a.startedAt);output(`${title('Diagnósticos iniciais','O planejamento de cada prova só é liberado depois da sua primeira avaliação.')}<div class="v9-card">${state.goals.map(summaryGoal).join('')}</div>${all.length?`<div class="v9-card"><h2>Histórico de avaliações</h2>${all.map(a=>{const g=state.goals.find(g=>g.id===a.goalId);return `<div class="v9-goal"><div><b>${h(g?.name||'Prova')}</b> · ${a.kind==='initial'?'Diagnóstico inicial':'Reteste'}<p>${a.status==='completed'?`Concluído · ${a.report.correct} acertos · ${a.report.accuracy}% das respondidas`:'Em andamento · '+Object.keys(a.answers||{}).length+' de '+a.ids.length+' respondidas'}</p></div>${a.status==='completed'?`<button class="btn secondary" data-action="open-report" data-id="${a.id}">Abrir correção</button>`:`<button class="btn" data-action="resume-assessment" data-id="${a.id}">Retomar</button>`}</div>`}).join('')}</div>`:''}`);}
 function renderReady(){const g=state.goals.find(x=>x.id===selectedGoal);if(!g){go('hub');return;}
  const already=state.assessments.filter(a=>a.goalId===g.id).flatMap(a=>a.ids);const pool=suitableQuestions(BANK,g,already);
@@ -183,7 +233,7 @@ function renderLesson(){const g=state.goals.find(x=>x.id===lessonGoal);if(!g||!i
 }
 function renderData(){output(`${title('Backup e privacidade','O progresso desta experiência fica somente neste navegador. Não há conta nem sincronização entre dispositivos.')}<div class="v9-card"><h2>Proteja seu progresso</h2><p>Faça backup antes de trocar de aparelho, limpar dados do navegador ou abrir em uma sessão privada.</p><div class="v9-actions">${cta('Baixar backup JSON','export')}${cta('Importar backup V9','show-import','secondary')}</div><input type="file" accept="application/json,.json" id="v9-import-file" hidden><p class="v9-mini">Chave local: ${KEY}. O backup não contém senhas. Não contém dados do antigo simulador, que permanece intacto no endereço original.</p></div>`);}
 function render(){if(!state.onboarding||page==='wizard'){page='wizard';renderWizard();return;}
- if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
+ if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
 }
 function go(to){if(!state.onboarding&&to!=='wizard'){page='wizard';renderWizard();return;}page=to;if(to==='plan')selectedGoal=null;render();window.scrollTo({top:0,behavior:'instant'});}
 function download(name,value){const b=new Blob([value],{type:'application/json;charset=utf-8'}),link=document.createElement('a'),url=URL.createObjectURL(b);link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
@@ -194,6 +244,19 @@ function importBackup(file){if(!file||file.size>5_000_000)throw Error('O arquivo
 function onAction(el){const action=el.dataset.action,id=el.dataset.id;
  if(action==='wizard-back'){step=Math.max(0,step-1);state.wizardStep=step;persist();render();}
  else if(action==='add-goal')beginWizard(true);
+  else if(action==='edit-goal'){editingGoalId=id;page='edit-goal';render();}
+  else if(action==='duplicate-goal'){
+   const original=state.goals.find(g=>g.id===id);if(!original)throw Error('Prova indisponível.');
+   const {curriculumHistory,curriculumChangedAt,...settings}=original;
+   state.goals.push({...settings,id:uid(),name:original.name+' (cópia)',status:'preparing',createdAt:Date.now(),updatedAt:Date.now()});
+   persist();render();message('Configuração duplicada sem copiar diagnósticos ou histórico de respostas.');
+  }
+  else if(action==='archive-goal'){
+   const g=state.goals.find(x=>x.id===id);if(!g||g.status==='archived')return;
+   if(!confirm('Arquivar esta prova? O histórico será preservado e o objetivo sairá do planejamento ativo.'))return;
+   g.status='archived';for(const t of state.tasks)if(t.goalId===g.id&&t.status==='pending'){t.status='superseded';t.supersededAt=Date.now();}
+   persist();render();message('Prova arquivada, sem excluir seus dados.');
+  }
  else if(action==='choose-assessment'){selectedGoal=id;page='ready';render();}
  else if(action==='enable-provisional'){const g=state.goals.find(x=>x.id===selectedGoal);g.provisional=true;persist();render();}
  else if(action==='resume-assessment'){selectedAssessment=id;questionPosition=0;page='exam';render();}
@@ -208,7 +271,7 @@ function onAction(el){const action=el.dataset.action,id=el.dataset.id;
  else if(action==='other-goals')go('diagnostics');
  else if(action==='study-topic'){lessonGoal=el.dataset.goal;lessonTopic=el.dataset.topic;page='lesson';renderLesson();}
  else if(action==='request-retest'){const goal=state.goals.find(g=>g.id===id);if(!goal||!isGoalEvaluated(goal,state.assessments)){message('Termine o diagnóstico inicial desta prova primeiro.','error');return;}const started=state.tasks.some(t=>t.goalId===id&&t.status==='completed');if(!started){message('Conclua ao menos uma atividade do plano antes de retestar.','error');return;}const used=state.assessments.filter(a=>a.goalId===id).flatMap(a=>a.ids),free=suitableQuestions(BANK,goal,used).length;if(free<3){message('Ainda não há questões inéditas suficientes para um reteste confiável.','error');return;}selectedGoal=id;mode='retest';page='ready';renderReady();message('Reteste: selecione uma quantidade de questões inéditas.');}
- else if(action==='toggle-goal'){const goal=state.goals.find(g=>g.id===id);goal.status=goal.status==='paused'?'preparing':'paused';persist();render();}
+ else if(action==='toggle-goal'){const goal=state.goals.find(g=>g.id===id);if(!goal)return;goal.status=goal.status==='paused'||goal.status==='archived'?'preparing':'paused';persist();render();}
  else if(action==='complete-task'){const task=state.tasks.find(t=>t.id===id);if(task&&task.status!=='completed'){task.status='completed';task.completedAt=Date.now();persist();render();message('Atividade concluída. Um reteste ficará disponível para esta prova.');}}
  else if(action==='plan-all'){selectedGoal=null;renderPlan();}
  else if(action==='plan-extend'){const version=Math.max(0,...state.tasks.map(t=>t.version||0))+1;const last=state.tasks.map(t=>t.day).sort().at(-1);const start=last?new Date(last+'T12:00:00'):new Date();start.setDate(start.getDate()+1);const additions=buildAdaptiveSchedule({goals:state.goals,assessments:state.assessments,availability:availableMinutes(),bank:BANK,existing:state.tasks,start,days:14,version});if(!additions.length){message('Não há tempo livre ou provas com diagnóstico para adicionar tarefas.','error');return;}const valid=verifyPlan([...state.tasks,...additions],availableMinutes());if(!valid.valid)throw Error('Agenda rejeitada: conflito de horário.');state.tasks.push(...additions);persist();renderPlan();message(additions.length+' novas atividades planejadas.');}
@@ -224,7 +287,7 @@ document.addEventListener('change',e=>{const el=e.target;
  if(el.id==='v9-import-file'&&el.files?.[0])importBackup(el.files[0]);
 });
 document.addEventListener('input',e=>{if(e.target.id==='custom-length')updateCompositionPreview();});
-document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});
+document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form','edit-goal-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else if(f.id==='edit-goal-form'){saveGoalEdit(f);}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});
 window.addEventListener('storage',event=>{if(event.key===KEY&&event.newValue!==JSON.stringify(state)){conflict=true;message('Outra aba alterou seu progresso. Exporte um backup e atualize esta página antes de continuar.','error');}});
 function tick(){if(page==='exam'){const a=currentAssessment(),el=$('#v9-clock');if(a&&el)el.textContent='Tempo: '+fmtTime(Math.floor((Date.now()-a.startedAt)/1000));}}
 setInterval(tick,1000);

@@ -25,6 +25,8 @@ export const hasEnoughEvidence=a=>a?.status==='completed'&&a.report?.answered>=M
 export const isGoalEvaluated=(goal,assessments)=>assessments.some(a=>a.goalId===goal.id&&a.kind==='initial'&&hasEnoughEvidence(a)&&(!goal.curriculumChangedAt||(a.completedAt||0)>=goal.curriculumChangedAt));
 export function suitableQuestions(bank,goal,exclude=[]){
  if(!Array.isArray(bank)||!goal)return [];
+ // A base ENEM não foi revisada para séries escolares: nem provisoriamente a apresentar como escolar.
+ if(goal.type==='Prova escolar'||goal.educationStage)return [];
  if(!isEnem(goal)&&!goal.provisional)return [];
  const seen=new Set(exclude),language=goal.foreignLanguage==='Espanhol'?'Espanhol':'Inglês';
  const valid=bank.filter(q=>q&&typeof q.id==='string'&&!seen.has(q.id)&&

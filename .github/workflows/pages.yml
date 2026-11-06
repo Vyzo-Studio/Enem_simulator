@@ -1,7 +1,7 @@
 name: Quality checks
 on:
   push:
-    branches: [main, feat-v13-subject-autocomplete, feat-v14-education-foundations]
+    branches: [main, feat-v13-subject-autocomplete, feat-v14-education-foundations, feat-v15-universal-pathways, feat-v15-1-school-pilots]
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,12 +37,24 @@ jobs:
 
       - name: Verify V9 diagnostic and scheduler
         run: node tests/v9_core.test.mjs
+      - name: Audit preserved V12 authentication and legacy import core (mocked)
+        run: node tests/v12_auth.test.mjs
+      - name: V12 gateway fail-closed without configured backend
+        run: python3 tests/v12_browser.py
       - name: V13 validated balanced question composition
         run: node tests/v13_composer.test.mjs
       - name: Verify V14 curricular matching and focused diagnostics
         run: node tests/v14_core.test.mjs
+      - name: Verify V15 school stages and content isolation
+        run: node tests/v15_pathways.test.mjs
+      - name: Audit V15.1 pilot curriculum, math answer keys and blank responses
+        run: node tests/v15_1_school_core.test.mjs
+      - name: Verify V15.1 proposed curriculum RLS and versioning (static only)
+        run: node tests/v15_1_schema.test.mjs
       - name: Browser regression V9 (local storage simulated)
         run: python3 tests/v9_browser.py
+      - name: V15 school pathways and official past-paper browser tests
+        run: python3 tests/v15_browser.py
       - name: V14 examination editing and timer browser regression
         run: python3 tests/v14_browser.py
 

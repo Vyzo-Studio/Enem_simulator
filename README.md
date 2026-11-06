@@ -1,3 +1,15 @@
+# VYZO ACADEMY — Plataforma educacional
+
+**Repositório oficial:** https://github.com/Vyzo-Studio/Vyzo_Academy
+
+**Site:** https://vyzo-studio.github.io/Vyzo_Academy/
+
+A evolução V14 amplia a jornada de estudos local com edição e arquivamento seguro de provas, taxonomia de disciplinas, avaliações focadas, calendário com disponibilidade por dia, cronômetros, biblioteca do banco autoral e revisão de erros. Consulte [V14_RELEASE_NOTES.md](./V14_RELEASE_NOTES.md).
+
+**Estado real da infraestrutura:** o login obrigatório, a sincronização em nuvem, pesquisa de concursos com IA e tutoria real ainda **não estão operacionais no site publicado**. A preparação de autenticação V12 está isolada na branch `v12-auth-gateway-preproduction` e depende de banco Supabase exclusivo, confirmação de e-mail, testes RLS entre estudantes diferentes e migração segura de históricos. A V14 não apaga os dados locais anteriores.
+
+---
+
 # VYZO ACADEMY — Universal Exam Mentor v3 (incremental)
 
 Plataforma educativa independente, executada no navegador, hospedável no GitHub Pages. A evolução v3 **não reconstrói o sistema v2**: mantém o banco atual, o motor de simulados, os dados já salvos, a correção, a redação e o recurso de recuperar respostas antigas.

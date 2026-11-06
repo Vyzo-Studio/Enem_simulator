@@ -3,7 +3,7 @@ import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,anal
 import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';
 import {composeExam} from './v11-composer.mjs';
 import {renderFigure} from './v11-visual.mjs';
-import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE} from './v15-pathways.mjs';
+import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';
 const KEY='vyzo-academy-v9-guest-1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -91,8 +91,8 @@ function researchPreview(){
   <div class="v10-kicker">BUSCA INTELIGENTE DE PROVAS</div>
   <h2>Qual prova ou concurso você deseja estudar?</h2>
   <p class="v9-lead">Digite o nome da prova. Quando a pesquisa segura estiver conectada, consultaremos fontes oficiais e mostraremos opções para você conferir.</p>
-  <div class="v10-search-row"><label class="sr-only" for="v10-exam-query">Nome da prova ou concurso</label><input id="v10-exam-query" type="search" maxlength="150" placeholder="Qual prova ou concurso você deseja estudar?" value="${h(researchQuery)}" autocomplete="off" aria-describedby="v10-search-status"><button type="button" class="btn" data-action="v10-research" ${researchBusy?'disabled':''}>${researchBusy?'Pesquisando fontes...':'Pesquisar com IA'}</button></div>
-  <p class="v9-mini">Exemplos de pesquisa: ENEM, Banco do Brasil, Polícia Federal — Agente, vestibular UnB. São exemplos, não editais anunciados.</p>
+  <div class="v10-search-row"><label class="sr-only" for="v10-exam-query">Nome da prova ou concurso</label><input id="v10-exam-query" type="search" list="v15-exam-catalog" maxlength="150" placeholder="Qual prova ou concurso você deseja estudar?" value="${h(researchQuery)}" autocomplete="off" aria-describedby="v10-search-status"><button type="button" class="btn" data-action="v10-research" ${researchBusy?'disabled':''}>${researchBusy?'Pesquisando fontes...':'Pesquisar com IA'}</button></div>
+  <datalist id="v15-exam-catalog"><option value="ENEM"></option><option value="Exame Nacional do Ensino Médio"></option></datalist><div id="v15-enem-suggestion" hidden class="v9-info"><strong>ENEM — catálogo público</strong><p>É possível cadastrar o objetivo sem pesquisa por IA. Data, edital e edição não foram identificados automaticamente.</p><button type="button" class="btn secondary" data-action="v15-add-enem">Adicionar ENEM ao meu planejamento</button></div><p class="v9-mini">Exemplos de pesquisa: ENEM, Banco do Brasil, Polícia Federal — Agente, vestibular UnB. São exemplos, não editais anunciados.</p>
   <div id="v10-search-status" aria-live="polite" class="${researchError?'v9-warn':'v9-mini'}">${researchBusy?'Consultando um serviço externo autenticado...':researchError?h(researchError):connected?'A pesquisa exige uma conta confirmada. Resultados devem ser confrontados com fontes oficiais.':'Pesquisa automática ainda não ativada: falta um Supabase exclusivo e um serviço de IA no servidor. Você pode continuar manualmente abaixo.'}</div>
   ${saved.length?`<div class="v10-selected"><h3>Provas escolhidas com fontes vinculadas</h3>${saved.map((g,i)=>`<div class="v10-selected-row"><div><strong>${h(g.name)}</strong><small>${h(g.edition||'Edição não confirmada')} · ${h(g.sourceStatus||'Conferir fonte')}</small></div><button type="button" class="btn secondary" data-action="v10-remove" data-name="${h(g.name)}" data-edition="${h(g.edition||'')}">Remover</button></div>`).join('')}</div>`:''}
   ${researchResults.length?`<div class="v10-found"><h3>Encontramos estas opções com links de fontes oficiais</h3><p class="v9-mini">Fonte vinculada não equivale a validação humana do edital. Confira cargo, ano, data e matérias.</p>${researchResults.map((r,i)=>`<article class="v10-result"><div class="v10-result-head"><strong>${h(r.name)}</strong><span class="v9-badge">${h(r.edition||'Edição não confirmada')}</span></div><p class="v9-mini">${h([r.institution,r.position,r.board].filter(Boolean).join(' · ')||'Dados adicionais não confirmados')} · ${h(r.examDate||'Data não confirmada')}</p><div class="v10-sources">${r.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Abrir fonte oficial')}</a>`).join('')}</div><button type="button" class="btn secondary" data-action="v10-select" data-index="${i}">Adicionar esta prova</button></article>`).join('')}</div>`:''}
@@ -469,6 +469,13 @@ function importBackup(file){if(!file||file.size>5_000_000)throw Error('O arquivo
 function onAction(el){const action=el.dataset.action,id=el.dataset.id;
  if(action==='wizard-back'){step=Math.max(0,step-1);state.wizardStep=step;persist();render();}
  else if(action==='add-goal')beginWizard(true);
+  else if(action==='v15-add-enem'){
+   if(draft.goals.some(g=>g.type==='ENEM')){message('O ENEM já foi adicionado a esta seleção.');return;}
+   draft.types=[...new Set([...draft.types,'ENEM'])];
+   draft.goals.push({type:'ENEM',name:'ENEM',subjects:[...AREAS],institution:'Inep',position:'',board:'',edition:'',examDate:'',provisional:false,
+    sourceStatus:'Edição e edital ainda não conferidos'});
+   persist();renderWizard();message('ENEM adicionado como objetivo geral, sem inventar edição ou data.');
+  }
   else if(action==='edit-goal'){editingGoalId=id;page='edit-goal';render();}
   else if(action==='duplicate-goal'){
    const original=state.goals.find(g=>g.id===id);if(!original)throw Error('Prova indisponível.');
@@ -520,6 +527,10 @@ document.addEventListener('change',e=>{const el=e.target;
  if(el.id==='v9-import-file'&&el.files?.[0])importBackup(el.files[0]);
 });
 document.addEventListener('input',e=>{
+ if(e.target.id==='v10-exam-query'){
+  const suggestion=$('#v15-enem-suggestion');
+  if(suggestion)suggestion.hidden=!searchVerifiedExam(e.target.value).some(x=>x.id==='enem');
+ }
  if(e.target.id==='custom-length')updateCompositionPreview();
  if(e.target.id==='v14-library-search'){
   const query=String(e.target.value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();

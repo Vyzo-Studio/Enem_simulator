@@ -5,7 +5,7 @@
 -- A tabela public.academy_goals(id,user_id) é criada pela migração V8.
 -- Para links públicos, exigir HTTPS e proveniência governamental na curadoria administrativa.
 create table if not exists public.academy_curriculum_references(
- id text primary key check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,119}$'),
+ id text not null check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,119}$'),
  curriculum_version text not null,
  stage text not null check(stage in ('fundamental1','fundamental2','medio')),
  grade smallint not null check(grade between 1 and 9),
@@ -25,7 +25,7 @@ create table if not exists public.academy_curriculum_references(
  content_available boolean not null default false,
  created_at timestamptz not null default now(),
  updated_at timestamptz not null default now(),
- unique(id,curriculum_version)
+ primary key(id,curriculum_version)
 );
 create index if not exists academy_curriculum_stage_grade_idx
  on public.academy_curriculum_references(stage,grade,subject);
@@ -44,7 +44,8 @@ create policy academy_curriculum_published_read on public.academy_curriculum_ref
 
 create table if not exists public.academy_school_lessons(
  id text not null check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,159}$'),
- reference_id text not null references public.academy_curriculum_references(id) on delete restrict,
+ reference_id text not null,
+ reference_version text not null,
  content_version text not null,
  title text not null,
  material jsonb not null,
@@ -53,7 +54,9 @@ create table if not exists public.academy_school_lessons(
  editor_reviewed_at timestamptz,
  editor_id uuid,
  created_at timestamptz not null default now(),
- primary key(id,content_version)
+ primary key(id,content_version),
+ constraint academy_school_lesson_curriculum_version foreign key (reference_id,reference_version)
+  references public.academy_curriculum_references(id,curriculum_version) on delete restrict
 );
 create index if not exists academy_school_lessons_reference_idx
  on public.academy_school_lessons(reference_id);
@@ -66,7 +69,7 @@ create policy academy_school_lessons_published_read on public.academy_school_les
  for select to authenticated using (
  editorial_status='publicado' AND editor_reviewed_at is not null AND
  exists(select 1 from public.academy_curriculum_references r
-  where r.id=reference_id and r.content_status='publicado'
+  where r.id=reference_id and r.curriculum_version=reference_version and r.content_status='publicado'
    and r.editorial_approved=true and r.content_available=true)
  );
 
@@ -100,7 +103,7 @@ create policy academy_school_questions_published_read on public.academy_school_q
  for select to authenticated using (
  editorial_status='publicado' AND reviewed_at is not null AND
  exists(select 1 from public.academy_school_lessons lesson
-  join public.academy_curriculum_references r on r.id=lesson.reference_id
+  join public.academy_curriculum_references r on r.id=lesson.reference_id and r.curriculum_version=lesson.reference_version
   where lesson.id=lesson_id and lesson.editorial_status='publicado' and
    lesson.editor_reviewed_at is not null and
    r.content_status='publicado' and r.editorial_approved=true)

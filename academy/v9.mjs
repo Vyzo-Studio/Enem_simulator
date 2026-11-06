@@ -6,6 +6,7 @@ import {renderFigure} from './v11-visual.mjs';
 import {findSchoolPilot} from './v15-school-content.mjs';
 import {gradeSchoolPilot,selectSchoolNextStep} from './v15-school-engine.mjs';
 import {schoolPreviewHtml,schoolLessonHtml} from './v15-school-ui.mjs';
+import {officialPaperHtml} from './v15-official-papers.mjs';
 import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';
 const KEY='vyzo-academy-v9-guest-1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -390,7 +391,8 @@ function renderPastPapers(){
   archive.years.map(y=>'<option value="'+y+'">'+y+'</option>').join('')+
   '</select></div><p id="v15-past-selection" class="v9-mini">Edição selecionada: '+archive.years[0]+'. Localize esse ano na página oficial.</p>'+
   '<div class="v9-actions"><a class="btn" href="'+h(archive.url)+'" target="_blank" rel="noopener noreferrer">Abrir provas e gabaritos oficiais no Inep</a></div>'+
-  '<p class="v9-mini">O link leva ao índice oficial de anos; não é um PDF direto nem um simulado já importado. Outros exames serão adicionados apenas com fontes verificadas.</p>'+
+  '<p class="v9-mini">Para algumas edições há links diretos oficialmente publicados. Nenhum PDF foi convertido em questões nesta versão.</p>'+
+  '<div id="v15-past-documents" aria-live="polite">'+officialPaperHtml(archive.years[0],h)+'</div>'+
   '</div>');
 }
 
@@ -557,7 +559,7 @@ document.addEventListener('change',e=>{const el=e.target;
   if(research)research.hidden=school;
   if(manual)manual.hidden=school;
  }
- if(el.id==='v15-past-year'){const display=$('#v15-past-selection');if(display)display.textContent='Edição selecionada: '+el.value+'. Localize esse ano na página oficial.';}
+ if(el.id==='v15-past-year'){const display=$('#v15-past-selection'),documents=$('#v15-past-documents');if(display)display.textContent='Edição selecionada: '+el.value+'. Localize esse ano na página oficial.';if(documents)documents.innerHTML=officialPaperHtml(Number(el.value),h);}
  if(el.id.startsWith('v15-school-stage-')){
   const index=el.id.slice('v15-school-stage-'.length),target=$('#v15-school-year-'+index);
   if(target)target.innerHTML=schoolYears(el.value).map(y=>'<option value="'+y+'">'+y+'º ano</option>').join('');

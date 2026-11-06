@@ -457,7 +457,7 @@ document.addEventListener('input',e=>{
  if(e.target.id==='custom-length')updateCompositionPreview();
  if(e.target.id==='v14-library-search'){
   const query=String(e.target.value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-  $('.v14-library-item').forEach(el=>{el.hidden=!el.dataset.search.includes(query);});
+  $$('.v14-library-item').forEach(el=>{el.hidden=!el.dataset.search.includes(query);});
  }
 });
 document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form','edit-goal-form','v14-reschedule-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else if(f.id==='edit-goal-form'){saveGoalEdit(f);}else if(f.id==='v14-reschedule-form'){rescheduleTask(f.dataset.id,String(new FormData(f).get('new_day')||''));}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});

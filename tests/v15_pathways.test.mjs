@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,schoolSubjects,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE} from '../academy/v15-pathways.mjs';
+import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,schoolSubjects,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from '../academy/v15-pathways.mjs';
 import {suitableQuestions,sampleDiagnostic} from '../academy/v9-core.mjs';
 assert.equal(EDUCATION_STAGES.length,3);
 assert.deepEqual(schoolYears('fundamental1'),[1,2,3,4,5]);
@@ -16,6 +16,9 @@ assert.equal(getSchoolStage('medio').label,'Ensino Médio');
 assert(schoolSubjects('fundamental1').includes('Matemática'));
 assert(schoolSubjects('fundamental2').includes('Inglês'));
 assert.equal(ENEM_OFFICIAL_ARCHIVE.years[0],2025);
+assert.equal(searchVerifiedExam('ENEM').length,1);
+assert.equal(searchVerifiedExam('exame nacional do ensino medio')[0].name,'ENEM');
+assert.equal(searchVerifiedExam('Polícia Federal').length,0);
 assert.equal(ENEM_OFFICIAL_ARCHIVE.years.at(-1),1998);
 assert(ENEM_OFFICIAL_ARCHIVE.url.startsWith('https://www.gov.br/inep/'));
 const ctx=vm.createContext({window:{}});

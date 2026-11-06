@@ -118,7 +118,7 @@ with sync_playwright() as p:
     expect(page.get_by_text('Questões que precisam de atenção')).to_be_visible()
     assert page.locator('details.v9-detail').count()==1
     page.locator('.v9-nav button[data-page="library"]').click()
-    expect(page.get_by_text('Biblioteca de estudos',exact=True)).to_be_visible()
+    expect(page.locator('#v9-content h1')).to_have_text('Biblioteca de estudos')
     assert page.locator('.v14-library-item').count()>0
     page.locator('#v14-library-search').fill('assunto-nao-cadastrado-xyz')
     assert page.locator('.v14-library-item:visible').count()==0

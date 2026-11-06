@@ -93,6 +93,12 @@ with sync_playwright() as p:
     expect(page.locator('#start-diagnostic-form button[type="submit"]')).to_be_enabled()
     page.get_by_role('button',name='COMEÇAR DIAGNÓSTICO').click()
     expect(page.get_by_text('Diagnóstico de conhecimento')).to_be_visible()
+    # Resposta errada real alimenta o centro de erros sem simular explicações.
+    wrong=page.evaluate("""(key)=>{
+       const id=JSON.parse(localStorage.getItem(key)).assessments[0].ids[0];
+       return (window.QUESTION_BANK.find(q=>q.id===id).answer+1)%5;
+    }""",KEY)
+    page.locator(f'input[name="answer"][value="{wrong}"]').check()
     page.evaluate('window.__fakeNow+=90000')
     page.wait_for_timeout(1150)
     expect(page.locator('#v9-clock')).to_contain_text('01:30')
@@ -108,6 +114,15 @@ with sync_playwright() as p:
     state=page.evaluate('(k)=>JSON.parse(localStorage.getItem(k))',KEY)
     assert state['assessments'][0]['timer']['finishedElapsedMs']==90000
     assert state['assessments'][0]['status']=='completed'
+    page.locator('.v9-nav button[data-page="revisions"]').click()
+    expect(page.get_by_text('Questões que precisam de atenção')).to_be_visible()
+    assert page.locator('details.v9-detail').count()==1
+    page.locator('.v9-nav button[data-page="library"]').click()
+    expect(page.get_by_text('Biblioteca de estudos',exact=True)).to_be_visible()
+    assert page.locator('.v14-library-item').count()>0
+    page.locator('#v14-library-search').fill('assunto-nao-cadastrado-xyz')
+    assert page.locator('.v14-library-item:visible').count()==0
+    assert not page.evaluate('document.documentElement.scrollWidth>innerWidth')
     assert not errors,errors
     page.close()
 

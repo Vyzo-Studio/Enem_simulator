@@ -17,11 +17,13 @@ with sync_playwright() as p:
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.set_content(HTML,wait_until='load')
         expect(page.get_by_role('heading',name='Qual é o seu objetivo de aprendizagem?')).to_be_visible()
+        page.locator('input[name="exam_type"][value="ENEM"]').check()
         page.locator('#v15-learning-path').select_option('school')
         assert page.locator('.v10-research').is_hidden(), 'Fluxo escolar não deve exibir pesquisa de concurso'
         assert page.locator('.v10-manual').is_hidden(), 'Fluxo escolar não deve solicitar tipo de concurso'
         page.get_by_role('button',name='Continuar').click()
         expect(page.get_by_role('heading',name='Conte um pouco sobre cada prova')).to_be_visible()
+        assert page.locator('input[id^="v9-name_"]').count()==1, 'Tipo oculto não deve criar prova extra'
         assert page.get_by_label('Banca (opcional)').count()==0
         page.locator('#v15-school-stage-0').select_option(stage)
         page.locator('#v15-school-year-0').select_option(str(grade))

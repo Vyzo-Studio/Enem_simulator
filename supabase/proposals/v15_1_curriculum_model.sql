@@ -43,7 +43,7 @@ create policy academy_curriculum_published_read on public.academy_curriculum_ref
 -- A publicação administrativa requer serviço separado autenticado e auditado.
 
 create table if not exists public.academy_school_lessons(
- id text primary key check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,159}$'),
+ id text not null check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,159}$'),
  reference_id text not null references public.academy_curriculum_references(id) on delete restrict,
  content_version text not null,
  title text not null,
@@ -53,7 +53,7 @@ create table if not exists public.academy_school_lessons(
  editor_reviewed_at timestamptz,
  editor_id uuid,
  created_at timestamptz not null default now(),
- unique(id,content_version)
+ primary key(id,content_version)
 );
 create index if not exists academy_school_lessons_reference_idx
  on public.academy_school_lessons(reference_id);
@@ -71,8 +71,9 @@ create policy academy_school_lessons_published_read on public.academy_school_les
  );
 
 create table if not exists public.academy_school_questions(
- id text primary key check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,159}$'),
- lesson_id text not null references public.academy_school_lessons(id) on delete restrict,
+ id text not null check(id ~ '^[a-z0-9][a-z0-9:_.-]{2,159}$'),
+ lesson_id text not null,
+ lesson_version text not null,
  content_version text not null,
  stem text not null,
  options jsonb not null check(jsonb_typeof(options)='array'),
@@ -83,7 +84,10 @@ create table if not exists public.academy_school_questions(
  editorial_status text not null default 'em_revisao'
   check(editorial_status in ('rascunho','em_revisao','validado','publicado','retirado')),
  reviewed_at timestamptz,
- created_at timestamptz not null default now()
+ created_at timestamptz not null default now(),
+ primary key(id,content_version),
+ constraint academy_school_question_lesson_version foreign key (lesson_id,lesson_version)
+  references public.academy_school_lessons(id,content_version) on delete restrict
 );
 create index if not exists academy_school_questions_lesson_idx
  on public.academy_school_questions(lesson_id);
@@ -108,7 +112,7 @@ create table if not exists public.academy_school_attempts(
  id uuid primary key default gen_random_uuid(),
  user_id uuid not null references auth.users(id) on delete cascade,
  goal_id uuid not null,
- lesson_id text not null references public.academy_school_lessons(id) on delete restrict,
+ lesson_id text not null,
  lesson_version text not null,
  answers jsonb not null default '{}'::jsonb check(jsonb_typeof(answers)='object'),
  revision bigint not null default 1 check(revision>0),
@@ -116,7 +120,9 @@ create table if not exists public.academy_school_attempts(
  completed_at timestamptz,
  updated_at timestamptz not null default now(),
  constraint academy_school_attempts_owner_goal foreign key (goal_id,user_id)
-   references public.academy_goals(id,user_id) on delete restrict
+   references public.academy_goals(id,user_id) on delete restrict,
+ constraint academy_school_attempts_lesson_version foreign key (lesson_id,lesson_version)
+   references public.academy_school_lessons(id,content_version) on delete restrict
 );
 create index if not exists academy_school_attempts_owner_idx
  on public.academy_school_attempts(user_id,goal_id,updated_at desc);

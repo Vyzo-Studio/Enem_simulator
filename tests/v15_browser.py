@@ -94,6 +94,10 @@ with sync_playwright() as p:
         expect(page.get_by_role('heading',name='Provas anteriores')).to_be_visible()
         page.locator('#v15-past-year').select_option('2024')
         expect(page.locator('#v15-past-selection')).to_contain_text('2024')
+        assert page.locator('#v15-past-documents article').count()==2
+        assert page.get_by_role('link',name='Abrir prova (PDF oficial)').count()==2
+        assert page.get_by_role('link',name='Abrir gabarito (PDF oficial)').count()==2
+        assert '/2024_PV_impresso_D1_CD1.pdf' in page.get_by_role('link',name='Abrir prova (PDF oficial)').first.get_attribute('href')
         assert 'gov.br/inep' in page.get_by_role('link',name='Abrir provas e gabaritos oficiais no Inep').get_attribute('href')
         assert not errors,(width,errors)
         print('PASS V15 Chromium:',stage,grade,width,'px, escola sem banca, histórico, acervo oficial')

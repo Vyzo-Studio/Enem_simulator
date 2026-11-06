@@ -41,9 +41,36 @@ with sync_playwright() as p:
         assert goal['educationStage']==stage and goal['schoolYear']==grade
         assert goal['provisional'] is False
         page.locator('.v9-nav button[data-page="goals"]').click()
-        page.get_by_role('button',name='Ver situação do conteúdo').first.click()
-        expect(page.get_by_text('O diagnóstico escolar específico desta série ainda não está disponível.',exact=False)).to_be_visible()
+        page.locator('button[data-action="choose-assessment"]').first.click()
+        expect(page.get_by_role('heading',name='Matemática · microaula-piloto')).to_be_visible()
         assert page.locator('#start-diagnostic-form').count()==0
+        page.get_by_role('button',name='Começar aula e atividade').click()
+        expect(page.locator('#v15-school-pilot-form')).to_be_visible()
+        assert page.locator('.v15-pilot-question').count()==6
+        questions=page.evaluate("""(key)=>{
+          const data=JSON.parse(localStorage.getItem(key));
+          const g=data.goals[0],p=findSchoolPilot(g);
+          return p.questions.map(q=>({id:q.id,answer:q.answer,options:q.options.length}));
+        }""",KEY)
+        first,second=questions[:2]
+        wrong=(first['answer']+1)%first['options']
+        page.locator(f'input[name="school-choice:{first["id"]}"][value="{wrong}"]').check()
+        page.locator(f'input[name="school-choice:{second["id"]}"][value="{second["answer"]}"]').check()
+        draft=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).schoolActivityDrafts',KEY)
+        assert draft and any(first['id'] in item['answers'] for item in draft.values())
+        page.locator('.v9-nav button[data-page="goals"]').click()
+        page.locator('button[data-action="choose-assessment"]').first.click()
+        page.get_by_role('button',name='Começar aula e atividade').click()
+        assert page.locator(f'input[name="school-choice:{first["id"]}"][value="{wrong}"]').is_checked()
+        page.get_by_role('button',name='Concluir e corrigir atividade').click()
+        final=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key))',KEY)
+        assert len(final['assessments'])==0, 'Piloto escolar não pode usar banco ENEM'
+        assert len(final['schoolActivityHistory'])==1
+        report=final['schoolActivityHistory'][0]['report']
+        assert report['answered']==2 and report['wrong']==1 and report['correct']==1 and report['blank']==4
+        assert 'domínio' not in report['evidence'].lower()
+        assert page.get_by_text('Última atividade corrigida').count()==1
+        page.locator('.v9-nav button[data-page="goals"]').click()
         page.get_by_role('button',name='Editar objetivo').click()
         assert page.locator('#v15-school-stage-edit').count()==1
         assert page.get_by_label('Banca organizadora').count()==0
@@ -56,6 +83,11 @@ with sync_playwright() as p:
         current=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).goals[0]',KEY)
         assert current['educationStage']==next_stage and current['schoolYear']==next_grade
         assert current['curriculumHistory'][0]['schoolYear']==grade
+        preserved=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).schoolActivityHistory',KEY)
+        assert len(preserved)==1, 'Histórico do piloto não pode desaparecer ao mudar a série'
+        page.locator('button[data-action="choose-assessment"]').first.click()
+        expect(page.get_by_text('Não há microaula revisável para as matérias e a série selecionadas.',exact=False)).to_be_visible()
+        assert page.locator('#v15-school-pilot-form').count()==0
         assert not page.evaluate('document.documentElement.scrollWidth>innerWidth'),(width,'horizontal overflow')
         page.locator('.v9-nav button[data-page="past-papers"]').click()
         expect(page.get_by_role('heading',name='Provas anteriores')).to_be_visible()

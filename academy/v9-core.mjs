@@ -22,7 +22,7 @@ export const matchesSelection=(question,selection)=>{
 };
 export const isEnem=goal=>goal.type==='ENEM';
 export const hasEnoughEvidence=a=>a?.status==='completed'&&a.report?.answered>=Math.max(3,Math.ceil(a.ids.length*.3));
-export const isGoalEvaluated=(goal,assessments)=>assessments.some(a=>a.goalId===goal.id&&a.kind==='initial'&&hasEnoughEvidence(a));
+export const isGoalEvaluated=(goal,assessments)=>assessments.some(a=>a.goalId===goal.id&&a.kind==='initial'&&hasEnoughEvidence(a)&&(!goal.curriculumChangedAt||(a.completedAt||0)>=goal.curriculumChangedAt));
 export function suitableQuestions(bank,goal,exclude=[]){
  if(!Array.isArray(bank)||!goal)return [];
  if(!isEnem(goal)&&!goal.provisional)return [];

@@ -74,8 +74,9 @@ with sync_playwright() as p:
         page.get_by_role('button',name='Editar objetivo').click()
         assert page.locator('#v15-school-stage-edit').count()==1
         assert page.get_by_label('Banca organizadora').count()==0
-        next_stage='fundamental2' if stage=='medio' else 'medio'
-        next_grade=8 if stage=='medio' else 2
+        # Transferência para uma série realmente fora dos três pilotos disponíveis.
+        next_stage='fundamental1' if stage=='fundamental2' else 'fundamental2'
+        next_grade=4 if next_stage=='fundamental1' else 8
         page.locator('#v15-school-stage-edit').select_option(next_stage)
         page.locator('#v15-school-year-edit').select_option(str(next_grade))
         page.once('dialog',lambda d:d.accept())

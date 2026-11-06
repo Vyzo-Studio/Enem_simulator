@@ -6,7 +6,20 @@ export const EXAM_TYPES=['ENEM','Vestibular','Concurso público','Concurso milit
 export const AREAS=['Linguagens','Humanas','Natureza','Matemática'];
 export const WEEKDAYS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 export const canonical=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-const contain=(hay,needle)=>canonical(hay).includes(canonical(needle))||canonical(needle).includes(canonical(hay));
+// Identificadores normalizados: nunca usar includes() para determinar equivalência curricular.
+const ALIASES=Object.freeze({
+ 'lingua portuguesa':'portugues','portugues':'portugues',
+ 'ciencias da natureza':'natureza','ciencias humanas':'humanas',
+ 'linguagens e codigos':'linguagens','linguagens codigos':'linguagens'
+});
+export const subjectId=value=>ALIASES[canonical(value)]||canonical(value);
+export const matchesSelection=(question,selection)=>{
+ const selected=subjectId(selection);
+ if(!selected)return false;
+ const area=subjectId(question?.area),subject=subjectId(question?.subject);
+ // Área selecionada expande seus descendentes; uma disciplina específica não.
+ return selected===area||selected===subject;
+};
 export const isEnem=goal=>goal.type==='ENEM';
 export const hasEnoughEvidence=a=>a?.status==='completed'&&a.report?.answered>=Math.max(3,Math.ceil(a.ids.length*.3));
 export const isGoalEvaluated=(goal,assessments)=>assessments.some(a=>a.goalId===goal.id&&a.kind==='initial'&&hasEnoughEvidence(a));
@@ -22,10 +35,10 @@ export function suitableQuestions(bank,goal,exclude=[]){
  const subjects=(goal.subjects||[]).map(s=>String(s).trim()).filter(Boolean);
  if(isEnem(goal)){
    if(!subjects.length||subjects.some(s=>canonical(s)==='todas'))return valid;
-   return valid.filter(q=>subjects.some(s=>contain(q.area,s)||contain(q.subject,s)));
+   return valid.filter(q=>subjects.some(s=>matchesSelection(q,s)));
  }
  if(!subjects.length)return valid;
- const matches=valid.filter(q=>subjects.some(s=>contain(q.area,s)||contain(q.subject,s)));
+ const matches=valid.filter(q=>subjects.some(s=>matchesSelection(q,s)));
  return matches.length?matches:valid;
 }
 export function sampleDiagnostic(bank,goal,quantity,excluded=[],options={}){
@@ -33,6 +46,13 @@ export function sampleDiagnostic(bank,goal,quantity,excluded=[],options={}){
  if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha uma quantidade de 3 a 50 questões.');
  const pool=suitableQuestions(bank,goal,excluded);
  const opts={...options,language:options.language||goal.foreignLanguage||'Inglês'};
+ // Uma única área/disciplina declarada implica diagnóstico focalizado, nunca cotas gerais.
+ if(!options.mode&&isEnem(goal)&&goal.subjects?.length===1){
+   const subject=String(goal.subjects[0]);
+   const area=AREAS.find(a=>subjectId(a)===subjectId(subject));
+   if(area){opts.mode='area';opts.area=area;}
+   else{opts.mode='subject';opts.subject=subjectId(subject)==='portugues'?'Português':subject;}
+ }
  return composeExam(pool,goal,n,opts).questions;
 }
 export function analyzeAnswers(goal,assessment,bank){
@@ -44,7 +64,9 @@ export function analyzeAnswers(goal,assessment,bank){
  const topics={};
  for(const [name,s] of Object.entries(results.byTopic)){
    const rate=s.answered?s.correct/s.answered:null;
-   const label=s.answered<3?'Não avaliado suficientemente':rate<.5?'Precisa de revisão':rate<.8?'Em desenvolvimento':s.answered>=5?'Domínio demonstrado':'Em desenvolvimento';
+   // Uma só prova não demonstra domínio persistente, mesmo com 100% de acertos.
+   const label=!s.answered?'Não avaliado':s.answered<3?'Evidência insuficiente':
+    rate<.5?'Precisa de revisão':rate<.8?'Em desenvolvimento':'Consolidando';
    topics[name]={...s,accuracy:s.answered?Math.round(rate*100):null,label,evidence:s.answered<3?'Amostra insuficiente':s.answered<5?'Evidência limitada':'Evidência moderada'};
  }
  return {...results,bySkill,byArea,topics,examName:goal.name,kind:assessment.kind,measuredAt:Date.now()};
@@ -58,14 +80,14 @@ export function topicRecommendations(goal,report,bank){
  for(const [topic,s] of Object.entries(tested)){
    const known=all.get(topic);
    rows.push({topic,subject:known?.subject||topic,questionId:known?.questionId||null,
-    priority:s.label==='Precisa de revisão'?'high':s.label==='Em desenvolvimento'?'medium':s.label==='Domínio demonstrado'?'maintenance':'coverage',
+    priority:s.label==='Precisa de revisão'?'high':['Em desenvolvimento','Consolidando'].includes(s.label)?'medium':s.label==='Domínio demonstrado'?'maintenance':'coverage',
     reason:s.label,confidence:s.evidence,score:s.accuracy});
  }
  // Um diagnóstico curto não cobre o edital todo. Sempre manter cobertura não avaliada.
  const untested=[...all.values()].filter(x=>!tested[x.topic]);
  for(const r of untested.slice(0,28))rows.push({...r,priority:'coverage',reason:'Não avaliado no diagnóstico',confidence:'Sem evidências',score:null});
  for(const subject of goal.subjects||[]){
-   if(!rows.some(x=>contain(x.subject,subject)||contain(x.topic,subject)))rows.push({topic:subject,subject,questionId:null,priority:'coverage',reason:'Matéria declarada, ainda sem avaliação adequada',confidence:'Sem evidências',score:null});
+   if(!qBank.some(q=>matchesSelection(q,subject))&&!rows.some(x=>subjectId(x.subject)===subjectId(subject)||canonical(x.topic)===canonical(subject)))rows.push({topic:subject,subject,questionId:null,priority:'coverage',reason:'Matéria declarada, ainda sem avaliação adequada',confidence:'Sem evidências',score:null});
  }
  const rank={high:0,medium:1,coverage:2,maintenance:3};
  return rows.sort((a,b)=>rank[a.priority]-rank[b.priority]||a.topic.localeCompare(b.topic));

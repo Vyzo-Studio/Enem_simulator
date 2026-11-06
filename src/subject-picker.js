@@ -121,7 +121,7 @@ function enhance(original){
      if(choice){
        const opt=[...original.options].find(o=>key(o.value)===key(choice)||key(o.textContent)===key(choice));
        if(opt)original.value=opt.value;
-       else{const next=document.createElement('option');next.value=choice;next.textContent=choice;original.append(next);original.value=choice;}
+       else{selected=[];original.value='Todas';}
      }else original.value='Todas';
    }else original.value=selected.join(', ');
    original.dispatchEvent(new Event('change',{bubbles:true}));
@@ -136,20 +136,27 @@ function enhance(original){
      tag.append(remove);chips.append(tag);
    }
    const chosen=selected.length;
-   info.textContent=chosen?chosen+' matéria(s) selecionada(s). '+source.label:source.label;
+   const guidance=single?'Escolha uma matéria disponível nesta modalidade.':source.label;
+   info.textContent=chosen?chosen+' matéria(s) selecionada(s). '+guidance:guidance;
    clear.disabled=!chosen;
-   selectRecommended.hidden=!source.list.length;
+   selectRecommended.hidden=single||!source.list.length;
  }
  function close(){open=false;list.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
  function renderSuggestions(){
    const q=normalize(input.value);shown=[];
    if(single&&selected.length&&input.value===''){close();return;}
-   for(const subject of DATA){
+   // Campos de disciplina única devem listar apenas opções reais do select original.
+   // Um item do catálogo global sem questões compatíveis não é uma opção válida.
+   const candidates=single?[...original.options]
+     .filter(option=>option.value&&key(option.value)!==key('Todas'))
+     .map(option=>({label:option.textContent.trim()||option.value,value:option.value,
+       search:normalize(option.value+' '+option.textContent+' '+(findByText(option.value)?.search||''))})):DATA;
+   for(const subject of candidates){
      if(q&&!subject.search.includes(q))continue;
      if(selected.some(s=>key(s)===key(subject.value)))continue;
      shown.push(subject);if(shown.length>=8)break;
    }
-   if(q.length>=2&&!shown.some(s=>key(s.value)===key(q))&&!selected.some(s=>key(s)===key(q)))
+   if(!single&&q.length>=2&&!shown.some(s=>key(s.value)===key(q))&&!selected.some(s=>key(s)===key(q)))
      shown.push({label:'Adicionar matéria personalizada: '+safe(input.value),value:safe(input.value),custom:true});
    if(!shown.length){close();return;}
    active=Math.min(Math.max(0,active),shown.length-1);
@@ -163,7 +170,14 @@ function enhance(original){
  }
  function add(name){
    if(!name)return;
-   if(single)selected=[name];
+   if(single){
+     const option=[...original.options].find(o=>key(o.value)===key(name)||key(o.textContent)===key(name));
+     if(!option||key(option.value)===key('Todas')){
+       info.textContent='Esta matéria não está disponível nesta modalidade.';
+       return;
+     }
+     selected=[option.value];
+   }
    else if(selected.length<20&&!selected.some(s=>key(s)===key(name)))selected.push(name);
    else if(selected.length>=20)info.textContent='Limite de 20 matérias por prova.';
    sync();input.value='';close();input.focus();

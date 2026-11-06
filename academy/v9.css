@@ -56,3 +56,9 @@ body[data-theme=dark] .v11-figure{background:#ecf4ff;color:#1e375b}
 .v14-library-item{min-width:0;padding:16px;border:1px solid var(--line,#d9dfeb);border-radius:14px}
 .v14-library-item h3{margin:6px 0 8px;overflow-wrap:anywhere}
 .v14-library-item[hidden]{display:none!important}
+
+/* V15 — adaptação do questionário por percurso, sem elementos de concurso para ensino escolar. */
+.v15-path{margin:0 0 18px;padding:16px;border:1px solid var(--line,#d9dfeb);border-radius:14px;min-width:0}
+.v15-path h2{margin:0 0 12px}
+.v10-research[hidden],.v10-manual[hidden],#v15-enem-suggestion[hidden]{display:none!important}
+#v15-enem-suggestion{margin:12px 0}

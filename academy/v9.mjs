@@ -183,7 +183,7 @@ function renderHub(){const pending=state.goals.filter(g=>g.type==='Prova escolar
  const lastSchool=schoolPilot?(state.schoolActivityHistory||[]).filter(a=>a.goalId===schoolGoal.id&&a.pilotId===schoolPilot.id).at(-1):null;
  const nextSchool=schoolPilot?'<section class="v9-card" aria-label="Próximo passo escolar">'+
   '<h2>O que vamos estudar hoje? · Escola</h2><p class="v9-lead">'+h(schoolGoal.name)+' · '+h(schoolPilot.topic)+'</p>'+
-  '<p>'+h(lastSchool?'Última tentativa: '+lastSchool.report.answered+' respondidas; '+lastSchool.report.correct+' acertos.':'Comece pela explicação e por seis questões curtas.')+'</p>'+
+  '<p>'+h(lastSchool?'Última tentativa: '+lastSchool.report.answered+' respondidas; '+lastSchool.report.correct+(lastSchool.report.correct===1?' acerto.':' acertos.'):'Comece pela explicação e por seis questões curtas.')+'</p>'+
   '<p class="v9-mini">'+h(selectSchoolNextStep(schoolPilot,lastSchool?.report))+'</p>'+
   '<p class="v9-mini">Microaula em revisão editorial · apenas este tópico disponível.</p>'+
   '<button type="button" class="btn" data-action="school-open" data-id="'+h(schoolGoal.id)+'">'+

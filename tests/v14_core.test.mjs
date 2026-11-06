@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {matchesSelection,suitableQuestions,sampleDiagnostic,analyzeAnswers,subjectId} from '../academy/v9-core.mjs';
+const context=vm.createContext({window:{}});
+for(const name of ['questions','extra_questions','advanced_questions'])vm.runInContext(readFileSync(new URL('../src/'+name+'.js',import.meta.url),'utf8'),context);
+const bank=context.window.QUESTION_BANK;
+const goal=(subjects)=>({id:'v14-enem',type:'ENEM',name:'ENEM',subjects,foreignLanguage:'Inglês'});
+assert.equal(subjectId('Língua Portuguesa'),'portugues');
+assert.equal(subjectId('Português'),'portugues');
+assert.equal(matchesSelection({area:'Matemática',subject:'Matemática Financeira'},'Matemática Financeira'),true);
+assert.equal(matchesSelection({area:'Matemática',subject:'Matemática Financeira'},'Matemática'),true,'Área pai engloba disciplinas');
+assert.equal(matchesSelection({area:'Matemática',subject:'Matemática Financeira'},'Matemática Básica'),false,'Disciplinas irmãs não são equivalentes');
+assert.equal(matchesSelection({area:'Humanas',subject:'História'},'Física'),false);
+const maths=suitableQuestions(bank,goal(['Matemática']));
+assert(maths.length>=10);
+assert(maths.every(q=>q.area==='Matemática'),'Filtro isolado deve excluir as demais áreas');
+const focused=sampleDiagnostic(bank,goal(['Matemática']),10);
+assert(focused.length===10&&focused.every(q=>q.area==='Matemática'),'Diagnóstico focalizado não exige quatro áreas');
+const general=sampleDiagnostic(bank,goal(['Matemática','Natureza','Humanas','Linguagens']),20);
+assert(general.length===20);
+assert.deepEqual(Object.fromEntries(['Linguagens','Humanas','Natureza','Matemática'].map(area=>[area,general.filter(q=>q.area===area).length])),
+ {'Linguagens':5,'Humanas':5,'Natureza':5,'Matemática':5});
+assert.equal(suitableQuestions(bank,goal(['Direito Penal'])).length,0,'ENEM não pode inventar banco de Direito Penal');
+const report=analyzeAnswers(goal(['Matemática']),{ids:focused.map(q=>q.id),answers:Object.fromEntries(focused.map(q=>[q.id,q.answer])),kind:'initial'},bank);
+assert(Object.values(report.topics).every(x=>x.label!=='Domínio demonstrado'),'Uma tentativa não comprova domínio');
+console.log('PASS V14: taxonomia por igualdade, área/disciplinas distintas, foco Matemática, ENEM geral equilibrado e cautela psicométrica');

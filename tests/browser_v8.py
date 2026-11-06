@@ -62,11 +62,10 @@ def build_html(mock=False):
  auth_core=(root/'academy/v12-auth-core.mjs').read_text().replace('export ','')
  scheduler=(root/'academy/scheduler.mjs').read_text().replace('export ','')
  diagnostic=(root/'academy/diagnostics.mjs').read_text().replace('export ','')
- auth_core=(root/'academy/v12-auth-core.mjs').read_text().replace('export ','')
- app=(root/'academy/app.mjs').read_text().replace("import {scanLegacySources,importLegacyWithConsent} from './v12-auth-core.mjs';",'').replace("import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",'').replace("import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';",'').replace("import {scanLegacySources,importLegacyWithConsent} from './v12-auth-core.mjs';",'')
+ app=(root/'academy/app.mjs').read_text().replace("import {scanLegacySources,importLegacyWithConsent} from './v12-auth-core.mjs';",'').replace("import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",'').replace("import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';",'')
  if mock:
   app=app.replace("const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');","const {createClient}={createClient:()=>window.__fakeClient};")
- html=html.replace('<script type="module" src="./app.mjs"></script>','<script type="module">'+auth_core+'\n'+auth_core+'\n'+scheduler+'\n'+diagnostic+'\n'+app+'</script>')
+ html=html.replace('<script type="module" src="./app.mjs"></script>','<script type="module">'+auth_core+'\n'+scheduler+'\n'+diagnostic+'\n'+app+'</script>')
  return html
 
 def suite():

@@ -43,12 +43,14 @@ with sync_playwright() as p:
         page.get_by_role('button',name='Editar objetivo').click()
         assert page.locator('#v15-school-stage-edit').count()==1
         assert page.get_by_label('Banca organizadora').count()==0
-        page.locator('#v15-school-stage-edit').select_option('medio')
-        page.locator('#v15-school-year-edit').select_option('2')
+        next_stage='fundamental2' if stage=='medio' else 'medio'
+        next_grade=8 if stage=='medio' else 2
+        page.locator('#v15-school-stage-edit').select_option(next_stage)
+        page.locator('#v15-school-year-edit').select_option(str(next_grade))
         page.once('dialog',lambda d:d.accept())
         page.get_by_role('button',name='Salvar alterações').click()
         current=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).goals[0]',KEY)
-        assert current['educationStage']=='medio' and current['schoolYear']==2
+        assert current['educationStage']==next_stage and current['schoolYear']==next_grade
         assert current['curriculumHistory'][0]['schoolYear']==grade
         assert not page.evaluate('document.documentElement.scrollWidth>innerWidth'),(width,'horizontal overflow')
         page.locator('.v9-nav button[data-page="past-papers"]').click()

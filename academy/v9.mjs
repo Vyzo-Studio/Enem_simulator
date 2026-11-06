@@ -331,6 +331,63 @@ function renderPlan(){const filtered=selectedGoal?state.goals.filter(g=>g.id===s
   const check=verifyPlan(state.tasks,availableMinutes());
  output(`${title('Meu plano personalizado','Cada tarefa leva em conta os erros, os acertos, os assuntos não avaliados e o tempo total disponível.')}<div class="v9-card"><h2>Estado das suas provas</h2>${pending.map(g=>`<div class="v9-goal"><div><b>${h(g.name)}</b><p>Plano bloqueado: diagnóstico inicial não concluído.</p></div><button class="btn" data-action="choose-assessment" data-id="${g.id}">Começar diagnóstico</button></div>`).join('')}${available.length?`<div class="v9-success">${available.length} objetivo(s) com diagnóstico concluído. O estudo das demais provas permanece bloqueado até sua avaliação.</div>`:''}<p class="v9-lead">Disponibilidade semanal: <b>${Object.entries(availableMinutes()).filter(([,n])=>n>0).map(([day,n])=>weekdays[Number(day)]+' '+n+' min').join(' · ')}</b>. O total diário respeita cada dia.</p>${check.valid?'<p class="v9-mini">Verificação: sem sobreposição ou excesso de minutos.</p>':'<div class="v9-warn">A agenda contém um conflito. Exporte um backup e confira as tarefas.</div>'}<div class="v9-actions"><button class="btn secondary" data-action="plan-all">Mostrar todas as provas</button><button class="btn secondary" data-action="plan-extend">Planejar próximos 14 dias</button></div><div class="v9-actions" aria-label="Visualização do calendário">${[['today','Hoje'],['week','Semana'],['month','Mês'],['all','Todas']].map(([view,label])=>'<button type="button" class="btn '+(planView===view?'':'secondary')+'" data-action="plan-view" data-view="'+view+'">'+label+'</button>').join('')}</div></div>${!available.length?'<div class="v9-warn">Nenhum plano personalizado disponível. Complete primeiro um diagnóstico.</div>':days.length?days.map(day=>{const group=tasks.filter(t=>t.day===day);return `<section class="v9-card"><div class="row between"><h2>${h(prettyDate(day))}</h2><span class="v9-badge">${group.reduce((n,t)=>n+t.minutes,0)} minutos planejados</span></div>${group.map(t=>`<article class="v9-task ${t.status==='completed'?'done':''}"><div class="row"><span class="v9-badge">${h(state.goals.find(g=>g.id===t.goalId)?.name||'Prova')}</span><span class="v9-badge ${t.priority==='high'?'danger':'muted'}">${h(labels[t.priority]||t.priority)}</span></div><h3>${h(t.subject)} — ${h(t.topic)}</h3><p>${h(t.objective)} · ${t.minutes} minutos</p><p class="v9-mini">${h(t.reason)} · Evidência: ${h(t.confidence)}. Teoria ${t.parts.theory} min, exemplos ${t.parts.example} min, exercícios ${t.parts.practice} min, revisão ${t.parts.review} min.</p><div class="row"><button class="btn secondary" data-action="study-topic" data-goal="${t.goalId}" data-topic="${h(t.topic)}">Estudar assunto</button><button class="btn ${t.status==='completed'?'ghost':''}" data-action="complete-task" data-id="${t.id}" ${t.status==='completed'?'disabled':''}>${t.status==='completed'?'Concluída ✓':'Concluir atividade'}</button><button class="btn secondary" type="button" data-action="reschedule-open" data-id="${t.id}" ${t.status==='completed'?'disabled':''}>Remarcar</button></div>${rescheduleTaskId===t.id?`<form id="v14-reschedule-form" data-id="${t.id}" class="v9-form"><div class="field"><label for="v14-new-day">Nova data da atividade</label><input id="v14-new-day" type="date" name="new_day" value="${h(t.day)}" required></div><div class="v9-actions"><button type="submit" class="btn">Confirmar remarcação</button></div></form>`:''}</article>`).join('')}</section>`}).join(''):'<div class="v9-card"><p>Nenhuma tarefa gerada para os dias disponíveis. Confira seu calendário e escolha dias com tempo livre.</p></div>'}`);
 }
+
+function renderLibrary(){
+ const rows=[],seen=new Set();
+ for(const goal of state.goals.filter(g=>g.status!=='archived')){
+  const allowed=isGoalEvaluated(goal,state.assessments);
+  for(const q of suitableQuestions(BANK,goal)){
+   const key=goal.id+'|'+q.area+'|'+q.subject+'|'+q.topic;
+   if(seen.has(key))continue;seen.add(key);
+   rows.push({goal,question:q,allowed});
+  }
+ }
+ rows.sort((a,b)=>a.goal.name.localeCompare(b.goal.name)||a.question.area.localeCompare(b.question.area)||
+  a.question.subject.localeCompare(b.question.subject)||a.question.topic.localeCompare(b.question.topic));
+ const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const items=rows.slice(0,200).map(({goal,question:q,allowed})=>
+  '<article class="v14-library-item" data-search="'+h(normalize([goal.name,q.area,q.subject,q.topic].join(' ')))+'">'+
+  '<p class="v9-mini">'+h(goal.name)+' · '+h(q.area)+' → '+h(q.subject)+'</p>'+
+  '<h3>'+h(q.topic)+'</h3><p class="v9-mini">'+h(allowed?'Conteúdo explicativo do banco autoral; verifique as fontes e a dificuldade.':'Faça o diagnóstico inicial para receber orientação baseada no seu desempenho.')+'</p>'+
+  (allowed?'<button type="button" class="btn secondary" data-action="study-topic" data-goal="'+h(goal.id)+'" data-topic="'+h(q.topic)+'">Estudar este assunto</button>':'')+
+  '</article>').join('');
+ output(title('Biblioteca de estudos','Localize assuntos reais do banco autoral por prova, área e disciplina.')+
+  '<div class="v9-card"><div class="field"><label for="v14-library-search">Pesquisar aula, disciplina ou assunto</label>'+
+  '<input id="v14-library-search" type="search" placeholder="Ex.: porcentagem, física, geografia" autocomplete="off"></div>'+
+  '<p class="v9-mini">Conteúdo existente; não se trata de aulas geradas ou corrigidas por IA. Os temas não cadastrados no banco não serão inventados.</p>'+
+  '<div class="v14-library-grid" id="v14-library-results">'+(items||'<p>Não há conteúdos compatíveis com suas provas. Configure as matérias ou complete o primeiro diagnóstico.</p>')+'</div>'+
+  (rows.length>200?'<p class="v9-mini">Exibindo os primeiros 200 assuntos. Refine sua pesquisa quando houver uma biblioteca ampliada.</p>':'')+'</div>');
+}
+function renderRevisions(){
+ const wrong=[];
+ for(const a of state.assessments.filter(a=>a.status==='completed'&&Array.isArray(a.report?.rows))){
+  const goal=state.goals.find(g=>g.id===a.goalId);
+  for(const row of a.report.rows){
+   if(row.status!=='wrong')continue;
+   const q=BANK.find(item=>item.id===row.id);
+   if(q)wrong.push({assessment:a,goal,question:q,row});
+  }
+ }
+ wrong.sort((a,b)=>(b.assessment.completedAt||0)-(a.assessment.completedAt||0));
+ const content=wrong.slice(0,100).map(({assessment:a,goal,question:q,row})=>
+  '<details class="v9-detail"><summary>'+h(goal?.name||'Prova')+' · '+h(q.subject)+' · '+h(q.topic)+'</summary>'+
+  '<p><b>Questão:</b> '+h(q.stem)+'</p>'+
+  renderFigure(q.visual)+
+  '<p><b>Resposta assinalada:</b> '+h(Number.isInteger(row.chosen)?'ABCDE'[row.chosen]+') '+q.options[row.chosen]:'Não registrada')+'</p>'+
+  '<p><b>Resposta correta:</b> '+h('ABCDE'[q.answer]+') '+q.options[q.answer])+'</p>'+
+  '<p><b>Explicação do banco autoral:</b> '+h(q.explanation)+'</p>'+
+  '<p class="v9-mini">Uma alternativa errada não revela por si só a causa do erro. Identifique o que precisa reforçar.</p>'+
+  '<div class="v9-actions"><button type="button" class="btn secondary" data-action="study-topic" data-goal="'+h(a.goalId)+'" data-topic="'+h(q.topic)+'">Revisar o assunto</button>'+
+  '<button type="button" class="btn secondary" data-action="request-retest" data-id="'+h(a.goalId)+'">Testar com questões inéditas</button></div></details>'
+ ).join('');
+ output(title('Meus erros e revisões','Revise respostas incorretas sem tratar questões em branco como erros.')+
+  '<div class="v9-card"><h2>Questões que precisam de atenção</h2>'+
+  '<p class="v9-lead">'+wrong.length+' resposta(s) incorreta(s) identificada(s) nos relatórios locais disponíveis.</p>'+
+  (content||'<p>Nenhum erro foi registrado em diagnósticos concluídos nesta jornada. Questões em branco não entram nesta lista.</p>')+
+  (wrong.length>100?'<p class="v9-mini">Mostrando as 100 ocorrências mais recentes. O histórico completo permanece salvo.</p>':'')+
+  '</div>');
+}
+
 function renderStudy(){const complete=state.goals.filter(g=>isGoalEvaluated(g,state.assessments)),done=state.tasks.filter(t=>t.status==='completed');
  output(`${title('Estudar, revisar e retestar','O conteúdo parte dos seus diagnósticos, e novas questões ajudam a verificar a evolução.')}<div class="v9-card"><h2>Assuntos recomendados</h2>${complete.map(g=>{const rec=topicRecommendations(g,latestReport(g.id,state.assessments),BANK);return `<div class="v9-detail"><h3>${h(g.name)}</h3>${rec.slice(0,12).map(x=>`<div class="v9-goal"><div><b>${h(x.subject)} · ${h(x.topic)}</b><p>${h(x.reason)} · ${h(x.confidence)}</p></div><button class="btn secondary" data-action="study-topic" data-goal="${g.id}" data-topic="${h(x.topic)}">Abrir conteúdo</button></div>`).join('')}<div class="row"><button class="btn" data-action="request-retest" data-id="${g.id}" ${!done.some(t=>t.goalId===g.id)?'disabled title="Conclua pelo menos uma atividade para liberar o reteste"':''}>Fazer reteste com questões novas</button></div></div>`;}).join('')}${!complete.length?'<p class="v9-warn">Primeiro termine um diagnóstico para liberar a aprendizagem guiada.</p>':''}</div>`);
 }
@@ -340,7 +397,7 @@ function renderLesson(){const g=state.goals.find(x=>x.id===lessonGoal);if(!g||!i
 }
 function renderData(){output(`${title('Backup e privacidade','O progresso desta experiência fica somente neste navegador. Não há conta nem sincronização entre dispositivos.')}<div class="v9-card"><h2>Proteja seu progresso</h2><p>Faça backup antes de trocar de aparelho, limpar dados do navegador ou abrir em uma sessão privada.</p><div class="v9-actions">${cta('Baixar backup JSON','export')}${cta('Importar backup V9','show-import','secondary')}</div><input type="file" accept="application/json,.json" id="v9-import-file" hidden><p class="v9-mini">Chave local: ${KEY}. O backup não contém senhas. Não contém dados do antigo simulador, que permanece intacto no endereço original.</p></div>`);}
 function render(){if(!state.onboarding||page==='wizard'){page='wizard';renderWizard();return;}
- if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
+ if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='library')renderLibrary();else if(page==='revisions')renderRevisions();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
 }
 function go(to){if(page==='exam'&&to!=='exam'){const a=currentAssessment();if(a?.status==='in_progress'){pauseAssessmentClock(a);persist();}}if(!state.onboarding&&to!=='wizard'){page='wizard';renderWizard();return;}page=to;if(to==='plan')selectedGoal=null;render();window.scrollTo({top:0,behavior:'instant'});}
 function download(name,value){const b=new Blob([value],{type:'application/json;charset=utf-8'}),link=document.createElement('a'),url=URL.createObjectURL(b);link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
@@ -396,7 +453,13 @@ document.addEventListener('change',e=>{const el=e.target;
  if(el.id==='review-toggle'){const a=currentAssessment(),qid=a.ids[questionPosition];a.flagged=a.flagged||[];a.flagged=el.checked?[...new Set([...a.flagged,qid])]:a.flagged.filter(x=>x!==qid);persist();render();}
  if(el.id==='v9-import-file'&&el.files?.[0])importBackup(el.files[0]);
 });
-document.addEventListener('input',e=>{if(e.target.id==='custom-length')updateCompositionPreview();});
+document.addEventListener('input',e=>{
+ if(e.target.id==='custom-length')updateCompositionPreview();
+ if(e.target.id==='v14-library-search'){
+  const query=String(e.target.value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  $('.v14-library-item').forEach(el=>{el.hidden=!el.dataset.search.includes(query);});
+ }
+});
 document.addEventListener('submit',e=>{const f=e.target;if(!['wizard-form','start-diagnostic-form','edit-goal-form','v14-reschedule-form'].includes(f.id))return;e.preventDefault();try{if(f.id==='wizard-form'){saveStep(f);if(step===3)endWizard();else {step++;state.wizardStep=step;persist();render();}}else if(f.id==='edit-goal-form'){saveGoalEdit(f);}else if(f.id==='v14-reschedule-form'){rescheduleTask(f.dataset.id,String(new FormData(f).get('new_day')||''));}else{const g=state.goals.find(x=>x.id===selectedGoal),fd=new FormData(f);const n=fd.get('count')==='custom'?Number(fd.get('custom_count')):Number(fd.get('count'));if(!Number.isInteger(n)||n<3||n>50)throw Error('Escolha de 3 a 50 questões.');startAssessment(g,n,mode,mode==='retest');mode='initial';}}catch(err){message(err.message,'error');}});
 window.addEventListener('storage',event=>{if(event.key===KEY&&event.newValue!==JSON.stringify(state)){conflict=true;message('Outra aba alterou seu progresso. Exporte um backup e atualize esta página antes de continuar.','error');}});
 let lastHeartbeat=0;

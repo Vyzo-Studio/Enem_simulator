@@ -3,6 +3,7 @@ import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,anal
 import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';
 import {composeExam} from './v11-composer.mjs';
 import {renderFigure} from './v11-visual.mjs';
+import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE} from './v15-pathways.mjs';
 const KEY='vyzo-academy-v9-guest-1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -17,7 +18,7 @@ const empty=()=>({schema:9,revision:0,onboarding:false,goals:[],profile:{minutes
 let storageFailure='',conflict=false;
 function load(){try{const s=localStorage.getItem(KEY);if(!s)return empty();const data=JSON.parse(s);if(data.schema!==9||!Array.isArray(data.goals)||!Array.isArray(data.assessments)||!Array.isArray(data.tasks))throw Error('Estrutura de dados inválida');return data;}catch(e){storageFailure='Os dados locais não puderam ser lidos. Nenhuma gravação será realizada até recuperar uma cópia.';return empty();}}
 let state=load();let page='hub',step=0,selectedGoal=null,questionPosition=0,selectedAssessment=null,lessonTopic=null,lessonGoal=null,previewReason=null;
-let draft=state.draft||{types:[],goals:[],minutes:120,weekdays:[1,2,3,4,5],dailyMinutes:null,confidence:'Não sei avaliar',difficulties:[],style:'Aprendizagem mista'};
+let draft=state.draft||{types:[],goals:[],learningPath:'',minutes:120,weekdays:[1,2,3,4,5],dailyMinutes:null,confidence:'Não sei avaliar',difficulties:[],style:'Aprendizagem mista'};
 let mode='initial',newGoalWizard=false,editingGoalId=null,rescheduleTaskId=null,planView='all';
 let researchResults=[],researchQuery='',researchError='',researchBusy=false;
 step=Number.isInteger(state.wizardStep)?Math.max(0,Math.min(3,state.wizardStep)):0;
@@ -63,11 +64,30 @@ function cta(text,action,extra=''){return `<button type="button" class="btn ${ex
 function stepper(){return `<div class="v9-steps">${['Prova','Detalhes','Disponibilidade','Preferências'].map((s,i)=>`<span class="v9-step ${i<step?'done':i===step?'current':''}">${i+1}. ${s}</span>`).join('')}</div>`;}
 function formField(label,name,value='',type='text',attrs=''){return `<div class="field"><label for="v9-${h(name)}">${h(label)}</label><input type="${type}" name="${h(name)}" id="v9-${h(name)}" value="${h(value)}" ${attrs}></div>`;}
 function formSelect(label,name,values,selected){return `<div class="field"><label for="v9-${h(name)}">${h(label)}</label><select name="${h(name)}" id="v9-${h(name)}">${values.map(v=>`<option value="${h(v)}" ${selected===v?'selected':''}>${h(v)}</option>`).join('')}</select></div>`;}
-function beginWizard(add=false){researchResults=[];researchQuery='';researchError='';researchBusy=false;newGoalWizard=add;state.wizardStep=0;draft=add?{types:[],goals:[],minutes:state.profile.minutes,weekdays:[...state.profile.weekdays],dailyMinutes:state.profile.dailyMinutes||null,confidence:state.profile.confidence,difficulties:[...state.profile.difficulties],style:state.profile.style}:draft;step=0;page='wizard';render();}
+function beginWizard(add=false){researchResults=[];researchQuery='';researchError='';researchBusy=false;newGoalWizard=add;state.wizardStep=0;draft=add?{types:[],goals:[],learningPath:'',minutes:state.profile.minutes,weekdays:[...state.profile.weekdays],dailyMinutes:state.profile.dailyMinutes||null,confidence:state.profile.confidence,difficulties:[...state.profile.difficulties],style:state.profile.style}:draft;step=0;page='wizard';render();}
+function schoolFields(i,goal){
+ const stage=getSchoolStage(goal.educationStage)?.id||'fundamental1';
+ const years=schoolYears(stage);
+ const year=validSchoolYear(stage,goal.schoolYear)?Number(goal.schoolYear):years[0];
+ return '<div class="field"><label for="v15-school-stage-'+i+'">Etapa de ensino</label>'+
+  '<select name="stage_'+i+'" id="v15-school-stage-'+i+'">'+
+  EDUCATION_STAGES.map(x=>'<option value="'+h(x.id)+'" '+(stage===x.id?'selected':'')+'>'+h(x.label)+'</option>').join('')+
+  '</select></div><div class="field"><label for="v15-school-year-'+i+'">Ano escolar</label>'+
+  '<select name="schoolYear_'+i+'" id="v15-school-year-'+i+'">'+
+  years.map(n=>'<option value="'+n+'" '+(year===n?'selected':'')+'>'+n+'º ano</option>').join('')+
+  '</select></div><p class="v9-mini">A etapa organiza seu objetivo. Questões específicas desta série ainda não foram validadas.</p>';
+}
+function pathSelector(){
+ return '<section class="v15-path"><h2>Qual é o seu objetivo de aprendizagem?</h2>'+
+  '<div class="field"><label for="v15-learning-path">Selecione seu objetivo</label>'+
+  '<select id="v15-learning-path" name="learning_path"><option value="">Prefiro configurar manualmente</option>'+
+  LEARNING_PATHS.map(x=>'<option value="'+h(x.id)+'" '+(draft.learningPath===x.id?'selected':'')+'>'+h(x.label)+'</option>').join('')+
+  '</select></div><p class="v9-mini">As etapas escolares e os tipos de prova terão formulários adequados. Conteúdos ainda não validados não serão simulados como disponíveis.</p></section>';
+}
 function researchPreview(){
  const connected=cloudConfigured(window.VYZO_ACADEMY_CLOUD||{});
  const saved=draft.goals.filter(g=>Array.isArray(g.sources)&&g.sources.length);
- return `<section class="v10-research" aria-label="Busca inteligente de provas">
+ return pathSelector()+`<section class="v10-research" aria-label="Busca inteligente de provas">
   <div class="v10-kicker">BUSCA INTELIGENTE DE PROVAS</div>
   <h2>Qual prova ou concurso você deseja estudar?</h2>
   <p class="v9-lead">Digite o nome da prova. Quando a pesquisa segura estiver conectada, consultaremos fontes oficiais e mostraremos opções para você conferir.</p>
@@ -100,13 +120,26 @@ function selectResearchResult(index){const item=researchResults[index];if(!item)
 }
 function renderWizard(){let content='';
  if(step===0) content=researchPreview();
- if(step===1) content=`<h2>Conte um pouco sobre cada prova</h2><p class="v9-lead">Preencha apenas o que você conhece. As matérias informadas por você não são apresentadas como edital oficial.</p>${draft.goals.map((g,i)=>`<fieldset class="v9-detail"><legend><strong>${h(g.type)}</strong></legend><div class="field-row">${formField('Nome da prova','name_'+i,g.name,'text','required maxlength="90"')}${formField('Órgão / Instituição (opcional)','institution_'+i,g.institution,'text','maxlength="110"')}${formField('Cargo ou curso (opcional)','position_'+i,g.position,'text','maxlength="100"')}${formField('Banca (opcional)','board_'+i,g.board,'text','maxlength="100"')}${formField('Edição ou ano (opcional)','edition_'+i,g.edition,'text','maxlength="50"')}${formField('Data, se divulgada','date_'+i,g.examDate,'date')}</div>${formField('Quais matérias você deseja estudar?','subjects_'+i,g.subjects.join(', '),'text','maxlength="400"')}${g.type==='ENEM'?formSelect('Língua estrangeira do ENEM','foreign_'+i,['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):''}<p class="v9-mini">${g.sources?.length?'Fontes oficiais vinculadas à pesquisa. Você deve conferir se correspondem à edição e ao cargo desejados.':g.type==='ENEM'?'Áreas gerais do ENEM sugeridas; você pode ajustar.':'Conteúdo declarado pelo estudante — não validado com edital oficial.'}</p>${g.sources?.length?`<div class="v10-sources">${g.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Consultar fonte oficial')}</a>`).join('')}</div>`:''}${g.type!=='ENEM'?`<label class="v9-choice"><input type="checkbox" name="provisional_${i}" ${g.provisional?'checked':''}><span>Se não houver questões específicas, autorizo um <b>diagnóstico provisório de habilidades gerais</b> (não representa a prova nem a banca).</span></label>`:''}</fieldset>`).join('')}`;
+ if(step===1) content=`<h2>Conte um pouco sobre cada prova</h2><p class="v9-lead">Preencha apenas o que você conhece. As matérias informadas por você não são apresentadas como edital oficial.</p>${draft.goals.map((g,i)=>`<fieldset class="v9-detail"><legend><strong>${h(g.type)}</strong></legend><div class="field-row">${formField('Nome da prova','name_'+i,g.name,'text','required maxlength="90"')}${g.type==='Prova escolar'?schoolFields(i,g):`${formField('Órgão / Instituição (opcional)','institution_'+i,g.institution,'text','maxlength="110"')}${formField('Cargo ou curso (opcional)','position_'+i,g.position,'text','maxlength="100"')}${formField('Banca (opcional)','board_'+i,g.board,'text','maxlength="100"')}${formField('Edição ou ano (opcional)','edition_'+i,g.edition,'text','maxlength="50"')}${formField('Data, se divulgada','date_'+i,g.examDate,'date')}`}</div>${formField('Quais matérias você deseja estudar?','subjects_'+i,g.subjects.join(', '),'text','maxlength="400"')}${g.type==='ENEM'?formSelect('Língua estrangeira do ENEM','foreign_'+i,['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):''}<p class="v9-mini">${g.sources?.length?'Fontes oficiais vinculadas à pesquisa. Você deve conferir se correspondem à edição e ao cargo desejados.':g.type==='ENEM'?'Áreas gerais do ENEM sugeridas; você pode ajustar.':'Conteúdo declarado pelo estudante — não validado com edital oficial.'}</p>${g.sources?.length?`<div class="v10-sources">${g.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Consultar fonte oficial')}</a>`).join('')}</div>`:''}${g.type!=='ENEM'&&g.type!=='Prova escolar'?`<label class="v9-choice"><input type="checkbox" name="provisional_${i}" ${g.provisional?'checked':''}><span>Se não houver questões específicas, autorizo um <b>diagnóstico provisório de habilidades gerais</b> (não representa a prova nem a banca).</span></label>`:''}</fieldset>`).join('')}`;
  if(step===2) content=`<h2>Quanto tempo você pode estudar por dia?</h2><p class="v9-lead">Este é o tempo <strong>total</strong>, compartilhado entre todas as provas. Não criaremos horários sobrepostos.</p><div class="field">${formSelect('Disponibilidade diária','minutes',['30','60','90','120','180','240','custom'],String(draft.minutes||120))}<small>30 = 30 min · 60 = 1 h · 90 = 1 h e 30 min · 120 = 2 h · 180 = 3 h · 240 = 4 h.</small></div><div class="field" id="v9-custom-wrap" ${draft.minutes==='custom'?'':'hidden'}>${formField('Duração personalizada (em minutos)','custom_minutes',120,'number','min="15" max="720" step="5"')}</div><h3>Em quais dias da semana pode estudar?</h3><div class="v9-choice-grid">${WEEKDAYS.map((day,i)=>`<div class="v14-day-row"><label class="v9-choice"><input type="checkbox" name="weekday" value="${i}" ${draft.weekdays.includes(i)?'checked':''}>${day}</label><label class="v14-day-minutes">Minutos neste dia <input type="number" name="day_minutes_${i}" min="15" max="720" step="5" value="${Number(draft.dailyMinutes?.[String(i)]||draft.minutes||120)}"></label></div>`).join('')}</div>`;
  if(step===3) content=`<h2>Como você está se sentindo nos estudos?</h2><p class="v9-lead">Suas respostas são referências subjetivas. O diagnóstico verificará o que você realmente sabe.</p>${formSelect('Como avalia seu nível agora?','confidence',['Não sei avaliar','Iniciante','Básico','Intermediário','Avançado'],draft.confidence)}<h3>Em quais assuntos sente mais dificuldade?</h3><div class="v9-choice-grid">${['Matemática','Interpretação','Redação','Memorização','Raciocínio lógico','Gestão do tempo','Ciências da natureza','Outros assuntos'].map(x=>`<label class="v9-choice"><input type="checkbox" name="difficulty" value="${h(x)}" ${draft.difficulties.includes(x)?'checked':''}>${h(x)}</label>`).join('')}</div><div style="margin-top:17px">${formSelect('Como prefere aprender?','style',['Aprendizagem mista','Leitura e resumos','Exemplos resolvidos','Questões práticas','Flashcards','Videoaulas'],draft.style)}</div>`;
  output(`<div class="v9-hero"><div class="v9-overline" style="color:#b6ccfb">ETAPA 1 DE 2 · QUESTIONÁRIO</div><h1>Antes de começar, vamos conhecer seus objetivos.</h1><p>Este questionário curto personaliza a avaliação inicial. O plano de estudos só será criado após a correção do diagnóstico.</p></div><div class="v9-card">${stepper()}<form id="wizard-form" class="v9-form" novalidate>${content}<div class="v9-actions">${step?cta('← Voltar','wizard-back','secondary'):'<span></span>'}<button class="btn" type="submit">${step===3?'Preparar meus diagnósticos →':'Continuar →'}</button></div></form></div>`);
 }
 function saveStep(form){const f=new FormData(form);
- if(step===0){const manually=f.getAll('exam_type').map(String);draft.types=[...new Set([...manually,...draft.goals.map(g=>g.type)])];if(!draft.types.length)throw Error('Pesquise e adicione uma prova ou selecione um tipo no modo manual.');draft.goals=[...draft.goals,...manually.filter(type=>!draft.goals.some(g=>g.type===type)).map(type=>({type,name:type==='ENEM'?'ENEM':type,institution:'',position:'',board:'',edition:'',examDate:'',subjects:type==='ENEM'?[...AREAS]:[],provisional:false}))];}
+ if(step===0){
+  const path=getLearningPath(String(f.get('learning_path')||'')),manually=f.getAll('exam_type').map(String);
+  draft.learningPath=path?.id||'';
+  const types=[...new Set([...manually,...(path?[path.type]:[]),...draft.goals.map(g=>g.type)])];
+  if(!types.length)throw Error('Escolha um objetivo, uma prova ou configure manualmente.');
+  draft.types=types;
+  draft.goals=[...draft.goals,...types.filter(type=>!draft.goals.some(g=>g.type===type)).map(type=>({
+   type,name:type==='ENEM'?'ENEM':type==='Prova escolar'?'Estudos escolares':type,
+   institution:'',position:'',board:'',edition:'',examDate:'',
+   subjects:type==='ENEM'?[...AREAS]:type==='Prova escolar'?['Língua Portuguesa','Matemática']:[],
+   educationStage:type==='Prova escolar'?'fundamental1':null,schoolYear:type==='Prova escolar'?1:null,
+   learningPath:path?.type===type?path.id:null,provisional:false
+  }))];
+ }
  if(step===1){draft.goals=draft.goals.map((g,i)=>{const name=String(f.get('name_'+i)||'').trim().slice(0,90);if(!name)throw Error('Informe o nome de cada prova.');const date=String(f.get('date_'+i)||'');if(date&&Number.isNaN(new Date(date+'T12:00:00').getTime()))throw Error('Data de prova inválida.');return {...g,name,institution:String(f.get('institution_'+i)||'').trim(),position:String(f.get('position_'+i)||'').trim(),board:String(f.get('board_'+i)||'').trim(),edition:String(f.get('edition_'+i)||'').trim(),examDate:date,subjects:String(f.get('subjects_'+i)||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,20),foreignLanguage:g.type==='ENEM'&&f.get('foreign_'+i)==='Espanhol'?'Espanhol':'Inglês',provisional:g.type==='ENEM'?false:f.has('provisional_'+i)};});}
  if(step===2){const raw=f.get('minutes');const minutes=raw==='custom'?Number(f.get('custom_minutes')):Number(raw);if(!Number.isInteger(minutes)||minutes<15||minutes>720)throw Error('Informe de 15 a 720 minutos por dia.');draft.minutes=minutes;draft.weekdays=f.getAll('weekday').map(Number);if(!draft.weekdays.length)throw Error('Selecione pelo menos um dia disponível.');
    draft.dailyMinutes=Object.fromEntries(Array.from({length:7},(_,i)=>{

@@ -31,3 +31,16 @@ export const ENEM_OFFICIAL_ARCHIVE=Object.freeze({
  years:Array.from({length:28},(_,i)=>2025-i)
 });
 // Não transforma links do acervo oficial em provas interativas: a extração e a revisão editorial são separadas.
+
+/** Sugestões locais e públicas; não substituem pesquisa de edição, banca ou edital. */
+export const EXAM_CATALOG=Object.freeze([
+ {id:'enem',name:'ENEM',title:'Exame Nacional do Ensino Médio',type:'ENEM',
+  aliases:['enem','exame nacional do ensino medio','exame nacional do ensino médio'],
+  officialSource:ENEM_OFFICIAL_ARCHIVE.url,edition:null,examDate:null}
+]);
+export const searchVerifiedExam=query=>{
+ const normalized=String(query||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+ if(normalized.length<2)return [];
+ return EXAM_CATALOG.filter(x=>[x.name,x.title,...x.aliases].some(a=>
+   a.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(normalized))).slice(0,8);
+};

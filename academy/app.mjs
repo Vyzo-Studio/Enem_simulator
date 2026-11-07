@@ -604,15 +604,12 @@ document.addEventListener('change',async ev=>{
   t.disabled=true;try{await saveDiagnosticAnswer(Number(t.value));}catch(e){notifyError(e,'Salvamento da resposta');}finally{t.disabled=false;}
  }else if(t.id==='calendar-view'){data.calendarView=t.value;data.calendarOffset=0;renderCalendar();}
  else if(t.id==='calendar-goal'){data.calendarFilter=t.value;renderCalendar();}
+ else if(t.id==='essay-category'){data.essayCategory=t.value;renderEssays();}
+ else if(t.id==='essay-mode'){data.essayMode=t.value;}
 });
 document.addEventListener('input',ev=>{
  const t=ev.target;
- if(['essay-body','essay-title','essay-prompt'].includes(t.id)&&data.activeEssay){
-  data.essayPending={...(data.essayPending||{}),body:$('#essay-body')?.value??data.activeEssay.body,title:$('#essay-title')?.value??data.activeEssay.title,prompt:$('#essay-prompt')?.value??data.activeEssay.prompt};
-  $('#essay-save-status').textContent='Salvando...';clearTimeout(data.essayTimer);
-  data.essayTimer=setTimeout(()=>saveEssayDraft().catch(e=>notifyError(e,'Salvamento da redação')),800);
-  $('#essay-count').textContent=($('#essay-body')?.value.trim().split(/\s+/).filter(Boolean).length||0)+' palavras';
- }
+ if(['essay-body','essay-title','essay-prompt'].includes(t.id)&&data.activeEssay){queueEssayDraft();}
 });
 document.addEventListener('submit',async ev=>{
  const f=ev.target;if(!f.id)return;ev.preventDefault();
@@ -625,6 +622,9 @@ document.addEventListener('submit',async ev=>{
  }else if(f.id==='form-account'){const fd=new FormData(f);await saveProfile({display_name:String(fd.get('display_name')||'').trim(),availability:parseAvailability(fd)});say('Preferências salvas.');}
  else if(f.id==='form-email-change'){const email=String(new FormData(f).get('email')||'').trim();const {error}=await data.client.auth.updateUser({email});if(error)throw error;say('Confira seu e-mail para confirmar a alteração, conforme as configurações do provedor.');}
  }catch(e){notifyError(e,'Formulário');}
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden&&data.essayRunning){stopEssayTimer();void saveEssayDraft().catch(e=>notifyError(e,'Proteção do rascunho'));}
 });
 $('#mobile-menu').addEventListener('click',()=>{const nav=$('#app-nav'),open=!nav.hidden;nav.hidden=open;$('#mobile-menu').setAttribute('aria-expanded',String(!open));});
 window.addEventListener('beforeunload',ev=>{if(data.essayPending){ev.preventDefault();ev.returnValue='';}});

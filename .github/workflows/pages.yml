@@ -56,6 +56,8 @@ jobs:
         run: node tests/v15_release_gate.test.mjs
       - name: Browser regression V9 (local storage simulated)
         run: python3 tests/v9_browser.py
+      - name: Block 03/A — mobile navigation, focus and dark mode at 8 widths
+        run: python3 tests/block03_v9_a11y_browser.py
       - name: Curriculum navigation browser (real Chromium)
         run: python3 tests/curriculum_browser.py
       - name: V15 school pathways and official past-paper browser tests

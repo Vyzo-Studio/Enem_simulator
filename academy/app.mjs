@@ -2,6 +2,7 @@ import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler
 import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';
 import {scanLegacySources,importForAccount,listHistory,readSnapshot,readHistoryArchive,downloadSnapshot} from './cloud-snapshot.mjs';
 import {getVerifiedStudent} from './v12-auth-core.mjs';
+import {mountAccountImport} from './account-import.mjs';
 
 /* VYZO ACADEMY — V8.0.1: cliente cloud. Não contém credenciais privilegiadas. */
 const $=s=>document.querySelector(s);
@@ -381,16 +382,10 @@ function renderAccount(){const p=data.profile||{};
  <p class="muted small">E-mail atual: ${esc(data.user?.email||'')}</p>${availableMarkup(p.availability)}<button class="btn">Salvar preferências</button></form></section>
  <section class="card stack"><h2>Segurança e privacidade</h2><form id="form-email-change" class="form">${field('Novo e-mail','email','email','','required')}<button class="btn secondary">Solicitar alteração de e-mail</button></form>
  <div class="divider"></div><button class="btn secondary" data-action="reset-email">Solicitar recuperação de senha</button>
- <button class="btn ghost" data-action="import-old">Importar histórico local anterior</button><p class="small muted">A importação é opcional e não apaga o arquivo original. Só inclui conteúdo de estudo, nunca credenciais.</p>
+ <a class="btn secondary" href="./v9-cloud.html">Abrir jornada V9 sincronizada</a><p class="small muted">A importação é opcional e não apaga o arquivo original. Só inclui conteúdo de estudo, nunca credenciais.</p>
  <div class="divider"></div><button class="btn danger" data-action="logout">Sair da minha conta</button></section></div>`);
-}
-async function importOld(){let raw;try{raw=localStorage.getItem('enem-intelligence-v2');}catch{}
- if(!raw){say('Não existe histórico antigo neste navegador.','error');return;}
- let old;try{old=JSON.parse(raw);}catch{say('O backup local não contém JSON válido.','error');return;}
- const allowed={schema:old.schema,history:old.history||[],essay:old.essay||{},mentor:old.mentor||{},seenIds:old.seenIds||[]};
- if(!confirm('Copiar seu histórico antigo para sua conta na nuvem? A cópia não apaga nem altera o original.'))return;
- const {error}=await data.client.from('academy_legacy_imports').insert({user_id:data.user.id,original_state:allowed});if(error)throw error;
- say('Histórico antigo copiado para uma área privada da sua conta. Ele permanece separado dos diagnósticos específicos de cada prova.');
+ const ownerId=data.user?.id;
+ void mountAccountImport(data.client,data.user,()=>Boolean(ownerId)&&data.user?.id===ownerId).catch(()=>say('Não foi possível listar backups. Verifique sua conexão.','error'));
 }
 function render(){
  if(!data.client){disableUI('Backend ainda não configurado.');return;}
@@ -435,7 +430,7 @@ document.addEventListener('click',async ev=>{
   case 'essay-list':await saveEssayDraft();data.activeEssay=null;go('essay');break;
   case 'essay-version':{await saveEssayDraft();const ed=data.activeEssay;const versions=[...(ed.versions||[]),{at:new Date().toISOString(),body:ed.body||'',prompt:ed.prompt||''}];
     const updated=await put('academy_essays',{versions},ed.id);data.essays=data.essays.map(x=>x.id===ed.id?updated:x);renderEssayEditor(updated);say('Versão registrada.');break;}
-  case 'import-old':await importOld();break;
+  case 'import-old':go('account');break;
   case 'reset-email':{const {error}=await data.client.auth.resetPasswordForEmail(data.user.email,{redirectTo:publicUrl});if(error)throw error;say('Se permitido, um link foi enviado ao seu e-mail.');break;}
   default:break;
  }

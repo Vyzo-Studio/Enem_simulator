@@ -63,7 +63,12 @@ try:
    expect(page.get_by_text('84,8%',exact=True)).to_be_visible()
    assert page.locator('a[href^="https://www.gov.br/inep"]').count()>=1
    assert page.locator('#essay-body').is_visible()
-   assert not page.evaluate('document.documentElement.scrollWidth>innerWidth'),width
+   overflow=page.evaluate("""() => ({screen:innerWidth,document:document.documentElement.scrollWidth,
+     offenders:Array.from(document.body.querySelectorAll('*')).filter(el=>{
+       const rect=el.getBoundingClientRect();
+       return rect.width>0 && rect.right>innerWidth+1;
+     }).slice(0,12).map(el=>({tag:el.tagName,id:el.id,className:String(el.className),right:Math.round(el.getBoundingClientRect().right)}))})""")
+   assert overflow['document']<=overflow['screen'],(width,overflow)
    if width==390:
     assert page.get_by_text('Roteiro de planejamento antes da entrega').count()==0
     body='A internet facilita muitos serviços públicos.\n\nEntretanto, a diferença territorial dificulta acesso em algumas comunidades.'

@@ -8,7 +8,7 @@ for name in required:assert (academy/name).is_file(),f'Faltando {name}'
 config=(academy/'config.js').read_text()
 assert "https://cfrlqinzsysoqcduqftd.supabase.co" in config and "sb_publishable_" in config, 'Projeto dedicado e chave pública'
 assert 'registrationEnabled: false' in config,'Cadastro deve permanecer fechado até homologação'
-assert not re.search(r'publishableKey:\\s*[\'"\\"]sb_secret_',config),'Segredo privado no frontend'
+assert 'sb_secret_' not in config,'Segredo privado no frontend'
 app=(academy/'app.mjs').read_text()
 assert 'email_confirmed_at' in app and 'onboarding_complete' in app
 assert 'v2' not in app.split('localStorage.setItem',1)[0] or True

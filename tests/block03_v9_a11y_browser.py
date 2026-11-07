@@ -78,7 +78,9 @@ try:
    assert page.evaluate('document.activeElement.tagName')=='H1'
    if mobile: assert toggle.get_attribute('aria-expanded')=='false'
    # Tema noturno: contraste mínimo do texto da navegação contra seu painel.
+   assert page.locator('#v9-theme').get_attribute('aria-pressed')=='false'
    page.locator('#v9-theme').click()
+   assert page.locator('#v9-theme').get_attribute('aria-pressed')=='true'
    colors=nav.locator('button[data-page="study"]').evaluate("""e=>{
      const color=getComputedStyle(e).color;
      const background=getComputedStyle(e.closest('nav')).backgroundColor;

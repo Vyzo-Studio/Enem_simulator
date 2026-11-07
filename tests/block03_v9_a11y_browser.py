@@ -46,7 +46,7 @@ try:
   browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
   for width in SIZES:
    context=browser.new_context(viewport={'width':width,'height':850},reduced_motion='reduce')
-   context.add_init_script("(state)=>{localStorage.setItem('vyzo-academy-v9-guest-1',JSON.stringify(state));}",state)
+   context.add_init_script(script="localStorage.setItem('vyzo-academy-v9-guest-1', "+json.dumps(state,ensure_ascii=False)+");")
    page=context.new_page()
    errors=[]
    page.on('pageerror',lambda error:errors.append(str(error)))

@@ -1,7 +1,9 @@
 name: Quality checks
 on:
   push:
-    branches: [main, feat-v13-subject-autocomplete, feat-v14-education-foundations, feat-v15-universal-pathways]
+    branches: [main, feat-v13-subject-autocomplete, feat-v14-education-foundations, feat-v15-universal-pathways, release-v15-stage01-safe]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -43,6 +45,8 @@ jobs:
         run: node tests/v14_core.test.mjs
       - name: Verify V15 school stages and content isolation
         run: node tests/v15_pathways.test.mjs
+      - name: Gate safe V15 release (no auth, unreviewed pilots or cloud)
+        run: node tests/v15_release_gate.test.mjs
       - name: Browser regression V9 (local storage simulated)
         run: python3 tests/v9_browser.py
       - name: V15 school pathways and official past-paper browser tests

@@ -7,7 +7,13 @@ export async function mountAccountImport(client,user,isCurrent){
  const old=document.getElementById('account-import-panel');if(old)old.remove();
  const section=document.createElement('section');section.id='account-import-panel';section.className='card';
  section.style.marginTop='20px';
- const sources=scanLegacySources(localStorage);
+ const safeStorage={
+  getItem(key){
+   try{const raw=localStorage.getItem(key);if(raw!==null)return raw;}catch{}
+   try{return sessionStorage.getItem(key);}catch{return null;}
+  }
+ };
+ const sources=scanLegacySources(safeStorage);
  section.innerHTML='<h2>Importar meus backups anteriores</h2><p>Seus dados do simulador clássico e da jornada V9 nunca são enviados automaticamente. A cópia não remove os originais.</p>'
  +'<form class="form" id="form-import-legacy"><div class="stack" id="legacy-source-list"></div>'
  +'<label class="small"><input type="checkbox" name="confirmed" required> Confirmo que esses dados locais pertencem a mim e autorizo copiá-los para a conta <strong>'+escapeHtml(user.email)+'</strong>.</label>'
@@ -46,7 +52,7 @@ export async function mountAccountImport(client,user,isCurrent){
   if(!fd.get('confirmed')||!keys.length){alert('Selecione os dados e confirme sua autorização.');return;}
   const button=form.querySelector('button[type="submit"]');button.disabled=true;
   try{
-   const results=await importForAccount({client,storage:localStorage,user,keys,confirmed:true});
+   const results=await importForAccount({client,storage:safeStorage,user,keys,confirmed:true});
    if(!isCurrent())return;
    await showArchives();
    const message=results.some(x=>x.activeAlreadyExists)?

@@ -84,11 +84,11 @@ async function setup(){
  }catch(e){setStatus('Conexão indisponível');disableUI('Não foi possível carregar o provedor de autenticação de forma segura.');}
 }
 async function bootstrap(){
- const generation=++authGeneration;
+ let generation=++authGeneration;
  const {data:result,error}=await data.client.auth.getUser();
  if(generation!==authGeneration)return;
  if(error||!result?.user){erasePrivateState();setStatus('Conta necessária');renderAuth();return;}
- if(data.user&&data.user.id!==result.user.id)erasePrivateState();
+ if(data.user&&data.user.id!==result.user.id){erasePrivateState();generation=authGeneration;}
  data.user=result.user;
  if(!data.user.email_confirmed_at||data.user.is_anonymous){setStatus('Verifique seu e-mail');renderUnverified();return;}
  const identity=data.user.id;
@@ -138,11 +138,12 @@ function authView(){return `<div class="auth-shell"><div class="card stack"><div
  <div class="auth-tabs" role="tablist" aria-label="Opções de autenticação">
   ${[['signup','Criar conta'],['login','Entrar'],['forgot','Esqueci a senha']].map(([k,v])=>`<button type="button" data-auth-tab="${k}" role="tab" aria-selected="${data.authTab===k}" class="${data.authTab===k?'active':''}">${v}</button>`).join('')}
  </div>
- ${data.authTab==='signup'?`<form class="form" id="form-signup">
+ ${data.authTab==='signup'&&!cfg.registrationEnabled?`<div class="callout warning"><strong>Inscrições temporariamente fechadas.</strong> A confirmação de e-mail e a proteção etária ainda estão em homologação. Contas de menores não são permitidas. Se já possui conta, escolha Entrar.</div>`:data.authTab==='signup'?`<form class="form" id="form-signup">
  ${field('Nome para exibição','display_name','text','','required minlength="2" maxlength="100" autocomplete="name"')}
  ${field('E-mail','email','email','','required autocomplete="email"')}
  <div class="field"><label for="f-password">Senha (mínimo de 12 caracteres)</label><div class="password-line"><input id="f-password" type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"><button type="button" data-action="reveal" data-target="f-password" aria-label="Mostrar ou ocultar senha">Mostrar</button></div><small>Use uma senha longa, difícil de adivinhar, com letras, números e símbolos.</small></div>
  <div class="field"><label for="f-confirm">Confirmar senha</label><div class="password-line"><input id="f-confirm" type="password" name="confirm" minlength="12" required autocomplete="new-password"><button type="button" data-action="reveal" data-target="f-confirm">Mostrar</button></div></div>
+ <label class="small"><input type="checkbox" name="adult" required> Confirmo que tenho 18 anos ou mais. O cadastro de menores está indisponível.</label>
  <label class="small"><input type="checkbox" name="accepted" required> Li e aceito os <a target="_blank" rel="noopener" href="./termos.html">termos de uso</a> e a <a href="../privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</label><button type="submit" class="btn">Criar conta</button></form>`:
  data.authTab==='login'?`<form class="form" id="form-login">${field('E-mail','email','email','','required autocomplete="email"')}
  <div class="field"><label for="f-password">Senha</label><div class="password-line"><input id="f-password" type="password" name="password" required autocomplete="current-password"><button type="button" data-action="reveal" data-target="f-password">Mostrar</button></div></div><button type="submit" class="btn">Entrar</button></form>`:
@@ -156,10 +157,12 @@ async function handleAuth(form){
  if(data.busy)return;busy(true);
  try{
  if(type==='form-signup'){
+   if(!cfg.registrationEnabled)throw Error('Inscrições indisponíveis até homologação.');
+   if(fd.get('adult')!=='on')throw Error('Cadastro somente para maiores de 18 anos.');
    const pwd=String(fd.get('password')||'');
    if(pwd.length<12||pwd!==fd.get('confirm'))throw Error('As senhas precisam coincidir e ter pelo menos 12 caracteres.');
    if(!fd.get('accepted'))throw Error('Aceite os termos e a política de privacidade.');
-   const {error}=await data.client.auth.signUp({email,password:pwd,options:{emailRedirectTo:publicUrl,data:{display_name:String(fd.get('display_name')||'Estudante').slice(0,100),terms_accepted_at:new Date().toISOString()}}});
+   const {error}=await data.client.auth.signUp({email,password:pwd,options:{emailRedirectTo:publicUrl,data:{display_name:String(fd.get('display_name')||'Estudante').slice(0,100),terms_accepted_at:new Date().toISOString(),vyzo_adult_attested:'true'}}});
    if(error)throw error;
    say('Se o cadastro puder ser concluído, você receberá um e-mail de confirmação. Verifique sua caixa de entrada e spam.');
    data.authTab='login';renderAuth();
@@ -407,7 +410,7 @@ document.addEventListener('click',async ev=>{
  switch(action.dataset.action){
   case 'reveal':{const el=document.getElementById(action.dataset.target);if(!el)return;el.type=el.type==='password'?'text':'password';action.textContent=el.type==='password'?'Mostrar':'Ocultar';break;}
   case 'resend-email':{const {error}=await data.client.auth.resend({type:'signup',email:data.user.email,options:{emailRedirectTo:publicUrl}});if(error)throw error;say('Se a conta estiver pendente, um novo e-mail será enviado.');break;}
-  case 'logout':await data.client.auth.signOut();data.user=null;data.profile=null;data.goals=[];data.essays=[];data.tasks=[];data.diagnostics=[];data.authTab='login';renderAuth();break;
+  case 'logout':{erasePrivateState();const {error}=await data.client.auth.signOut();if(error)throw error;data.authTab='login';renderAuth();break;}
   case 'onboard-back':data.onboard=Math.max(1,data.onboard-1);renderOnboarding();break;
   case 'onboard-types-next':data.selectedTypes=[...document.querySelectorAll('.onboard-type:checked')].map(x=>x.value);if(!data.selectedTypes.length){say('Selecione pelo menos um tipo de prova.','error');break;}data.onboard=3;renderOnboarding();break;
   case 'goal-new':$('#goal-form-slot').innerHTML=goalForm();$('#goal-form-slot').scrollIntoView({behavior:'smooth'});break;

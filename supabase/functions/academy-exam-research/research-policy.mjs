@@ -12,7 +12,11 @@ export const ALLOWED_HOSTS=Object.freeze([
 const clean=(v,max=120)=>typeof v==='string'?v.trim().replace(/\s+/gu,' ').slice(0,max):'';
 export function safeOfficialUrl(raw){
  try {
-  const u=new URL(String(raw));
+  const original=String(raw);
+  // URL() normaliza /%2e%2e/ antes da verificação; examine o caminho bruto.
+  const rawPath=original.replace(/^https:\/\/[^/?#]+/i,'').split(/[?#]/,1)[0];
+  if(/(?:%2e|%2f|%5c|\\|\/\.\.?\/|\/\/)/i.test(rawPath))return null;
+  const u=new URL(original);
   if(u.protocol!=='https:'||u.username||u.password||u.port&&u.port!=='443')return null;
   if(!ALLOWED_HOSTS.some(h=>u.hostname===h||u.hostname.endsWith('.'+h)))return null;
   if(/(?:\\|%5c|%2f|%2e%2e|\/\.\.|\/\/)/i.test(u.pathname))return null;

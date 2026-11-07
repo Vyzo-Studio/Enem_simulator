@@ -1,5 +1,7 @@
 import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';
 import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';
+import {getWritingProposal,WRITING_PROPOSALS,newEssayRecord,essayMetrics,formatWritingTimer,essayVersionSnapshot} from './essay-lab.mjs';
+import {renderWritingCatalog,renderWritingEditor,refreshWritingCounters} from './essay-lab-ui.mjs';
 
 /* VYZO ACADEMY — V8.0.1: cliente cloud. Não contém credenciais privilegiadas. */
 const $=s=>document.querySelector(s);
@@ -18,7 +20,7 @@ const week=(dt)=>{const d=new Date(dt);d.setHours(12,0,0,0);return d;};
 const fmtClock=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const safeExternalUrl=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null}catch{return null}};
 const configReady=()=>/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(String(cfg.url||'')) && (/^sb_publishable_/.test(String(cfg.publishableKey||''))||/^eyJ/.test(String(cfg.publishableKey||'')));
-const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
+const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,essaySaving:null,essayClockAt:null,essayClockBase:0,essayTicker:null,essayRunning:false,essayCategory:'enem',essayMode:'treino',essayFocus:false,lastSync:null};
 function say(message,type='info'){
  const el=$('#toast');el.textContent=message;el.dataset.type=type;
 }

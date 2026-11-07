@@ -1,8 +1,10 @@
 -- Stage 02: CRUD real, RLS A/B e consistência de objetivo-sessão. Sem persistência de fixtures.
 begin;
-insert into auth.users(id,email,aud,role,is_sso_user,is_anonymous) values
- ('a0a0a0a0-0000-4000-8000-000000000011','stage02crud-a@example.invalid','authenticated','authenticated',false,false),
- ('b0b0b0b0-0000-4000-8000-000000000012','stage02crud-b@example.invalid','authenticated','authenticated',false,false);
+-- Habilitação somente dentro da transação que será revertida ao fim.
+update academy_internal.registration_gate set enabled=true where singleton=true;
+insert into auth.users(id,email,aud,role,is_sso_user,is_anonymous,raw_user_meta_data) values
+ ('a0a0a0a0-0000-4000-8000-000000000011','stage02crud-a@example.invalid','authenticated','authenticated',false,false,'{"vyzo_adult_attested":"true"}'::jsonb),
+ ('b0b0b0b0-0000-4000-8000-000000000012','stage02crud-b@example.invalid','authenticated','authenticated',false,false,'{"vyzo_adult_attested":"true"}'::jsonb);
 insert into public.academy_goals(id,user_id,exam_type,exam_name) values
  ('a0a0a0a0-1000-4000-8000-000000000011','a0a0a0a0-0000-4000-8000-000000000011','ENEM','Meta A1'),
  ('a0a0a0a0-1000-4000-8000-000000000013','a0a0a0a0-0000-4000-8000-000000000011','ENEM','Meta A2'),

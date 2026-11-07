@@ -3,7 +3,7 @@ import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,anal
 import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';
 import {composeExam} from './v11-composer.mjs';
 import {renderFigure} from './v11-visual.mjs';
-import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';
+import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,schoolSubjects,validSchoolYear,validateSchoolSubjectSelection,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';
 const KEY='vyzo-academy-v9-guest-1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -77,6 +77,25 @@ function schoolFields(i,goal){
   years.map(n=>'<option value="'+n+'" '+(year===n?'selected':'')+'>'+n+'º ano</option>').join('')+
   '</select></div><p class="v9-mini">A etapa organiza seu objetivo. Questões específicas desta série ainda não foram validadas.</p>';
 }
+function schoolSubjectFields(index,goal){
+ const stage=getSchoolStage(goal.educationStage)?.id||'fundamental1';
+ const years=schoolYears(stage),year=validSchoolYear(stage,goal.schoolYear)?Number(goal.schoolYear):years[0];
+ const allowed=schoolSubjects(stage,year),selected=validateSchoolSubjectSelection(stage,year,goal.subjects||[]);
+ return '<fieldset id="v15-school-subjects-'+index+'" class="v9-detail">'+
+   '<legend>Disciplinas do '+year+'º ano</legend>'+
+   '<div class="v9-choice-grid">'+allowed.map(label=>
+     '<label class="v9-choice"><input type="checkbox" name="schoolSubject_'+index+'" value="'+h(label)+'" '+
+     (selected.accepted.includes(label)?'checked':'')+'><span>'+h(label)+'</span></label>').join('')+'</div>'+
+   '<p class="v9-mini">Disciplinas conforme a etapa escolar; ainda não há aulas ou avaliações aprovadas para todas elas. Ensino Religioso tem matrícula facultativa.</p>'+
+   (selected.rejected.length?'<p class="v9-warn">Há matérias antigas fora desta lista. Elas continuarão guardadas no histórico até você salvar alterações.</p>':'')+
+   '</fieldset>';
+}
+function updateSchoolSubjectFields(index){
+ const stage=$('#v15-school-stage-'+index)?.value,grade=Number($('#v15-school-year-'+index)?.value);
+ const box=$('#v15-school-subjects-'+index);if(!box)return;
+ const current=$$('input[name="schoolSubject_'+index+'"]:checked').map(input=>input.value);
+ box.outerHTML=schoolSubjectFields(index,{educationStage:stage,schoolYear:grade,subjects:current});
+}
 function isSchoolPath(id){return getLearningPath(id)?.type==='Prova escolar';}
 function pathSelector(){
  return '<section class="v15-path"><h2>Qual é o seu objetivo de aprendizagem?</h2>'+
@@ -121,7 +140,7 @@ function selectResearchResult(index){const item=researchResults[index];if(!item)
 }
 function renderWizard(){let content='';
  if(step===0) content=researchPreview();
- if(step===1) content=`<h2>Conte um pouco sobre cada prova</h2><p class="v9-lead">Preencha apenas o que você conhece. As matérias informadas por você não são apresentadas como edital oficial.</p>${draft.goals.map((g,i)=>`<fieldset class="v9-detail"><legend><strong>${h(g.type)}</strong></legend><div class="field-row">${formField('Nome da prova','name_'+i,g.name,'text','required maxlength="90"')}${g.type==='Prova escolar'?schoolFields(i,g):`${formField('Órgão / Instituição (opcional)','institution_'+i,g.institution,'text','maxlength="110"')}${formField('Cargo ou curso (opcional)','position_'+i,g.position,'text','maxlength="100"')}${formField('Banca (opcional)','board_'+i,g.board,'text','maxlength="100"')}${formField('Edição ou ano (opcional)','edition_'+i,g.edition,'text','maxlength="50"')}${formField('Data, se divulgada','date_'+i,g.examDate,'date')}`}</div>${formField('Quais matérias você deseja estudar?','subjects_'+i,g.subjects.join(', '),'text','maxlength="400"')}${g.type==='ENEM'?formSelect('Língua estrangeira do ENEM','foreign_'+i,['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):''}<p class="v9-mini">${g.sources?.length?'Fontes oficiais vinculadas à pesquisa. Você deve conferir se correspondem à edição e ao cargo desejados.':g.type==='ENEM'?'Áreas gerais do ENEM sugeridas; você pode ajustar.':'Conteúdo declarado pelo estudante — não validado com edital oficial.'}</p>${g.sources?.length?`<div class="v10-sources">${g.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Consultar fonte oficial')}</a>`).join('')}</div>`:''}${g.type!=='ENEM'&&g.type!=='Prova escolar'?`<label class="v9-choice"><input type="checkbox" name="provisional_${i}" ${g.provisional?'checked':''}><span>Se não houver questões específicas, autorizo um <b>diagnóstico provisório de habilidades gerais</b> (não representa a prova nem a banca).</span></label>`:''}</fieldset>`).join('')}`;
+ if(step===1) content=`<h2>Conte um pouco sobre cada prova</h2><p class="v9-lead">Preencha apenas o que você conhece. As matérias informadas por você não são apresentadas como edital oficial.</p>${draft.goals.map((g,i)=>`<fieldset class="v9-detail"><legend><strong>${h(g.type)}</strong></legend><div class="field-row">${formField('Nome da prova','name_'+i,g.name,'text','required maxlength="90"')}${g.type==='Prova escolar'?schoolFields(i,g):`${formField('Órgão / Instituição (opcional)','institution_'+i,g.institution,'text','maxlength="110"')}${formField('Cargo ou curso (opcional)','position_'+i,g.position,'text','maxlength="100"')}${formField('Banca (opcional)','board_'+i,g.board,'text','maxlength="100"')}${formField('Edição ou ano (opcional)','edition_'+i,g.edition,'text','maxlength="50"')}${formField('Data, se divulgada','date_'+i,g.examDate,'date')}`}</div>${g.type==='Prova escolar'?schoolSubjectFields(i,g):formField('Quais matérias você deseja estudar?','subjects_'+i,g.subjects.join(', '),'text','maxlength="400"')}${g.type==='ENEM'?formSelect('Língua estrangeira do ENEM','foreign_'+i,['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):''}<p class="v9-mini">${g.sources?.length?'Fontes oficiais vinculadas à pesquisa. Você deve conferir se correspondem à edição e ao cargo desejados.':g.type==='ENEM'?'Áreas gerais do ENEM sugeridas; você pode ajustar.':'Conteúdo declarado pelo estudante — não validado com edital oficial.'}</p>${g.sources?.length?`<div class="v10-sources">${g.sources.map(src=>`<a href="${h(src.url)}" target="_blank" rel="noopener noreferrer">${h(src.title||'Consultar fonte oficial')}</a>`).join('')}</div>`:''}${g.type!=='ENEM'&&g.type!=='Prova escolar'?`<label class="v9-choice"><input type="checkbox" name="provisional_${i}" ${g.provisional?'checked':''}><span>Se não houver questões específicas, autorizo um <b>diagnóstico provisório de habilidades gerais</b> (não representa a prova nem a banca).</span></label>`:''}</fieldset>`).join('')}`;
  if(step===2) content=`<h2>Quanto tempo você pode estudar por dia?</h2><p class="v9-lead">Este é o tempo <strong>total</strong>, compartilhado entre todas as provas. Não criaremos horários sobrepostos.</p><div class="field">${formSelect('Disponibilidade diária','minutes',['30','60','90','120','180','240','custom'],String(draft.minutes||120))}<small>30 = 30 min · 60 = 1 h · 90 = 1 h e 30 min · 120 = 2 h · 180 = 3 h · 240 = 4 h.</small></div><div class="field" id="v9-custom-wrap" ${draft.minutes==='custom'?'':'hidden'}>${formField('Duração personalizada (em minutos)','custom_minutes',120,'number','min="15" max="720" step="5"')}</div><h3>Em quais dias da semana pode estudar?</h3><div class="v9-choice-grid">${WEEKDAYS.map((day,i)=>`<div class="v14-day-row"><label class="v9-choice"><input type="checkbox" name="weekday" value="${i}" ${draft.weekdays.includes(i)?'checked':''}>${day}</label><label class="v14-day-minutes">Minutos neste dia <input type="number" name="day_minutes_${i}" min="15" max="720" step="5" value="${Number(draft.dailyMinutes?.[String(i)]||draft.minutes||120)}"></label></div>`).join('')}</div>`;
  if(step===3) content=`<h2>Como você está se sentindo nos estudos?</h2><p class="v9-lead">Suas respostas são referências subjetivas. O diagnóstico verificará o que você realmente sabe.</p>${formSelect('Como avalia seu nível agora?','confidence',['Não sei avaliar','Iniciante','Básico','Intermediário','Avançado'],draft.confidence)}<h3>Em quais assuntos sente mais dificuldade?</h3><div class="v9-choice-grid">${['Matemática','Interpretação','Redação','Memorização','Raciocínio lógico','Gestão do tempo','Ciências da natureza','Outros assuntos'].map(x=>`<label class="v9-choice"><input type="checkbox" name="difficulty" value="${h(x)}" ${draft.difficulties.includes(x)?'checked':''}>${h(x)}</label>`).join('')}</div><div style="margin-top:17px">${formSelect('Como prefere aprender?','style',['Aprendizagem mista','Leitura e resumos','Exemplos resolvidos','Questões práticas','Flashcards','Videoaulas'],draft.style)}</div>`;
  output(`<div class="v9-hero"><div class="v9-overline" style="color:#b6ccfb">ETAPA 1 DE 2 · QUESTIONÁRIO</div><h1>Antes de começar, vamos conhecer seus objetivos.</h1><p>Este questionário curto personaliza a avaliação inicial. O plano de estudos só será criado após a correção do diagnóstico.</p></div><div class="v9-card">${stepper()}<form id="wizard-form" class="v9-form" novalidate>${content}<div class="v9-actions">${step?cta('← Voltar','wizard-back','secondary'):'<span></span>'}<button class="btn" type="submit">${step===3?'Preparar meus diagnósticos →':'Continuar →'}</button></div></form></div>`);
@@ -144,7 +163,9 @@ function saveStep(form){const f=new FormData(form);
  if(step===1){draft.goals=draft.goals.map((g,i)=>{const name=String(f.get('name_'+i)||'').trim().slice(0,90);if(!name)throw Error('Informe o nome de cada prova.');const date=String(f.get('date_'+i)||'');if(date&&Number.isNaN(new Date(date+'T12:00:00').getTime()))throw Error('Data de prova inválida.');const educationStage=g.type==='Prova escolar'?String(f.get('stage_'+i)||'fundamental1'):null;
   const schoolYear=g.type==='Prova escolar'?Number(f.get('schoolYear_'+i)):null;
   if(g.type==='Prova escolar'&&!validSchoolYear(educationStage,schoolYear))throw Error('Selecione um ano escolar válido para a etapa.');
-  return {...g,name,educationStage,schoolYear,institution:String(f.get('institution_'+i)||'').trim(),position:String(f.get('position_'+i)||'').trim(),board:String(f.get('board_'+i)||'').trim(),edition:String(f.get('edition_'+i)||'').trim(),examDate:date,subjects:String(f.get('subjects_'+i)||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,20),foreignLanguage:g.type==='ENEM'&&f.get('foreign_'+i)==='Espanhol'?'Espanhol':'Inglês',provisional:g.type==='ENEM'||g.type==='Prova escolar'?false:f.has('provisional_'+i)};});}
+   if(g.type==='Prova escolar'&&!validateSchoolSubjectSelection(educationStage,schoolYear,f.getAll('schoolSubject_'+i).map(String)).valid)
+    throw Error('Selecione disciplinas compatíveis com o ano escolar.');
+  return {...g,name,educationStage,schoolYear,institution:String(f.get('institution_'+i)||'').trim(),position:String(f.get('position_'+i)||'').trim(),board:String(f.get('board_'+i)||'').trim(),edition:String(f.get('edition_'+i)||'').trim(),examDate:date,subjects:g.type==='Prova escolar'?validateSchoolSubjectSelection(educationStage,schoolYear,f.getAll('schoolSubject_'+i).map(String)).accepted:String(f.get('subjects_'+i)||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,20),foreignLanguage:g.type==='ENEM'&&f.get('foreign_'+i)==='Espanhol'?'Espanhol':'Inglês',provisional:g.type==='ENEM'||g.type==='Prova escolar'?false:f.has('provisional_'+i)};});}
  if(step===2){const raw=f.get('minutes');const minutes=raw==='custom'?Number(f.get('custom_minutes')):Number(raw);if(!Number.isInteger(minutes)||minutes<15||minutes>720)throw Error('Informe de 15 a 720 minutos por dia.');draft.minutes=minutes;draft.weekdays=f.getAll('weekday').map(Number);if(!draft.weekdays.length)throw Error('Selecione pelo menos um dia disponível.');
    draft.dailyMinutes=Object.fromEntries(Array.from({length:7},(_,i)=>{
     const n=draft.weekdays.includes(i)?Number(f.get('day_minutes_'+i)):0;
@@ -190,7 +211,7 @@ function renderEditGoal(){
   formField('Banca organizadora','board',g.board||'','text','maxlength="100"')+
   formField('Edição ou ano','edition',g.edition||'','text','maxlength="50"')+
   formField('Data da prova','examDate',g.examDate||'','date'))+
-  '</div>'+formField('Quais matérias deseja estudar?','subjects',(g.subjects||[]).join(', '),'text','maxlength="400"')+
+  '</div>'+(g.type==='Prova escolar'?schoolSubjectFields('edit',g):formField('Quais matérias deseja estudar?','subjects',(g.subjects||[]).join(', '),'text','maxlength="400"'))+
   formField('Tópicos prioritários (opcional, separados por vírgula)','topics',(g.topics||[]).join(', '),'text','maxlength="400"')+
   (isEnem(g)?formSelect('Língua estrangeira','foreignLanguage',['Inglês','Espanhol'],g.foreignLanguage||'Inglês'):'')+
   formSelect('Prioridade','priority',['high','medium','low'],g.priority||'medium')+
@@ -202,9 +223,9 @@ function renderEditGoal(){
 function saveGoalEdit(form){
  const current=state.goals.find(g=>g.id===editingGoalId);
  if(!current)throw Error('Prova não encontrada.');
- const f=new FormData(form),name=String(f.get('name')||'').trim().slice(0,90),
+ let f=new FormData(form),name=String(f.get('name')||'').trim().slice(0,90),
   examDate=f.has('examDate')?String(f.get('examDate')||''):String(current.examDate||''),
-  subjects=[...new Set(String(f.get('subjects')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20),
+  subjects=current.type==='Prova escolar'?f.getAll('schoolSubject_edit').map(String):[...new Set(String(f.get('subjects')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20),
   topics=[...new Set(String(f.get('topics')||'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,30),
   foreignLanguage=isEnem(current)&&f.get('foreignLanguage')==='Espanhol'?'Espanhol':'Inglês',
   priority=String(f.get('priority')||'medium'),status=String(f.get('status')||'preparing');
@@ -212,6 +233,11 @@ function saveGoalEdit(form){
  const educationStage=current.type==='Prova escolar'?String(f.get('stage_edit')||'fundamental1'):current.educationStage||null;
  const schoolYear=current.type==='Prova escolar'?Number(f.get('schoolYear_edit')):current.schoolYear||null;
  if(current.type==='Prova escolar'&&!validSchoolYear(educationStage,schoolYear))throw Error('Etapa e ano escolar incompatíveis.');
+  if(current.type==='Prova escolar'){
+   const checked=validateSchoolSubjectSelection(educationStage,schoolYear,subjects);
+   if(!checked.valid)throw Error('As disciplinas precisam corresponder ao ano selecionado.');
+   subjects=checked.accepted;
+  }
  if(examDate&&Number.isNaN(new Date(examDate+'T12:00:00').getTime()))throw Error('Data inválida.');
  if(!['high','medium','low'].includes(priority)||!['preparing','paused','archived'].includes(status))throw Error('Configuração inválida.');
  const changed=JSON.stringify({subjects:current.subjects||[],topics:current.topics||[],language:current.foreignLanguage||'Inglês',stage:current.educationStage||null,year:current.schoolYear||null})!==
@@ -527,8 +553,10 @@ document.addEventListener('change',e=>{const el=e.target;
  if(el.id.startsWith('v15-school-stage-')){
   const index=el.id.slice('v15-school-stage-'.length),target=$('#v15-school-year-'+index);
   if(target)target.innerHTML=schoolYears(el.value).map(y=>'<option value="'+y+'">'+y+'º ano</option>').join('');
+   updateSchoolSubjectFields(index);
  }
- if(el.name==='answer'){const a=currentAssessment(),qid=a.ids[questionPosition];a.answers[qid]=Number(el.value);a.updatedAt=Date.now();if(persist()){render();message('Resposta salva neste navegador.');}}
+ if(el.id.startsWith('v15-school-year-'))updateSchoolSubjectFields(el.id.slice('v15-school-year-'.length));
+  if(el.name==='answer'){const a=currentAssessment(),qid=a.ids[questionPosition];a.answers[qid]=Number(el.value);a.updatedAt=Date.now();if(persist()){render();message('Resposta salva neste navegador.');}}
  if(el.id==='review-toggle'){const a=currentAssessment(),qid=a.ids[questionPosition];a.flagged=a.flagged||[];a.flagged=el.checked?[...new Set([...a.flagged,qid])]:a.flagged.filter(x=>x!==qid);persist();render();}
  if(el.id==='v9-import-file'&&el.files?.[0])importBackup(el.files[0]);
 });

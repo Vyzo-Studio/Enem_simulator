@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Consulte etapas, anos escolares, disciplinas e referências oficiais da BNCC e das matrizes ENEM.">
+<title>VYZO ACADEMY — Mapa curricular</title>
+<link rel="icon" type="image/svg+xml" href="../assets/vyzo-academy.svg">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./curriculo.css">
+<script type="module" src="./curriculo.mjs"></script>
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<header class="topbar">
+<a class="brand" href="./v9.html"><span class="monogram" aria-hidden="true">V<span>·</span></span><span class="brand-copy"><b>VYZO ACADEMY</b><small>Mapa curricular de referência</small></span></a>
+<a class="curr-back" href="./v9.html">Voltar aos estudos</a>
+</header>
+<main class="curr-wrap" id="conteudo">
+<section class="curr-head"><p class="eyebrow">BLOCO 01 · CURRÍCULO</p><h1>Mapa curricular</h1><p>Explore as áreas de estudo por etapa, ano e disciplina. Uma referência verificada não significa que já exista uma aula ou avaliação aprovada.</p></section>
+<div class="curr-box"><label for="curr-stage">Etapa educacional</label><select id="curr-stage"></select><div id="curr-grade-list" class="curr-grades" role="group" aria-label="Selecione o ano ou a matriz"></div></div>
+<div class="curr-layout"><aside class="curr-box"><h2>Disciplinas e áreas</h2><div id="curr-subject-list" class="curr-subjects"></div></aside>
+<section class="curr-box" aria-live="polite"><div id="curr-content"></div></section></div>
+<section class="curr-box"><h2>Referências consultadas</h2><div id="curr-sources" class="curr-sources"></div><p class="curr-small">Informações oficiais são associadas aos respectivos órgãos e versões. Esta página é apenas um mapa de referência, não substitui currículos locais nem libera conteúdos em revisão.</p></section>
+<footer class="footer">VYZO ACADEMY · Nenhuma conta, histórico ou dado pessoal é solicitado nesta consulta.</footer>
+</main>
+</body>
+</html>

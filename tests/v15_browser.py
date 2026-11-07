@@ -28,7 +28,12 @@ with sync_playwright() as p:
         page.locator('#v15-school-stage-0').select_option(stage)
         page.locator('#v15-school-year-0').select_option(str(grade))
         page.locator('#v9-name_0').fill('Reforço escolar')
-        page.locator('#v9-subjects_0').fill('Matemática, Língua Portuguesa')
+        page.locator('input[name="schoolSubject_0"][value="Matemática"]').check()
+        page.locator('input[name="schoolSubject_0"][value="Língua Portuguesa"]').check()
+        if stage=='fundamental1':
+            assert page.locator('input[name="schoolSubject_0"][value="Língua Inglesa"]').count()==0
+        if stage in ('fundamental2','medio'):
+            assert page.locator('input[name="schoolSubject_0"][value="Língua Inglesa"]').count()==1
         page.get_by_role('button',name='Continuar').click()
         expect(page.get_by_text('Quanto tempo você pode estudar por dia?')).to_be_visible()
         page.get_by_role('button',name='Continuar').click()

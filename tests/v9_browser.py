@@ -12,10 +12,12 @@ def fixture():
     composer=source('academy/v11-composer.mjs').replace('export ','')
     visual=source('academy/v11-visual.mjs').replace('export ','')
     core=source('academy/v9-core.mjs').replace("import {allocateDaily,validMinutes} from './scheduler.mjs';",'').replace("import {evaluateDiagnostic} from './diagnostics.mjs';",'').replace("import {composeExam,isSupportedVisual} from './v11-composer.mjs';",'').replace('export ','')
-    pathways=source('academy/v15-pathways.mjs').replace('export ','')
+    taxonomy=source('academy/curriculum-taxonomy.mjs').replace('export ','')
+    taxonomy_bind='const {getGradeSubjects,validateSchoolSubjects}=(function(){'+taxonomy+';return {getGradeSubjects,validateSchoolSubjects};})();'
+    pathways=source('academy/v15-pathways.mjs').replace("import {getGradeSubjects,validateSchoolSubjects} from './curriculum-taxonomy.mjs';",'').replace('export ','')
     research=source('academy/v10-research.mjs').replace('export ','')
-    app=source('academy/v9.mjs').replace("import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,analyzeAnswers,topicRecommendations,buildAdaptiveSchedule,verifyPlan,isGoalEvaluated,hasEnoughEvidence,latestInitial,latestReport} from './v9-core.mjs';",'').replace("import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';",'').replace("import {composeExam} from './v11-composer.mjs';",'').replace("import {renderFigure} from './v11-visual.mjs';",'').replace("import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,validSchoolYear,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';",'')
-    return html.replace('<script src="./config.js"></script>','<script>window.VYZO_ACADEMY_CLOUD={url:"",publishableKey:""};</script>').replace('<script type="module" src="./v9.mjs"></script>','').replace('</body>',f'<script>\n{sch}\n{diag}\n{composer}\n{visual}\n{core}\n{pathways}\n{research}\n{app}\n</script></body>')
+    app=source('academy/v9.mjs').replace("import {EXAM_TYPES,AREAS,WEEKDAYS,isEnem,suitableQuestions,sampleDiagnostic,analyzeAnswers,topicRecommendations,buildAdaptiveSchedule,verifyPlan,isGoalEvaluated,hasEnoughEvidence,latestInitial,latestReport} from './v9-core.mjs';",'').replace("import {searchExams,cloudConfigured,validQuery} from './v10-research.mjs';",'').replace("import {composeExam} from './v11-composer.mjs';",'').replace("import {renderFigure} from './v11-visual.mjs';",'').replace("import {EDUCATION_STAGES,LEARNING_PATHS,getLearningPath,getSchoolStage,schoolYears,schoolSubjects,validSchoolYear,validateSchoolSubjectSelection,schoolGradeLabel,ENEM_OFFICIAL_ARCHIVE,searchVerifiedExam} from './v15-pathways.mjs';",'')
+    return html.replace('<script src="./config.js"></script>','<script>window.VYZO_ACADEMY_CLOUD={url:"",publishableKey:""};</script>').replace('<script type="module" src="./v9.mjs"></script>','').replace('</body>',f'<script>\n{sch}\n{diag}\n{composer}\n{visual}\n{core}\n{taxonomy_bind}\n{pathways}\n{research}\n{app}\n</script></body>')
 HTML=fixture()
 def storage(page,seed=None):
     page.evaluate("""(seed)=>{

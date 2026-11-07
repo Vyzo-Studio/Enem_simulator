@@ -52,6 +52,7 @@ window.__fakeClient={
 def build_html(mock=False):
  html=(root/'academy/index.html').read_text()
  html=html.replace('<link rel="stylesheet" href="./styles.css">','<style>'+(root/'academy/styles.css').read_text()+'</style>')
+ html=html.replace('<link rel="stylesheet" href="./essay-lab.css">','<style>'+(root/'academy/essay-lab.css').read_text()+'</style>')
  config=(root/'academy/config.js').read_text()
  if mock:
   config="window.VYZO_ACADEMY_CLOUD={url:'https://abcde12345.supabase.co',publishableKey:'sb_publishable_mock'};"
@@ -61,10 +62,21 @@ def build_html(mock=False):
   html=html.replace('<script src="../src/'+name+'" defer></script>','<script>'+(root/'src'/name).read_text()+'</script>')
  scheduler=(root/'academy/scheduler.mjs').read_text().replace('export ','')
  diagnostic=(root/'academy/diagnostics.mjs').read_text().replace('export ','')
- app=(root/'academy/app.mjs').read_text().replace("import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",'').replace("import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';",'')
+ lab=(root/'academy/essay-lab.mjs').read_text().replace('export ','')
+ ui=(root/'academy/essay-lab-ui.mjs').read_text().replace('export ','')
+ ui=re.sub(r"^import \{WRITING_CATEGORIES,[\s\S]*?\} from './essay-lab.mjs';\s*","",ui,count=1)
+ app=(root/'academy/app.mjs').read_text()
+ for declaration in [
+  "import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",
+  "import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';",
+  "import {getWritingProposal,WRITING_PROPOSALS,newEssayRecord,essayMetrics,formatWritingTimer,essayVersionSnapshot} from './essay-lab.mjs';",
+  "import {renderWritingCatalog,renderWritingEditor,refreshWritingCounters} from './essay-lab-ui.mjs';"
+ ]:
+  assert declaration in app,('Missing fixture import',declaration)
+  app=app.replace(declaration,'')
  if mock:
   app=app.replace("const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');","const {createClient}={createClient:()=>window.__fakeClient};")
- html=html.replace('<script type="module" src="./app.mjs"></script>','<script type="module">'+scheduler+'\n'+diagnostic+'\n'+app+'</script>')
+ html=html.replace('<script type="module" src="./app.mjs"></script>','<script type="module">'+scheduler+'\n'+diagnostic+'\n'+lab+'\n'+ui+'\n'+app+'</script>')
  return html
 
 def suite():

@@ -46,15 +46,16 @@ try:
   browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
   for width in SIZES:
    context=browser.new_context(viewport={'width':width,'height':850},reduced_motion='reduce')
-   context.add_init_script(script="localStorage.setItem('vyzo-academy-v9-guest-1', "+json.dumps(state,ensure_ascii=False)+");")
    page=context.new_page()
    errors=[]
    page.on('pageerror',lambda error:errors.append(str(error)))
    page.goto(f'http://127.0.0.1:{server.server_port}/academy/v9.html',wait_until='networkidle')
+   page.evaluate("(saved)=>localStorage.setItem('vyzo-academy-v9-guest-1',JSON.stringify(saved))",state)
+   page.reload(wait_until='networkidle')
    expect(page.locator('#v9-content h1').first).to_be_visible()
    nav=page.locator('#v9-nav')
    first=nav.locator('button[data-page="hub"]')
-   assert first.get_attribute('aria-current')=='page',(width,'initial aria-current')
+   assert first.get_attribute('aria-current')=='page',(width,'initial aria-current',page.locator('#v9-content h1').first.inner_text(),errors,page.evaluate("localStorage.getItem('vyzo-academy-v9-guest-1')"))
    assert first.evaluate('(e)=>getComputedStyle(e).minHeight') in ('44px',),width
    mobile=width<=900
    toggle=page.locator('#v9-nav-toggle')

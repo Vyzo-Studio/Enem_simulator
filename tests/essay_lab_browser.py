@@ -44,7 +44,7 @@ try:
    page.on('pageerror',lambda err:errors.append(str(err)))
    page.goto('http://127.0.0.1:%s/academy/index.html'%server.server_port)
    page.set_content(html_with_rows(seed()),wait_until='load')
-   expect(page.get_by_role('heading',name='Visão geral')).to_be_visible(timeout=4000)
+   expect(page.get_by_role('heading',name='Seu painel de aprendizagem')).to_be_visible(timeout=4000)
    if width<=740:
     page.locator('#mobile-menu').click()
    page.locator('#app-nav [data-page="essay"]').click()
@@ -97,7 +97,7 @@ try:
     page.locator('#essay-body').fill(unsent)
     assert page.evaluate("sessionStorage.length")>0
     page.set_content(html_with_rows(rows),wait_until='load')
-    expect(page.get_by_role('heading',name='Visão geral')).to_be_visible()
+    expect(page.get_by_role('heading',name='Seu painel de aprendizagem')).to_be_visible()
     if width<=740:page.locator('#mobile-menu').click()
     page.locator('#app-nav [data-page="essay"]').click()
     page.once('dialog',lambda dlg:dlg.accept())

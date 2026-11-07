@@ -331,25 +331,144 @@ function renderCalendar(){const ref=new Date();ref.setDate(ref.getDate()+data.ca
  <div class="row between"><p class="small muted">${dates.length} dia(s) · ${activeExamGoals().length} prova(s) cadastradas</p><button class="btn" data-action="calendar-generate">Gerar próximos 7 dias</button></div>
  <div class="calendar-grid">${cell}</div></div><div class="callout" style="margin-top:15px">Tarefas finalizadas são mantidas no histórico. A geração acrescenta atividades novas sem substituir as já concluídas.</div>`);
 }
-function renderEssays(){main(`${head('Redações e versões','Guarde rascunhos separados por prova. A correção por IA ainda não foi ativada.')}
- <div class="row" style="margin-bottom:15px"><button class="btn" data-action="essay-new">+ Nova redação</button></div>
- <div class="stack">${data.essays.map(e=>{const g=data.goals.find(g=>g.id===e.goal_id);return `<div class="goal-row"><div class="row between"><b>${esc(e.title)}</b><span class="badge">${esc(g?.exam_name||'Geral')}</span></div><p class="small muted">${(e.body||'').trim().split(/\s+/).filter(Boolean).length} palavras · ${(e.versions||[]).length} versões anteriores</p><button class="btn secondary" data-action="essay-open" data-id="${e.id}">Editar</button></div>`}).join('')||'<div class="card empty">Nenhuma redação salva.</div>'}</div>`);}
-function renderEssayEditor(e){data.activeEssay=e;
- main(`${head('Editor de redação','O rascunho é salvo automaticamente na conta quando você faz alterações.')}
- <div class="card stack"><div class="field"><label for="essay-title">Título</label><input class="text" id="essay-title" value="${esc(e.title)}"></div>
- <div class="field"><label for="essay-prompt">Tema e textos motivadores (fontes confiáveis)</label><textarea class="text" id="essay-prompt" rows="3">${esc(e.prompt)}</textarea></div>
- <div class="field"><label for="essay-body">Sua redação</label><textarea class="text" id="essay-body" style="min-height:360px;line-height:1.75" rows="15">${esc(e.body)}</textarea></div>
- <div class="row between"><span id="essay-count" class="small muted">${(e.body||'').trim().split(/\s+/).filter(Boolean).length} palavras</span><span id="essay-save-status" class="small muted">Salva na nuvem</span></div>
- <div class="row"><button class="btn" data-action="essay-version">Salvar esta versão</button><button class="btn secondary" data-action="essay-list">Voltar às redações</button></div>
- ${(e.versions||[]).length?`<h3>Histórico de versões</h3>${e.versions.map((v,i)=>`<details><summary>Versão ${i+1} · ${new Date(v.at).toLocaleString('pt-BR')}</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(v.body)}</pre></details>`).join('')}`:''}</div>`);
+/** Um cache TEMPORÁRIO na aba preserva edição não confirmada, isolado por conta e ID.
+ * O original no PostgreSQL só é alterado depois de uma gravação autenticada.
+ * O cache é apagado após sucesso e na saída explícita da conta.
+ */
+function essayCacheKey(owner,id){return 'vyzo-essay-unsent-a1-'+owner+'-'+id;}
+function backupPendingEssay(id,payload){
+ const owner=data.user?.id;if(!owner||!id)return;
+ try{sessionStorage.setItem(essayCacheKey(owner,id),JSON.stringify({
+  owner,id,at:Date.now(),payload
+ }));}catch{say('O navegador não permitiu o backup temporário. Baixe o texto antes de sair.','error');}
 }
-async function saveEssayDraft(){if(!data.essayPending)return;
- const ed=data.activeEssay;if(!ed)return;
- const payload=data.essayPending;data.essayPending=null;clearTimeout(data.essayTimer);
- const {data:updated,error}=await data.client.from('academy_essays').update({...payload,updated_at:new Date().toISOString()}).eq('id',ed.id).eq('user_id',data.user.id).select().single();
- if(error){data.essayPending=payload;throw error;}
- data.activeEssay=updated;data.essays=data.essays.map(e=>e.id===ed.id?updated:e);
- $('#essay-save-status')&&($('#essay-save-status').textContent='Salva na nuvem ✓');
+function clearPendingEssayCache(owner,id){
+ try{sessionStorage.removeItem(essayCacheKey(owner,id));}catch{}
+}
+function clearEssayCachesForUser(owner){
+ if(!owner)return;
+ try{
+  const prefix='vyzo-essay-unsent-a1-'+owner+'-';
+  for(let i=sessionStorage.length-1;i>=0;i--){
+   const key=sessionStorage.key(i);if(key?.startsWith(prefix))sessionStorage.removeItem(key);
+  }
+ }catch{}
+}
+function essayElapsed(){
+ const running=data.essayRunning?Math.max(0,(Date.now()-data.essayClockAt)/1000):0;
+ return Math.min(604800,Math.max(0,Math.floor(data.essayClockBase+running)));
+}
+function essayStatus(text,error=false){
+ const el=$('#essay-save-status');
+ if(el){el.textContent=text;el.dataset.state=error?'error':'ok';}
+}
+function stopEssayTimer(){
+ if(!data.essayRunning)return;
+ data.essayClockBase=essayElapsed();data.essayRunning=false;data.essayClockAt=null;
+ if(data.essayTicker){clearInterval(data.essayTicker);data.essayTicker=null;}
+ const button=document.querySelector('[data-action="essay-timer"]');
+ if(button)button.textContent='Retomar cronômetro';
+ if(data.activeEssay)queueEssayDraft();
+}
+function updateEssayTick(){
+ if(!data.essayRunning||!data.activeEssay)return;
+ const seconds=essayElapsed(),clock=$('#essay-clock');
+ if(clock)clock.textContent=formatWritingTimer(seconds);
+ if(seconds>=604800){stopEssayTimer();say('Tempo máximo do registro atingido. O texto pode continuar sendo editado.');return;}
+ if(seconds>0&&seconds%15===0&&seconds!==data.essayLastSavedSeconds){
+  data.essayLastSavedSeconds=seconds;queueEssayDraft();
+ }
+}
+function renderEssays(){
+ stopEssayTimer();
+ data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');
+ main(head('Laboratório de redação','Propostas autorais com coletânea documentada e seu histórico pessoal. A avaliação por IA ainda não está disponível.')+
+  '<div id="essay-lab-root"></div>');
+ renderWritingCatalog($('#essay-lab-root'),{
+  essays:data.essays,goals:data.goals,category:data.essayCategory,mode:data.essayMode
+ });
+}
+function restoreUnsavedEssay(e){
+ try{
+  const raw=sessionStorage.getItem(essayCacheKey(data.user.id,e.id));
+  if(!raw)return;
+  const candidate=JSON.parse(raw);
+  if(candidate.owner!==data.user.id||candidate.id!==e.id||!candidate.payload||typeof candidate.payload.body!=='string')
+   return;
+  if(!confirm('Encontramos alterações ainda não confirmadas na nuvem, guardadas temporariamente nesta aba. Deseja recuperá-las para esta redação?'))
+   return;
+  const draft=candidate.payload;
+  if($('#essay-title')&&typeof draft.title==='string')$('#essay-title').value=draft.title;
+  if($('#essay-prompt')&&typeof draft.prompt==='string')$('#essay-prompt').value=draft.prompt;
+  if($('#essay-body'))$('#essay-body').value=draft.body;
+  data.essayClockBase=Math.min(604800,Math.max(0,Number(draft.elapsed_seconds)||0));
+  $('#essay-clock').textContent=formatWritingTimer(data.essayClockBase);
+  refreshWritingCounters(draft.body);
+  queueEssayDraft();
+  say('Versão temporária recuperada nesta aba. Salvando na conta...');
+ }catch{essayStatus('Cópia temporária inválida. Baixe o histórico antes de alterar.',true);}
+}
+function renderEssayEditor(e){
+ if(!e||!data.user)return;
+ stopEssayTimer();
+ data.activeEssay=e;data.essayClockBase=Math.min(604800,Math.max(0,Number(e.elapsed_seconds)||0));
+ data.essayClockAt=null;data.essayRunning=false;data.essayLastSavedSeconds=0;
+ data.essayFocus=false;document.body.classList.remove('essay-focus-mode');
+ main(head('Editor de redação','Leia a proposta, escreva e acompanhe o estado de salvamento. Seus textos não são enviados para IA nesta etapa.')+
+  '<div id="essay-lab-root"></div>');
+ renderWritingEditor($('#essay-lab-root'),e);
+ restoreUnsavedEssay(e);
+}
+function queueEssayDraft(){
+ const e=data.activeEssay;if(!e||!data.user)return;
+ const payload={
+  title:$('#essay-title')?.value??e.title,
+  prompt:$('#essay-prompt')?.value??e.prompt,
+  body:$('#essay-body')?.value??e.body,
+  elapsed_seconds:essayElapsed()
+ };
+ data.essayPending={...data.essayPending,...payload};
+ backupPendingEssay(e.id,data.essayPending);
+ essayStatus('Alterações pendentes — salvando...');
+ clearTimeout(data.essayTimer);
+ data.essayTimer=setTimeout(()=>saveEssayDraft().catch(err=>notifyError(err,'Salvamento da redação')),800);
+ refreshWritingCounters(payload.body);
+}
+async function saveEssayDraft(){
+ if(!data.essayPending)return data.essaySaving||undefined;
+ const initial=data.activeEssay,owner=data.user?.id;
+ if(!initial||!owner)throw Error('Conta ou redação não verificada.');
+ const payload=data.essayPending;
+ data.essayPending=null;clearTimeout(data.essayTimer);
+ const previous=data.essaySaving||Promise.resolve();
+ const task=previous.catch(()=>{}).then(async()=>{
+  if(data.user?.id!==owner)throw Error('A conta ativa mudou. Nenhum texto foi enviado.');
+  const latest=data.essays.find(x=>x.id===initial.id);
+  if(!latest)throw Error('Redação não encontrada nesta conta.');
+  // Compare-and-swap impede sobrescrever outra edição mais recente.
+  const expected=latest.updated_at;
+  const query=data.client.from('academy_essays').update({...payload,updated_at:new Date().toISOString()})
+   .eq('id',initial.id).eq('user_id',owner).eq('updated_at',expected);
+  const {data:updated,error}=await query.select().single();
+  if(error||!updated)throw Error('Não foi possível confirmar o salvamento. Pode haver edição mais recente em outra aba ou dispositivo.');
+  if(data.user?.id!==owner)return;
+  data.essays=data.essays.map(x=>x.id===initial.id?updated:x);
+  if(data.activeEssay?.id===initial.id)data.activeEssay=updated;
+  if(!data.essayPending){
+   clearPendingEssayCache(owner,initial.id);
+   essayStatus('Salva na nuvem ✓');
+  }
+ });
+ const tracked=task.catch(error=>{
+  if(data.user?.id===owner){
+   data.essayPending={...payload,...data.essayPending};
+   backupPendingEssay(initial.id,data.essayPending);
+   essayStatus('Falha ao salvar. Cópia temporária mantida nesta aba.',true);
+  }
+  throw error;
+ });
+ data.essaySaving=tracked;
+ return tracked;
 }
 function renderAccount(){const p=data.profile||{};
  main(`${head('Minha conta','Suas informações são privadas. A senha não faz parte do perfil de estudante.')}

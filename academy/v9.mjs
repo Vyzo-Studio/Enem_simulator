@@ -613,6 +613,10 @@ document.addEventListener('keydown',event=>{
   $('#v9-nav-toggle')?.focus();
  }
 });
-$('#v9-theme').addEventListener('click',()=>{const theme=document.body.dataset.theme==='dark'?'light':'dark';document.body.dataset.theme=theme;try{localStorage.setItem('vyzo-v9-theme',theme);}catch{}});
-try{document.body.dataset.theme=localStorage.getItem('vyzo-v9-theme')||'light';}catch{}
+function syncThemeControl(){
+ $('#v9-theme').setAttribute('aria-pressed',String(document.body.dataset.theme==='dark'));
+}
+$('#v9-theme').addEventListener('click',()=>{const theme=document.body.dataset.theme==='dark'?'light':'dark';document.body.dataset.theme=theme;syncThemeControl();try{localStorage.setItem('vyzo-v9-theme',theme);}catch{}});
+try{document.body.dataset.theme=localStorage.getItem('vyzo-v9-theme')==='dark'?'dark':'light';}catch{document.body.dataset.theme='light';}
+syncThemeControl();
 if(storageFailure)message(storageFailure,'error');render();

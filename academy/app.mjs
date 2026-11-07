@@ -498,14 +498,26 @@ function render(){
 // Eventos delegados: os campos de senha nunca são armazenados nem enviados para estatísticas.
 document.addEventListener('click',async ev=>{
  const tab=ev.target.closest('[data-auth-tab]');if(tab){data.authTab=tab.dataset.authTab;renderAuth();return;}
- const page=ev.target.closest('[data-page]');if(page){go(page.dataset.page);return;}
+ const page=ev.target.closest('[data-page]');if(page){
+  if(data.activeEssay){stopEssayTimer();try{await saveEssayDraft();}catch(e){notifyError(e,'Proteção do rascunho');return;}data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');}
+  go(page.dataset.page);return;
+ }
  const action=ev.target.closest('[data-action]');if(!action)return;
  const id=action.dataset.id;
  try{
  switch(action.dataset.action){
   case 'reveal':{const el=document.getElementById(action.dataset.target);if(!el)return;el.type=el.type==='password'?'text':'password';action.textContent=el.type==='password'?'Mostrar':'Ocultar';break;}
   case 'resend-email':{const {error}=await data.client.auth.resend({type:'signup',email:data.user.email,options:{emailRedirectTo:publicUrl}});if(error)throw error;say('Se a conta estiver pendente, um novo e-mail será enviado.');break;}
-  case 'logout':await data.client.auth.signOut();data.user=null;data.profile=null;data.goals=[];data.essays=[];data.tasks=[];data.diagnostics=[];data.authTab='login';renderAuth();break;
+  case 'logout':{
+    stopEssayTimer();
+    if(data.activeEssay)await saveEssayDraft();
+    const owner=data.user?.id;
+    const {error}=await data.client.auth.signOut();if(error)throw error;
+    clearEssayCachesForUser(owner);
+    data.activeEssay=null;data.essayPending=null;data.essaySaving=null;data.user=null;data.profile=null;
+    data.goals=[];data.essays=[];data.tasks=[];data.diagnostics=[];data.authTab='login';
+    document.body.classList.remove('essay-focus-mode');renderAuth();break;
+   }
   case 'onboard-back':data.onboard=Math.max(1,data.onboard-1);renderOnboarding();break;
   case 'onboard-types-next':data.selectedTypes=[...document.querySelectorAll('.onboard-type:checked')].map(x=>x.value);if(!data.selectedTypes.length){say('Selecione pelo menos um tipo de prova.','error');break;}data.onboard=3;renderOnboarding();break;
   case 'goal-new':$('#goal-form-slot').innerHTML=goalForm();$('#goal-form-slot').scrollIntoView({behavior:'smooth'});break;
@@ -525,11 +537,61 @@ document.addEventListener('click',async ev=>{
   case 'calendar-now':data.calendarOffset=0;renderCalendar();break;
   case 'calendar-generate':await generatePlan();break;
   case 'task-done':await put('academy_study_tasks',{status:'completed',completed_at:new Date().toISOString()},id);await loadData();render();say('Atividade concluída.');break;
-  case 'essay-new':{const row=await put('academy_essays',{title:'Nova redação',body:'',prompt:'',versions:[]});data.essays.push(row);renderEssayEditor(row);break;}
+  case 'essay-new':{
+    const row=await put('academy_essays',{title:'Nova redação livre',body:'',prompt:'',versions:[]});
+    data.essays.push(row);renderEssayEditor(row);break;
+   }
+   case 'essay-start-proposal':{
+    const proposal=getWritingProposal(id);
+    if(!proposal||proposal.status!=='validado_editorialmente')throw Error('A proposta está indisponível.');
+    const mode=$('#essay-mode')?.value||'treino';
+    const selectedGoal=$('#essay-goal')?.value||'';
+    const goal=selectedGoal?data.goals.find(x=>x.id===selectedGoal):null;
+    if(selectedGoal&&!goal)throw Error('Objetivo não pertence à conta.');
+    if(goal&&proposal.category==='enem'&&goal.exam_type!=='ENEM')throw Error('Esta proposta deve ser vinculada ao ENEM ou usada sem vínculo.');
+    const row=await put('academy_essays',newEssayRecord(proposal,mode,goal?.id||null));
+    data.essays.push(row);renderEssayEditor(row);break;
+   }
+   case 'essay-timer':{
+    if(!data.activeEssay)break;
+    if(data.essayRunning)stopEssayTimer();
+    else{data.essayRunning=true;data.essayClockAt=Date.now();
+     data.essayTicker=setInterval(updateEssayTick,1000);
+     action.textContent='Pausar cronômetro';}
+    break;
+   }
+   case 'essay-focus':{
+    data.essayFocus=!data.essayFocus;
+    document.body.classList.toggle('essay-focus-mode',data.essayFocus);
+    action.textContent=data.essayFocus?'Sair do modo foco':'Foco na escrita';
+    $('#essay-body')?.focus();break;
+   }
+   case 'essay-save-now':{stopEssayTimer();queueEssayDraft();await saveEssayDraft();break;}
+   case 'essay-export':{
+    const current=$('#essay-body')?.value??data.activeEssay?.body??'';
+    const blob=new Blob([current],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='VYZO_REDACAO_'+new Date().toISOString().slice(0,10)+'.txt';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);break;
+   }
   case 'essay-open':renderEssayEditor(data.essays.find(e=>e.id===id));break;
-  case 'essay-list':await saveEssayDraft();data.activeEssay=null;go('essay');break;
-  case 'essay-version':{await saveEssayDraft();const ed=data.activeEssay;const versions=[...(ed.versions||[]),{at:new Date().toISOString(),body:ed.body||'',prompt:ed.prompt||''}];
-    const updated=await put('academy_essays',{versions},ed.id);data.essays=data.essays.map(x=>x.id===ed.id?updated:x);renderEssayEditor(updated);say('Versão registrada.');break;}
+  case 'essay-list':stopEssayTimer();await saveEssayDraft();data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');go('essay');break;
+  case 'essay-version':{
+    stopEssayTimer();
+    await saveEssayDraft();
+    const ed=data.activeEssay;
+    if(!ed)throw Error('Redação não encontrada.');
+    if((ed.versions||[]).length>=200)throw Error('Limite de 200 versões atingido. Exporte a redação antes de continuar.');
+    const versions=[...(ed.versions||[]),essayVersionSnapshot(ed)];
+    const {data:updated,error}=await data.client.from('academy_essays')
+     .update({versions,updated_at:new Date().toISOString()})
+     .eq('id',ed.id).eq('user_id',data.user.id).eq('updated_at',ed.updated_at).select().single();
+    if(error||!updated)throw Error('Outra edição pode ter sido salva. Reabra o rascunho para evitar sobrescrever versões.');
+    data.essays=data.essays.map(x=>x.id===ed.id?updated:x);
+    renderEssayEditor(updated);
+    say('Versão histórica registrada sem apagar as anteriores.');
+    break;
+   }
   case 'import-old':await importOld();break;
   case 'reset-email':{const {error}=await data.client.auth.resetPasswordForEmail(data.user.email,{redirectTo:publicUrl});if(error)throw error;say('Se permitido, um link foi enviado ao seu e-mail.');break;}
   default:break;

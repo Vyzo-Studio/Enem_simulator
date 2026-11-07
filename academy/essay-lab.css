@@ -10,12 +10,13 @@
 .essay-proposal-foot{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:5px}
 .essay-history-item{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .essay-history-item p{margin:8px 0}
-.essay-editor{display:grid;gap:18px;max-width:100%}
+.essay-editor{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;max-width:100%;min-width:0}
+.essay-editor>*,.essay-supports>*,.essay-writing>*{min-width:0}
 .essay-editor-head{padding:18px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}
 .essay-editor-head h2{margin:5px 0 8px;font-size:clamp(20px,2.5vw,28px);color:var(--ink)}
 .essay-instructions,.essay-source-list,.essay-writing{padding:clamp(15px,2.5vw,25px);border:1px solid var(--line);border-radius:15px;background:var(--surface)}
 .essay-instructions p,.essay-source-list p{line-height:1.7}
-.essay-supports{display:grid;gap:12px}
+.essay-supports{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
 .essay-supports h2,.essay-instructions h2,.essay-source-list h2{font-size:19px;color:var(--ink);margin:5px 0 15px}
 .essay-support{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:clamp(14px,2vw,19px)}
 .essay-support h3{font-size:16px;color:var(--ink);margin:0 0 8px}
@@ -23,13 +24,13 @@
 .essay-support-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .essay-support-links a,.essay-source-list a{overflow-wrap:anywhere;font-size:13px}
 .essay-licence-note{font-size:12px!important;color:var(--muted)!important}
-.essay-table-wrap{max-width:100%;overflow:auto;margin:12px 0}
+.essay-table-wrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;margin:12px 0}
 .essay-source-table{border-collapse:collapse;width:100%;min-width:280px;background:var(--surface);font-size:13px}
 .essay-source-table caption{font-size:12px;text-align:left;caption-side:top;padding-bottom:7px}
 .essay-source-table th,.essay-source-table td{padding:10px;border:1px solid var(--line);text-align:left;color:var(--ink)}
 .essay-source-table thead th{background:#eaf1ff;color:#193967}
 .essay-guidance summary{cursor:pointer;padding:12px;color:var(--ink);font-weight:700}
-.essay-writing{display:grid;gap:15px}
+.essay-writing{display:grid;grid-template-columns:minmax(0,1fr);gap:15px;min-width:0}
 .essay-writing textarea#essay-body{min-height:440px;width:100%;font-size:16px;line-height:1.85;resize:vertical;letter-spacing:.01em}
 .essay-writing textarea#essay-prompt{min-height:130px}
 .essay-warning-small{font-size:12px;color:#64551f;background:#fffaea;border:1px solid #f4df9c;padding:10px;border-radius:9px}

@@ -17,6 +17,15 @@ jobs:
           node-version: '22'
       - name: Verify bank and JavaScript
         run: node tests/qa.mjs
+      - name: Validate Stage 03 Auth and cloud modules
+        run: |
+          node --check academy/app.mjs
+          node --check academy/v12-auth-core.mjs
+          node --check academy/cloud-snapshot.mjs
+          node --check academy/account-import.mjs
+          node --check academy/v9-cloud-gate.mjs
+          node --check academy/v9.mjs
+          node tests/stage03_auth.test.mjs
       - name: Check HTML bundle
         run: python3 scripts/build.py --check
       - uses: actions/setup-python@v5

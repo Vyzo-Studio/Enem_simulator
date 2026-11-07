@@ -1,10 +1,12 @@
 -- Stage 02 RLS live test. Run ONLY in the dedicated Academy project.
 -- All temporary users and student data are rolled back.
 begin;
-insert into auth.users(id,email,aud,role,is_sso_user,is_anonymous)
+-- Habilitação somente dentro da transação que será revertida ao fim.
+update academy_internal.registration_gate set enabled=true where singleton=true;
+insert into auth.users(id,email,aud,role,is_sso_user,is_anonymous,raw_user_meta_data)
 values
- ('a0a0a0a0-0000-4000-8000-000000000001','vyzo-stage02-a@example.invalid','authenticated','authenticated',false,false),
- ('b0b0b0b0-0000-4000-8000-000000000002','vyzo-stage02-b@example.invalid','authenticated','authenticated',false,false);
+ ('a0a0a0a0-0000-4000-8000-000000000001','vyzo-stage02-a@example.invalid','authenticated','authenticated',false,false,'{"vyzo_adult_attested":"true"}'::jsonb),
+ ('b0b0b0b0-0000-4000-8000-000000000002','vyzo-stage02-b@example.invalid','authenticated','authenticated',false,false,'{"vyzo_adult_attested":"true"}'::jsonb);
 
 insert into public.academy_goals(id,user_id,exam_type,exam_name)
 values

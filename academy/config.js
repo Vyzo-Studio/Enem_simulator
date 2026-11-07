@@ -1,7 +1,8 @@
-/* VYZO ACADEMY V8 — apenas URL e chave PÚBLICA de um projeto exclusivo.
-   NUNCA coloque secret/service_role, senha de banco ou credencial privada aqui.
-   A autenticação só é habilitada quando os dois valores forem configurados. */
+/* VYZO ACADEMY — credenciais PÚBLICAS Supabase, nunca secret/service_role.
+  Inscrições desativadas até homologação de emails, proteção etária e privacidade.
+  O backend também possui um gatilho fail-closed independente desta configuração. */
 window.VYZO_ACADEMY_CLOUD = Object.freeze({
-  url: '',
-  publishableKey: ''
+  url: 'https://cfrlqinzsysoqcduqftd.supabase.co',
+  publishableKey: 'sb_publishable_KVxTEFLu0lL5h1zhvqON3A_Xc9jVSSz',
+  registrationEnabled: false
 });

@@ -5,7 +5,6 @@ import {existsSync,readFileSync} from 'node:fs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFileSync(new URL(path,root),'utf8');
 const unavailable=[
- 'academy/v12-auth-core.mjs',
  'academy/v12-entry.html',
  'academy/v12-entry.mjs',
  'academy/v15-school-content.mjs',
@@ -19,8 +18,10 @@ for(const path of unavailable){
   'Recurso em revisão não pode ser incluído no release V15: '+path);
 }
 // Migrações SQL podem ser versionadas na main sem habilitar a UI de login.
-// O bloqueio de módulos V12 executáveis e pilotos não revisados permanece.
+// O núcleo de autenticação V12 é autorizado na Etapa 03; pilotos e entrada V12 separada seguem bloqueados.
 assert.match(read('supabase/migrations/202611050003_vyzo_academy_v12.sql'),/academy_private_records/);
+assert.match(read('supabase/migrations/202611070003_stage03_registration_gate.sql'),/guard_signup/);
+assert.match(read('academy/config.js'),/registrationEnabled: false/);
 const html=read('academy/v9.html');
 const journey=read('academy/v9.mjs');
 const core=read('academy/v9-core.mjs');
@@ -33,4 +34,4 @@ assert.match(core,/if\(goal.type==='Prova escolar'\|\|goal.educationStage\)retur
  'Nenhuma questão ENEM deve aparecer como diagnóstico de série escolar.');
 assert.doesNotMatch(journey,/v12-entry|v12-auth-core|v15-school-content|v15-school-ui/,
  'A versão pública não pode carregar serviços V12 ou pilotos não homologados.');
-console.log('PASS V15 release gate: sem V12, sem pilotos V15.1 e sem migração; V9 local/backup e isolamento ENEM preservados.');
+console.log('PASS release gate: autenticação controlada na Etapa 03, inscrições bloqueadas e pilotos V15.1 isolados; backups V9 preservados.');

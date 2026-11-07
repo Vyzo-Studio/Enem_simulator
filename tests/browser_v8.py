@@ -62,8 +62,8 @@ def build_html(mock=False):
  scheduler=(root/'academy/scheduler.mjs').read_text().replace('export ','')
  diagnostic=(root/'academy/diagnostics.mjs').read_text().replace('export ','')
  app=(root/'academy/app.mjs').read_text().replace("import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",'').replace("import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';",'')
- app=re.sub(r"^import .* from './(?:cloud-snapshot|v12-auth-core|account-import)\\.mjs';\\n","",app,flags=re.M)
- app="const getVerifiedStudent=async client=>(await client.auth.getUser()).data.user;\\nconst listHistory=async()=>[];\\nconst mountAccountImport=async()=>{};\\n"+app
+ app=re.sub(r"^import .* from './(?:cloud-snapshot|v12-auth-core|account-import)\.mjs';\n","",app,flags=re.M)
+ app="const getVerifiedStudent=async client=>(await client.auth.getUser()).data.user;\nconst listHistory=async()=>[];\nconst mountAccountImport=async()=>{};\n"+app
  if mock:
   app=app.replace("const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');","const {createClient}={createClient:()=>window.__fakeClient};")
  html=html.replace('<script type="module" src="./app.mjs"></script>','<script type="module">'+scheduler+'\n'+diagnostic+'\n'+app+'</script>')

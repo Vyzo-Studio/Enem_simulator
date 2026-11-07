@@ -101,7 +101,7 @@ try:
     unsent=body+'\n\nUma proposta futura deve ser avaliada.'
     page.locator('#essay-body').fill(unsent)
     assert page.evaluate("sessionStorage.length")>0
-    page.set_content(html_with_rows(rows),wait_until='load')
+    # Navegação real reinicia o contexto JS sem apagar sessionStorage da mesma aba.\n    page.goto('http://127.0.0.1:%s/academy/index.html'%server.server_port)\n    page.set_content(html_with_rows(rows),wait_until='load')
     expect(page.get_by_role('heading',name='Seu painel de aprendizagem')).to_be_visible()
     if width<=740:page.locator('#mobile-menu').click()
     page.locator('#app-nav [data-page="essay"]').click()

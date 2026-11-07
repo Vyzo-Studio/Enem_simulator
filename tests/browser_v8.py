@@ -64,7 +64,7 @@ def build_html(mock=False):
  diagnostic=(root/'academy/diagnostics.mjs').read_text().replace('export ','')
  lab=(root/'academy/essay-lab.mjs').read_text().replace('export ','')
  ui=(root/'academy/essay-lab-ui.mjs').read_text().replace('export ','')
- ui=re.sub(r"^import \{WRITING_CATEGORIES,[\s\S]*?\} from './essay-lab.mjs';\s*","",ui,count=1)
+ ui=re.sub(r"^import \{WRITING_CATEGORIES,[\s\S]*?\} from './essay-lab.mjs';\s*","",ui,count=1,flags=re.M)
  app=(root/'academy/app.mjs').read_text()
  for declaration in [
   "import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';",

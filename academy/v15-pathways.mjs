@@ -1,4 +1,5 @@
-/** V15 — Percursos escolares configuráveis sem alegar conteúdo BNCC validado. */
+/** V15 — Percursos escolares e compatibilidade de objetivos locais V9. */
+import {getGradeSubjects,validateSchoolSubjects} from './curriculum-taxonomy.mjs';
 export const EDUCATION_STAGES=Object.freeze([
   {id:'fundamental1',label:'Ensino Fundamental I',years:[1,2,3,4,5],
    subjects:['Língua Portuguesa','Matemática','Ciências','História','Geografia','Arte','Educação Física']},
@@ -20,7 +21,11 @@ export const LEARNING_PATHS=Object.freeze([
 export const getLearningPath=id=>LEARNING_PATHS.find(x=>x.id===id)||null;
 export const getSchoolStage=id=>EDUCATION_STAGES.find(x=>x.id===id)||null;
 export const schoolYears=id=>getSchoolStage(id)?.years.slice()||[];
-export const schoolSubjects=id=>getSchoolStage(id)?.subjects.slice()||[];
+/** Sem ano: lista legada conservada; com ano: filtro documental do catálogo A1. */
+export const schoolSubjects=(id,year)=>year==null?getSchoolStage(id)?.subjects.slice()||[]:
+  getGradeSubjects(id,year).map(subject=>subject.label);
+export const validateSchoolSubjectSelection=(stage,year,selected)=>
+  validateSchoolSubjects(stage,year,selected);
 export const validSchoolYear=(stage,year)=>schoolYears(stage).includes(Number(year));
 export const schoolGradeLabel=(stage,year)=>validSchoolYear(stage,year)?
   String(year)+'º ano do '+getSchoolStage(stage).label:'Ano escolar não informado';

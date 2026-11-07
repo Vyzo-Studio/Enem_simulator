@@ -1,5 +1,7 @@
 import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';
 import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';
+import {getWritingProposal,WRITING_PROPOSALS,newEssayRecord,essayMetrics,formatWritingTimer,essayVersionSnapshot} from './essay-lab.mjs';
+import {renderWritingCatalog,renderWritingEditor,refreshWritingCounters} from './essay-lab-ui.mjs';
 
 /* VYZO ACADEMY — V8.0.1: cliente cloud. Não contém credenciais privilegiadas. */
 const $=s=>document.querySelector(s);
@@ -18,7 +20,7 @@ const week=(dt)=>{const d=new Date(dt);d.setHours(12,0,0,0);return d;};
 const fmtClock=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const safeExternalUrl=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null}catch{return null}};
 const configReady=()=>/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(String(cfg.url||'')) && (/^sb_publishable_/.test(String(cfg.publishableKey||''))||/^eyJ/.test(String(cfg.publishableKey||'')));
-const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
+const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,essaySaving:null,essayClockAt:null,essayClockBase:0,essayTicker:null,essayRunning:false,essayCategory:'enem',essayMode:'treino',essayFocus:false,lastSync:null};
 function say(message,type='info'){
  const el=$('#toast');el.textContent=message;el.dataset.type=type;
 }
@@ -329,25 +331,144 @@ function renderCalendar(){const ref=new Date();ref.setDate(ref.getDate()+data.ca
  <div class="row between"><p class="small muted">${dates.length} dia(s) · ${activeExamGoals().length} prova(s) cadastradas</p><button class="btn" data-action="calendar-generate">Gerar próximos 7 dias</button></div>
  <div class="calendar-grid">${cell}</div></div><div class="callout" style="margin-top:15px">Tarefas finalizadas são mantidas no histórico. A geração acrescenta atividades novas sem substituir as já concluídas.</div>`);
 }
-function renderEssays(){main(`${head('Redações e versões','Guarde rascunhos separados por prova. A correção por IA ainda não foi ativada.')}
- <div class="row" style="margin-bottom:15px"><button class="btn" data-action="essay-new">+ Nova redação</button></div>
- <div class="stack">${data.essays.map(e=>{const g=data.goals.find(g=>g.id===e.goal_id);return `<div class="goal-row"><div class="row between"><b>${esc(e.title)}</b><span class="badge">${esc(g?.exam_name||'Geral')}</span></div><p class="small muted">${(e.body||'').trim().split(/\s+/).filter(Boolean).length} palavras · ${(e.versions||[]).length} versões anteriores</p><button class="btn secondary" data-action="essay-open" data-id="${e.id}">Editar</button></div>`}).join('')||'<div class="card empty">Nenhuma redação salva.</div>'}</div>`);}
-function renderEssayEditor(e){data.activeEssay=e;
- main(`${head('Editor de redação','O rascunho é salvo automaticamente na conta quando você faz alterações.')}
- <div class="card stack"><div class="field"><label for="essay-title">Título</label><input class="text" id="essay-title" value="${esc(e.title)}"></div>
- <div class="field"><label for="essay-prompt">Tema e textos motivadores (fontes confiáveis)</label><textarea class="text" id="essay-prompt" rows="3">${esc(e.prompt)}</textarea></div>
- <div class="field"><label for="essay-body">Sua redação</label><textarea class="text" id="essay-body" style="min-height:360px;line-height:1.75" rows="15">${esc(e.body)}</textarea></div>
- <div class="row between"><span id="essay-count" class="small muted">${(e.body||'').trim().split(/\s+/).filter(Boolean).length} palavras</span><span id="essay-save-status" class="small muted">Salva na nuvem</span></div>
- <div class="row"><button class="btn" data-action="essay-version">Salvar esta versão</button><button class="btn secondary" data-action="essay-list">Voltar às redações</button></div>
- ${(e.versions||[]).length?`<h3>Histórico de versões</h3>${e.versions.map((v,i)=>`<details><summary>Versão ${i+1} · ${new Date(v.at).toLocaleString('pt-BR')}</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(v.body)}</pre></details>`).join('')}`:''}</div>`);
+/** Um cache TEMPORÁRIO na aba preserva edição não confirmada, isolado por conta e ID.
+ * O original no PostgreSQL só é alterado depois de uma gravação autenticada.
+ * O cache é apagado após sucesso e na saída explícita da conta.
+ */
+function essayCacheKey(owner,id){return 'vyzo-essay-unsent-a1-'+owner+'-'+id;}
+function backupPendingEssay(id,payload){
+ const owner=data.user?.id;if(!owner||!id)return;
+ try{sessionStorage.setItem(essayCacheKey(owner,id),JSON.stringify({
+  owner,id,at:Date.now(),payload
+ }));}catch{say('O navegador não permitiu o backup temporário. Baixe o texto antes de sair.','error');}
 }
-async function saveEssayDraft(){if(!data.essayPending)return;
- const ed=data.activeEssay;if(!ed)return;
- const payload=data.essayPending;data.essayPending=null;clearTimeout(data.essayTimer);
- const {data:updated,error}=await data.client.from('academy_essays').update({...payload,updated_at:new Date().toISOString()}).eq('id',ed.id).eq('user_id',data.user.id).select().single();
- if(error){data.essayPending=payload;throw error;}
- data.activeEssay=updated;data.essays=data.essays.map(e=>e.id===ed.id?updated:e);
- $('#essay-save-status')&&($('#essay-save-status').textContent='Salva na nuvem ✓');
+function clearPendingEssayCache(owner,id){
+ try{sessionStorage.removeItem(essayCacheKey(owner,id));}catch{}
+}
+function clearEssayCachesForUser(owner){
+ if(!owner)return;
+ try{
+  const prefix='vyzo-essay-unsent-a1-'+owner+'-';
+  for(let i=sessionStorage.length-1;i>=0;i--){
+   const key=sessionStorage.key(i);if(key?.startsWith(prefix))sessionStorage.removeItem(key);
+  }
+ }catch{}
+}
+function essayElapsed(){
+ const running=data.essayRunning?Math.max(0,(Date.now()-data.essayClockAt)/1000):0;
+ return Math.min(604800,Math.max(0,Math.floor(data.essayClockBase+running)));
+}
+function essayStatus(text,error=false){
+ const el=$('#essay-save-status');
+ if(el){el.textContent=text;el.dataset.state=error?'error':'ok';}
+}
+function stopEssayTimer(){
+ if(!data.essayRunning)return;
+ data.essayClockBase=essayElapsed();data.essayRunning=false;data.essayClockAt=null;
+ if(data.essayTicker){clearInterval(data.essayTicker);data.essayTicker=null;}
+ const button=document.querySelector('[data-action="essay-timer"]');
+ if(button)button.textContent='Retomar cronômetro';
+ if(data.activeEssay)queueEssayDraft();
+}
+function updateEssayTick(){
+ if(!data.essayRunning||!data.activeEssay)return;
+ const seconds=essayElapsed(),clock=$('#essay-clock');
+ if(clock)clock.textContent=formatWritingTimer(seconds);
+ if(seconds>=604800){stopEssayTimer();say('Tempo máximo do registro atingido. O texto pode continuar sendo editado.');return;}
+ if(seconds>0&&seconds%15===0&&seconds!==data.essayLastSavedSeconds){
+  data.essayLastSavedSeconds=seconds;queueEssayDraft();
+ }
+}
+function renderEssays(){
+ stopEssayTimer();
+ data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');
+ main(head('Laboratório de redação','Propostas autorais com coletânea documentada e seu histórico pessoal. A avaliação por IA ainda não está disponível.')+
+  '<div id="essay-lab-root"></div>');
+ renderWritingCatalog($('#essay-lab-root'),{
+  essays:data.essays,goals:data.goals,category:data.essayCategory,mode:data.essayMode
+ });
+}
+function restoreUnsavedEssay(e){
+ try{
+  const raw=sessionStorage.getItem(essayCacheKey(data.user.id,e.id));
+  if(!raw)return;
+  const candidate=JSON.parse(raw);
+  if(candidate.owner!==data.user.id||candidate.id!==e.id||!candidate.payload||typeof candidate.payload.body!=='string')
+   return;
+  if(!confirm('Encontramos alterações ainda não confirmadas na nuvem, guardadas temporariamente nesta aba. Deseja recuperá-las para esta redação?'))
+   return;
+  const draft=candidate.payload;
+  if($('#essay-title')&&typeof draft.title==='string')$('#essay-title').value=draft.title;
+  if($('#essay-prompt')&&typeof draft.prompt==='string')$('#essay-prompt').value=draft.prompt;
+  if($('#essay-body'))$('#essay-body').value=draft.body;
+  data.essayClockBase=Math.min(604800,Math.max(0,Number(draft.elapsed_seconds)||0));
+  $('#essay-clock').textContent=formatWritingTimer(data.essayClockBase);
+  refreshWritingCounters(draft.body);
+  queueEssayDraft();
+  say('Versão temporária recuperada nesta aba. Salvando na conta...');
+ }catch{essayStatus('Cópia temporária inválida. Baixe o histórico antes de alterar.',true);}
+}
+function renderEssayEditor(e){
+ if(!e||!data.user)return;
+ stopEssayTimer();
+ data.activeEssay=e;data.essayClockBase=Math.min(604800,Math.max(0,Number(e.elapsed_seconds)||0));
+ data.essayClockAt=null;data.essayRunning=false;data.essayLastSavedSeconds=0;
+ data.essayFocus=false;document.body.classList.remove('essay-focus-mode');
+ main(head('Editor de redação','Leia a proposta, escreva e acompanhe o estado de salvamento. Seus textos não são enviados para IA nesta etapa.')+
+  '<div id="essay-lab-root"></div>');
+ renderWritingEditor($('#essay-lab-root'),e);
+ restoreUnsavedEssay(e);
+}
+function queueEssayDraft(){
+ const e=data.activeEssay;if(!e||!data.user)return;
+ const payload={
+  title:$('#essay-title')?.value??e.title,
+  prompt:$('#essay-prompt')?.value??e.prompt,
+  body:$('#essay-body')?.value??e.body,
+  elapsed_seconds:essayElapsed()
+ };
+ data.essayPending={...data.essayPending,...payload};
+ backupPendingEssay(e.id,data.essayPending);
+ essayStatus('Alterações pendentes — salvando...');
+ clearTimeout(data.essayTimer);
+ data.essayTimer=setTimeout(()=>saveEssayDraft().catch(err=>notifyError(err,'Salvamento da redação')),800);
+ refreshWritingCounters(payload.body);
+}
+async function saveEssayDraft(){
+ if(!data.essayPending)return data.essaySaving||undefined;
+ const initial=data.activeEssay,owner=data.user?.id;
+ if(!initial||!owner)throw Error('Conta ou redação não verificada.');
+ const payload=data.essayPending;
+ data.essayPending=null;clearTimeout(data.essayTimer);
+ const previous=data.essaySaving||Promise.resolve();
+ const task=previous.catch(()=>{}).then(async()=>{
+  if(data.user?.id!==owner)throw Error('A conta ativa mudou. Nenhum texto foi enviado.');
+  const latest=data.essays.find(x=>x.id===initial.id);
+  if(!latest)throw Error('Redação não encontrada nesta conta.');
+  // Compare-and-swap impede sobrescrever outra edição mais recente.
+  const expected=latest.updated_at;
+  const query=data.client.from('academy_essays').update({...payload,updated_at:new Date().toISOString()})
+   .eq('id',initial.id).eq('user_id',owner).eq('updated_at',expected);
+  const {data:updated,error}=await query.select().single();
+  if(error||!updated)throw Error('Não foi possível confirmar o salvamento. Pode haver edição mais recente em outra aba ou dispositivo.');
+  if(data.user?.id!==owner)return;
+  data.essays=data.essays.map(x=>x.id===initial.id?updated:x);
+  if(data.activeEssay?.id===initial.id)data.activeEssay=updated;
+  if(!data.essayPending){
+   clearPendingEssayCache(owner,initial.id);
+   essayStatus('Salva na nuvem ✓');
+  }
+ });
+ const tracked=task.catch(error=>{
+  if(data.user?.id===owner){
+   data.essayPending={...payload,...data.essayPending};
+   backupPendingEssay(initial.id,data.essayPending);
+   essayStatus('Falha ao salvar. Cópia temporária mantida nesta aba.',true);
+  }
+  throw error;
+ });
+ data.essaySaving=tracked;
+ return tracked;
 }
 function renderAccount(){const p=data.profile||{};
  main(`${head('Minha conta','Suas informações são privadas. A senha não faz parte do perfil de estudante.')}
@@ -377,14 +498,26 @@ function render(){
 // Eventos delegados: os campos de senha nunca são armazenados nem enviados para estatísticas.
 document.addEventListener('click',async ev=>{
  const tab=ev.target.closest('[data-auth-tab]');if(tab){data.authTab=tab.dataset.authTab;renderAuth();return;}
- const page=ev.target.closest('[data-page]');if(page){go(page.dataset.page);return;}
+ const page=ev.target.closest('[data-page]');if(page){
+  if(data.activeEssay){stopEssayTimer();try{await saveEssayDraft();}catch(e){notifyError(e,'Proteção do rascunho');return;}data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');}
+  go(page.dataset.page);return;
+ }
  const action=ev.target.closest('[data-action]');if(!action)return;
  const id=action.dataset.id;
  try{
  switch(action.dataset.action){
   case 'reveal':{const el=document.getElementById(action.dataset.target);if(!el)return;el.type=el.type==='password'?'text':'password';action.textContent=el.type==='password'?'Mostrar':'Ocultar';break;}
   case 'resend-email':{const {error}=await data.client.auth.resend({type:'signup',email:data.user.email,options:{emailRedirectTo:publicUrl}});if(error)throw error;say('Se a conta estiver pendente, um novo e-mail será enviado.');break;}
-  case 'logout':await data.client.auth.signOut();data.user=null;data.profile=null;data.goals=[];data.essays=[];data.tasks=[];data.diagnostics=[];data.authTab='login';renderAuth();break;
+  case 'logout':{
+    stopEssayTimer();
+    if(data.activeEssay)await saveEssayDraft();
+    const owner=data.user?.id;
+    const {error}=await data.client.auth.signOut();if(error)throw error;
+    clearEssayCachesForUser(owner);
+    data.activeEssay=null;data.essayPending=null;data.essaySaving=null;data.user=null;data.profile=null;
+    data.goals=[];data.essays=[];data.tasks=[];data.diagnostics=[];data.authTab='login';
+    document.body.classList.remove('essay-focus-mode');renderAuth();break;
+   }
   case 'onboard-back':data.onboard=Math.max(1,data.onboard-1);renderOnboarding();break;
   case 'onboard-types-next':data.selectedTypes=[...document.querySelectorAll('.onboard-type:checked')].map(x=>x.value);if(!data.selectedTypes.length){say('Selecione pelo menos um tipo de prova.','error');break;}data.onboard=3;renderOnboarding();break;
   case 'goal-new':$('#goal-form-slot').innerHTML=goalForm();$('#goal-form-slot').scrollIntoView({behavior:'smooth'});break;
@@ -404,11 +537,61 @@ document.addEventListener('click',async ev=>{
   case 'calendar-now':data.calendarOffset=0;renderCalendar();break;
   case 'calendar-generate':await generatePlan();break;
   case 'task-done':await put('academy_study_tasks',{status:'completed',completed_at:new Date().toISOString()},id);await loadData();render();say('Atividade concluída.');break;
-  case 'essay-new':{const row=await put('academy_essays',{title:'Nova redação',body:'',prompt:'',versions:[]});data.essays.push(row);renderEssayEditor(row);break;}
+  case 'essay-new':{
+    const row=await put('academy_essays',{title:'Nova redação livre',body:'',prompt:'',versions:[]});
+    data.essays.push(row);renderEssayEditor(row);break;
+   }
+   case 'essay-start-proposal':{
+    const proposal=getWritingProposal(id);
+    if(!proposal||proposal.status!=='validado_editorialmente')throw Error('A proposta está indisponível.');
+    const mode=$('#essay-mode')?.value||'treino';
+    const selectedGoal=$('#essay-goal')?.value||'';
+    const goal=selectedGoal?data.goals.find(x=>x.id===selectedGoal):null;
+    if(selectedGoal&&!goal)throw Error('Objetivo não pertence à conta.');
+    if(goal&&proposal.category==='enem'&&goal.exam_type!=='ENEM')throw Error('Esta proposta deve ser vinculada ao ENEM ou usada sem vínculo.');
+    const row=await put('academy_essays',newEssayRecord(proposal,mode,goal?.id||null));
+    data.essays.push(row);renderEssayEditor(row);break;
+   }
+   case 'essay-timer':{
+    if(!data.activeEssay)break;
+    if(data.essayRunning)stopEssayTimer();
+    else{data.essayRunning=true;data.essayClockAt=Date.now();
+     data.essayTicker=setInterval(updateEssayTick,1000);
+     action.textContent='Pausar cronômetro';}
+    break;
+   }
+   case 'essay-focus':{
+    data.essayFocus=!data.essayFocus;
+    document.body.classList.toggle('essay-focus-mode',data.essayFocus);
+    action.textContent=data.essayFocus?'Sair do modo foco':'Foco na escrita';
+    $('#essay-body')?.focus();break;
+   }
+   case 'essay-save-now':{stopEssayTimer();queueEssayDraft();await saveEssayDraft();break;}
+   case 'essay-export':{
+    const current=$('#essay-body')?.value??data.activeEssay?.body??'';
+    const blob=new Blob([current],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='VYZO_REDACAO_'+new Date().toISOString().slice(0,10)+'.txt';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);break;
+   }
   case 'essay-open':renderEssayEditor(data.essays.find(e=>e.id===id));break;
-  case 'essay-list':await saveEssayDraft();data.activeEssay=null;go('essay');break;
-  case 'essay-version':{await saveEssayDraft();const ed=data.activeEssay;const versions=[...(ed.versions||[]),{at:new Date().toISOString(),body:ed.body||'',prompt:ed.prompt||''}];
-    const updated=await put('academy_essays',{versions},ed.id);data.essays=data.essays.map(x=>x.id===ed.id?updated:x);renderEssayEditor(updated);say('Versão registrada.');break;}
+  case 'essay-list':stopEssayTimer();await saveEssayDraft();data.activeEssay=null;data.essayFocus=false;document.body.classList.remove('essay-focus-mode');go('essay');break;
+  case 'essay-version':{
+    stopEssayTimer();
+    await saveEssayDraft();
+    const ed=data.activeEssay;
+    if(!ed)throw Error('Redação não encontrada.');
+    if((ed.versions||[]).length>=200)throw Error('Limite de 200 versões atingido. Exporte a redação antes de continuar.');
+    const versions=[...(ed.versions||[]),essayVersionSnapshot(ed)];
+    const {data:updated,error}=await data.client.from('academy_essays')
+     .update({versions,updated_at:new Date().toISOString()})
+     .eq('id',ed.id).eq('user_id',data.user.id).eq('updated_at',ed.updated_at).select().single();
+    if(error||!updated)throw Error('Outra edição pode ter sido salva. Reabra o rascunho para evitar sobrescrever versões.');
+    data.essays=data.essays.map(x=>x.id===ed.id?updated:x);
+    renderEssayEditor(updated);
+    say('Versão histórica registrada sem apagar as anteriores.');
+    break;
+   }
   case 'import-old':await importOld();break;
   case 'reset-email':{const {error}=await data.client.auth.resetPasswordForEmail(data.user.email,{redirectTo:publicUrl});if(error)throw error;say('Se permitido, um link foi enviado ao seu e-mail.');break;}
   default:break;
@@ -421,15 +604,12 @@ document.addEventListener('change',async ev=>{
   t.disabled=true;try{await saveDiagnosticAnswer(Number(t.value));}catch(e){notifyError(e,'Salvamento da resposta');}finally{t.disabled=false;}
  }else if(t.id==='calendar-view'){data.calendarView=t.value;data.calendarOffset=0;renderCalendar();}
  else if(t.id==='calendar-goal'){data.calendarFilter=t.value;renderCalendar();}
+ else if(t.id==='essay-category'){data.essayCategory=t.value;renderEssays();}
+ else if(t.id==='essay-mode'){data.essayMode=t.value;}
 });
 document.addEventListener('input',ev=>{
  const t=ev.target;
- if(['essay-body','essay-title','essay-prompt'].includes(t.id)&&data.activeEssay){
-  data.essayPending={...(data.essayPending||{}),body:$('#essay-body')?.value??data.activeEssay.body,title:$('#essay-title')?.value??data.activeEssay.title,prompt:$('#essay-prompt')?.value??data.activeEssay.prompt};
-  $('#essay-save-status').textContent='Salvando...';clearTimeout(data.essayTimer);
-  data.essayTimer=setTimeout(()=>saveEssayDraft().catch(e=>notifyError(e,'Salvamento da redação')),800);
-  $('#essay-count').textContent=($('#essay-body')?.value.trim().split(/\s+/).filter(Boolean).length||0)+' palavras';
- }
+ if(['essay-body','essay-title','essay-prompt'].includes(t.id)&&data.activeEssay){queueEssayDraft();}
 });
 document.addEventListener('submit',async ev=>{
  const f=ev.target;if(!f.id)return;ev.preventDefault();
@@ -442,6 +622,9 @@ document.addEventListener('submit',async ev=>{
  }else if(f.id==='form-account'){const fd=new FormData(f);await saveProfile({display_name:String(fd.get('display_name')||'').trim(),availability:parseAvailability(fd)});say('Preferências salvas.');}
  else if(f.id==='form-email-change'){const email=String(new FormData(f).get('email')||'').trim();const {error}=await data.client.auth.updateUser({email});if(error)throw error;say('Confira seu e-mail para confirmar a alteração, conforme as configurações do provedor.');}
  }catch(e){notifyError(e,'Formulário');}
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden&&data.essayRunning){stopEssayTimer();void saveEssayDraft().catch(e=>notifyError(e,'Proteção do rascunho'));}
 });
 $('#mobile-menu').addEventListener('click',()=>{const nav=$('#app-nav'),open=!nav.hidden;nav.hidden=open;$('#mobile-menu').setAttribute('aria-expanded',String(!open));});
 window.addEventListener('beforeunload',ev=>{if(data.essayPending){ev.preventDefault();ev.returnValue='';}});

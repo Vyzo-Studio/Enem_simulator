@@ -1,0 +1,59 @@
+/* WRITING LAB — Subetapa A. Reutiliza o design system Academy; sem fontes externas. */
+.essay-hero{border-radius:17px;background:linear-gradient(128deg,#112955,#294fa4);color:#fff;padding:clamp(20px,3.5vw,32px);margin-bottom:15px}
+.essay-hero h2,.essay-hero p{color:#fff;margin:10px 0;line-height:1.55}.essay-hero .eyebrow{color:#b7ceff}
+.essay-catalog-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.essay-catalog-list,.essay-history{display:grid;gap:14px;margin-bottom:18px}
+.essay-proposal-card{display:grid;gap:9px}
+.essay-proposal-card h4{font-size:clamp(17px,2vw,20px);margin:0;color:var(--ink)}
+.essay-proposal-card p{margin:0;line-height:1.6}
+.essay-proposal-kind{color:#244baa;font-size:12px;font-weight:800;letter-spacing:.05em}
+.essay-proposal-foot{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:5px}
+.essay-history-item{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.essay-history-item p{margin:8px 0}
+.essay-editor{display:grid;gap:18px;max-width:100%}
+.essay-editor-head{padding:18px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}
+.essay-editor-head h2{margin:5px 0 8px;font-size:clamp(20px,2.5vw,28px);color:var(--ink)}
+.essay-instructions,.essay-source-list,.essay-writing{padding:clamp(15px,2.5vw,25px);border:1px solid var(--line);border-radius:15px;background:var(--surface)}
+.essay-instructions p,.essay-source-list p{line-height:1.7}
+.essay-supports{display:grid;gap:12px}
+.essay-supports h2,.essay-instructions h2,.essay-source-list h2{font-size:19px;color:var(--ink);margin:5px 0 15px}
+.essay-support{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:clamp(14px,2vw,19px)}
+.essay-support h3{font-size:16px;color:var(--ink);margin:0 0 8px}
+.essay-support p{line-height:1.65;color:var(--ink);margin:7px 0}
+.essay-support-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.essay-support-links a,.essay-source-list a{overflow-wrap:anywhere;font-size:13px}
+.essay-licence-note{font-size:12px!important;color:var(--muted)!important}
+.essay-table-wrap{max-width:100%;overflow:auto;margin:12px 0}
+.essay-source-table{border-collapse:collapse;width:100%;min-width:280px;background:var(--surface);font-size:13px}
+.essay-source-table caption{font-size:12px;text-align:left;caption-side:top;padding-bottom:7px}
+.essay-source-table th,.essay-source-table td{padding:10px;border:1px solid var(--line);text-align:left;color:var(--ink)}
+.essay-source-table thead th{background:#eaf1ff;color:#193967}
+.essay-guidance summary{cursor:pointer;padding:12px;color:var(--ink);font-weight:700}
+.essay-writing{display:grid;gap:15px}
+.essay-writing textarea#essay-body{min-height:440px;width:100%;font-size:16px;line-height:1.85;resize:vertical;letter-spacing:.01em}
+.essay-writing textarea#essay-prompt{min-height:130px}
+.essay-warning-small{font-size:12px;color:#64551f;background:#fffaea;border:1px solid #f4df9c;padding:10px;border-radius:9px}
+.essay-meta-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:11px;border-radius:12px;background:#f1f5fb}
+.essay-clock{font:700 16px ui-monospace,monospace;color:#1b4597;font-variant-numeric:tabular-nums}
+.essay-save{font-size:12px;color:#315d8a}
+.essay-save[data-state=error]{color:#a02836;font-weight:700}
+.essay-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.essay-actions .btn{min-height:44px}
+.essay-versions{border-top:1px solid var(--line);padding-top:10px}
+.essay-versions details{border:1px solid var(--line);padding:12px;border-radius:10px;margin-bottom:7px}
+.essay-versions summary{cursor:pointer;font-weight:700;min-height:28px}
+.essay-version-body{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.7}
+body.essay-focus-mode .topbar,body.essay-focus-mode .sidebar,body.essay-focus-mode .bottom-nav{display:none!important}
+body.essay-focus-mode .shell{display:block;max-width:1160px}
+body.essay-focus-mode #conteudo{padding-top:20px;min-height:100vh}
+body.essay-focus-mode .essay-editor-head,body.essay-focus-mode .essay-supports,
+body.essay-focus-mode .essay-instructions,body.essay-focus-mode .essay-source-list{display:none}
+body.essay-focus-mode .essay-writing{border:0;box-shadow:none}
+@media(max-width:760px){
+ .essay-catalog-controls{grid-template-columns:1fr}
+ .essay-actions .btn{flex:1 1 170px}
+ .essay-meta-row{align-items:stretch;flex-direction:column}
+ .essay-writing textarea#essay-body{min-height:380px}
+}
+@media(max-width:360px){.essay-actions{display:grid;grid-template-columns:1fr}.essay-actions .btn{width:100%}}
+@media(prefers-reduced-motion:reduce){.essay-hero,.essay-proposal-card{animation:none}}

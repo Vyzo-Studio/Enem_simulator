@@ -12,13 +12,15 @@ const unavailable=[
  'academy/v15-school-engine.mjs',
  'academy/v15-school-ui.mjs',
  'academy/v15-official-papers.mjs',
- 'supabase/migrations/202611050003_vyzo_academy_v12.sql',
  'supabase/proposals/v15_1_curriculum_model.sql'
 ];
 for(const path of unavailable){
  assert.equal(existsSync(new URL(path,root)),false,
   'Recurso em revisão não pode ser incluído no release V15: '+path);
 }
+// Migrações SQL podem ser versionadas na main sem habilitar a UI de login.
+// O bloqueio de módulos V12 executáveis e pilotos não revisados permanece.
+assert.match(read('supabase/migrations/202611050003_vyzo_academy_v12.sql'),/academy_private_records/);
 const html=read('academy/v9.html');
 const journey=read('academy/v9.mjs');
 const core=read('academy/v9-core.mjs');

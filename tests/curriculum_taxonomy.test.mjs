@@ -96,5 +96,5 @@ assert.match(read('academy/v9.mjs'),/schema:9/);
 assert(read('academy/v9.mjs').includes("schoolSubjectFields")&&read('academy/v9.mjs').includes('validateSchoolSubjectSelection'));
 const core=read('academy/v9-core.mjs');
 assert(core.includes("if(goal.type==='Prova escolar'||goal.educationStage)return [];"));
-assert.equal(suitableQuestions([], {type:'Prova escolar',educationStage:'fundamental1',schoolYear:3}),[].length);
+assert.equal(suitableQuestions([], {type:'Prova escolar',educationStage:'fundamental1',schoolYear:3}).length,0);
 console.log('PASS BLOCO 01/A: 13 séries + ENEM, disciplinas por ano, referência EF03MA06, fontes, IDs, zero aulas indevidas, V9 intacto.');

@@ -385,7 +385,7 @@ function renderAccount(){const p=data.profile||{};
  <a class="btn secondary" href="./v9-cloud.html">Abrir jornada V9 sincronizada</a><p class="small muted">A importação é opcional e não apaga o arquivo original. Só inclui conteúdo de estudo, nunca credenciais.</p>
  <div class="divider"></div><button class="btn danger" data-action="logout">Sair da minha conta</button></section></div>`);
  const ownerId=data.user?.id;
- void mountAccountImport(data.client,data.user,()=>Boolean(ownerId)&&data.user?.id===ownerId).catch(()=>say('Não foi possível listar backups. Verifique sua conexão.','error'));
+ void mountAccountImport(data.client,data.user,()=>Boolean(ownerId)&&data.user?.id===ownerId&&data.page==='account').catch(()=>say('Não foi possível listar backups. Verifique sua conexão.','error'));
 }
 function render(){
  if(!data.client){disableUI('Backend ainda não configurado.');return;}

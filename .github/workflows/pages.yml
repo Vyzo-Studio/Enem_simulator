@@ -40,7 +40,7 @@ jobs:
           node tests/essay_lab_core.test.mjs
       - name: Browser regression V8 (simulated backend)
         run: python3 tests/browser_v8.py
-      - name: Writing Lab A — Chromium: proposta, rascunho e recuperação
+      - name: 'Writing Lab A — Chromium: proposta, rascunho e recuperação'
         run: python3 tests/essay_lab_browser.py
       - name: Public questionnaire demo browser test
         run: python3 tests/browser_demo.py

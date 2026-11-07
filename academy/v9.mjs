@@ -58,7 +58,15 @@ for(const a of state.assessments){
 
 function persist(){if(storageFailure||conflict)throw Error('Salvamento bloqueado: exporte seu backup antes de continuar.');state.revision=(state.revision||0)+1;state.draft=draft;try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(e){state.revision--;storageFailure='O navegador não permitiu salvar. Libere espaço ou autorize armazenamento e baixe um backup.';message(storageFailure,'error');return false;}}
 function message(text,type='info'){$('#v9-toast').textContent=text;$('#v9-toast').dataset.type=type;}
-function output(html){$('#v9-content').innerHTML=html;$$('.v9-nav [data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));}
+function output(html){
+ $('#v9-content').innerHTML=html;
+ $$('.v9-nav [data-page]').forEach(el=>{
+  const active=el.dataset.page===page;
+  el.classList.toggle('active',active);
+  if(active)el.setAttribute('aria-current','page');
+  else el.removeAttribute('aria-current');
+ });
+}
 function title(text,info=''){return `<div class="page-head"><div><p class="v9-overline">VYZO ACADEMY · DIAGNÓSTICO ANTES DO PLANO</p><h1>${h(text)}</h1>${info?`<p class="v9-lead">${h(info)}</p>`:''}</div></div>`;}
 function cta(text,action,extra=''){return `<button type="button" class="btn ${extra}" data-action="${action}">${text}</button>`;}
 function stepper(){return `<div class="v9-steps">${['Prova','Detalhes','Disponibilidade','Preferências'].map((s,i)=>`<span class="v9-step ${i<step?'done':i===step?'current':''}">${i+1}. ${s}</span>`).join('')}</div>`;}
@@ -487,6 +495,20 @@ function renderData(){output(`${title('Backup e privacidade','O progresso desta 
 function render(){if(!state.onboarding||page==='wizard'){page='wizard';renderWizard();return;}
  if(page==='hub')renderHub();else if(page==='goals')renderGoals();else if(page==='diagnostics')renderDiagnostics();else if(page==='edit-goal')renderEditGoal();else if(page==='ready')renderReady();else if(page==='exam')renderExam();else if(page==='report')renderReport();else if(page==='plan')renderPlan();else if(page==='study')renderStudy();else if(page==='library')renderLibrary();else if(page==='past-papers')renderPastPapers();else if(page==='revisions')renderRevisions();else if(page==='lesson')renderLesson();else if(page==='data')renderData();else renderHub();
 }
+function setMobileMenu(expanded){
+ const nav=$('#v9-nav'),button=$('#v9-nav-toggle');
+ if(!nav||!button)return;
+ nav.classList.toggle('is-expanded',expanded);
+ button.setAttribute('aria-expanded',String(expanded));
+ const label=button.querySelector('.v9-nav-toggle-label');
+ if(label)label.textContent=expanded?'Recolher seções':'Ver todas as seções';
+}
+function focusPageHeading(){
+ const heading=$('#v9-content h1');
+ if(!heading)return;
+ heading.setAttribute('tabindex','-1');
+ heading.focus({preventScroll:true});
+}
 function go(to){if(page==='exam'&&to!=='exam'){const a=currentAssessment();if(a?.status==='in_progress'){pauseAssessmentClock(a);persist();}}if(!state.onboarding&&to!=='wizard'){page='wizard';renderWizard();return;}page=to;if(to==='plan')selectedGoal=null;render();window.scrollTo({top:0,behavior:'instant'});}
 function download(name,value){const b=new Blob([value],{type:'application/json;charset=utf-8'}),link=document.createElement('a'),url=URL.createObjectURL(b);link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
 function backup(){download('VYZO_ACADEMY_V9_BACKUP_'+today()+'.json',JSON.stringify({...state,exportedAt:Date.now(),source:'VYZO ACADEMY V9 modo local'},null,2));}
@@ -538,7 +560,7 @@ function onAction(el){const action=el.dataset.action,id=el.dataset.id;
  else if(action==='plan-extend'){const version=Math.max(0,...state.tasks.map(t=>t.version||0))+1;const last=state.tasks.map(t=>t.day).sort().at(-1);const start=last?new Date(last+'T12:00:00'):new Date();start.setDate(start.getDate()+1);const additions=buildAdaptiveSchedule({goals:state.goals,assessments:state.assessments,availability:availableMinutes(),bank:BANK,existing:state.tasks,start,days:14,version});if(!additions.length){message('Não há tempo livre ou provas com diagnóstico para adicionar tarefas.','error');return;}const valid=verifyPlan([...state.tasks,...additions],availableMinutes());if(!valid.valid)throw Error('Agenda rejeitada: conflito de horário.');state.tasks.push(...additions);persist();renderPlan();message(additions.length+' novas atividades planejadas.');}
  else if(action==='export')backup();else if(action==='show-import')$('#v9-import-file')?.click();
 }
-document.addEventListener('click',event=>{const special=event.target.closest('[data-action^="v10-"]');if(special){event.preventDefault();if(special.dataset.action==='v10-research'){researchExam().catch(e=>message(e.message,'error'));return;}if(special.dataset.action==='v10-select'){try{selectResearchResult(Number(special.dataset.index));}catch(e){message(e.message,'error');}return;}if(special.dataset.action==='v10-remove'){draft.goals=draft.goals.filter(g=>!(g.name===special.dataset.name&&(g.edition||'')===special.dataset.edition));draft.types=[...new Set(draft.goals.map(g=>g.type))];persist();renderWizard();return;}}const nav=event.target.closest('[data-page]');if(nav){go(nav.dataset.page);return;}const a=event.target.closest('[data-action]');if(!a||a.disabled)return;try{onAction(a);}catch(e){message('Não foi possível concluir: '+e.message,'error');}});
+document.addEventListener('click',event=>{const special=event.target.closest('[data-action^="v10-"]');if(special){event.preventDefault();if(special.dataset.action==='v10-research'){researchExam().catch(e=>message(e.message,'error'));return;}if(special.dataset.action==='v10-select'){try{selectResearchResult(Number(special.dataset.index));}catch(e){message(e.message,'error');}return;}if(special.dataset.action==='v10-remove'){draft.goals=draft.goals.filter(g=>!(g.name===special.dataset.name&&(g.edition||'')===special.dataset.edition));draft.types=[...new Set(draft.goals.map(g=>g.type))];persist();renderWizard();return;}}const nav=event.target.closest('[data-page]');if(nav){go(nav.dataset.page);if(nav.closest('#v9-nav')){setMobileMenu(false);focusPageHeading();}return;}const a=event.target.closest('[data-action]');if(!a||a.disabled)return;try{onAction(a);}catch(e){message('Não foi possível concluir: '+e.message,'error');}});
 document.addEventListener('change',e=>{const el=e.target;
  if(el.id==='exam-length'){$('#custom-length-wrap').hidden=el.value!=='custom';}
  if(['exam-length','custom-length','v13-exam-mode','v13-area','v13-subject','v13-language'].includes(el.id))updateCompositionPreview();
@@ -581,6 +603,16 @@ function tick(){if(page!=='exam')return;const a=currentAssessment(),el=$('#v9-cl
 }
 setInterval(tick,1000);
 window.addEventListener('pagehide',()=>{if(page==='exam'){const a=currentAssessment();if(a?.status==='in_progress'){pauseAssessmentClock(a);try{persist();}catch{}}}});
+$('#v9-nav-toggle')?.addEventListener('click',()=>{
+ const expanded=$('#v9-nav-toggle').getAttribute('aria-expanded')==='true';
+ setMobileMenu(!expanded);
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&$('#v9-nav')?.classList.contains('is-expanded')){
+  setMobileMenu(false);
+  $('#v9-nav-toggle')?.focus();
+ }
+});
 $('#v9-theme').addEventListener('click',()=>{const theme=document.body.dataset.theme==='dark'?'light':'dark';document.body.dataset.theme=theme;try{localStorage.setItem('vyzo-v9-theme',theme);}catch{}});
 try{document.body.dataset.theme=localStorage.getItem('vyzo-v9-theme')||'light';}catch{}
 if(storageFailure)message(storageFailure,'error');render();

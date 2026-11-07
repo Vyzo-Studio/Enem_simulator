@@ -1,5 +1,7 @@
 import {generateSchedule,verifySchedule,WEEKDAYS,validMinutes} from './scheduler.mjs';
 import {evaluateDiagnostic,selectDiagnosticQuestions} from './diagnostics.mjs';
+import {scanLegacySources,importForAccount,listHistory,readSnapshot,readHistoryArchive,downloadSnapshot} from './cloud-snapshot.mjs';
+import {getVerifiedStudent} from './v12-auth-core.mjs';
 
 /* VYZO ACADEMY — V8.0.1: cliente cloud. Não contém credenciais privilegiadas. */
 const $=s=>document.querySelector(s);
@@ -18,7 +20,14 @@ const week=(dt)=>{const d=new Date(dt);d.setHours(12,0,0,0);return d;};
 const fmtClock=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const safeExternalUrl=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null}catch{return null}};
 const configReady=()=>/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(String(cfg.url||'')) && (/^sb_publishable_/.test(String(cfg.publishableKey||''))||/^eyJ/.test(String(cfg.publishableKey||'')));
-const data={client:null,user:null,profile:null,goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'signup',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
+const data={client:null,user:null,profile:null,archives:[],goals:[],diagnostics:[],tasks:[],essays:[],page:'home',activeGoalId:null,activeDiagnostic:null,questionPosition:0,authTab:'login',onboard:1,selectedTypes:[],calendarView:'week',calendarOffset:0,calendarFilter:'all',recovery:false,busy:false,essayTimer:null,essayPending:null,lastSync:null};
+let authGeneration=0;
+function erasePrivateState(){
+ authGeneration++;clearTimeout(data.essayTimer);data.essayPending=null;data.activeEssay=null;
+ data.user=null;data.profile=null;data.goals=[];data.diagnostics=[];data.tasks=[];
+ data.essays=[];data.archives=[];data.activeGoalId=null;data.activeDiagnostic=null;
+ data.questionPosition=0;data.onboard=1;data.lastSync=null;
+}
 function say(message,type='info'){
  const el=$('#toast');el.textContent=message;el.dataset.type=type;
 }
@@ -67,6 +76,7 @@ async function setup(){
    const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');
    data.client=createClient(cfg.url,cfg.publishableKey,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
    data.client.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&data.user&&session?.user?.id!==data.user.id){erasePrivateState();data.authTab='login';renderAuth();}
      if(event==='PASSWORD_RECOVERY'){data.recovery=true;setTimeout(()=>{data.authTab='reset';renderAuth();},0);return;}
      if(['SIGNED_IN','SIGNED_OUT','USER_UPDATED','TOKEN_REFRESHED'].includes(event))setTimeout(()=>bootstrap().catch(e=>notifyError(e,'Restauração de sessão')),0);
    });
@@ -74,32 +84,45 @@ async function setup(){
  }catch(e){setStatus('Conexão indisponível');disableUI('Não foi possível carregar o provedor de autenticação de forma segura.');}
 }
 async function bootstrap(){
+ const generation=++authGeneration;
  const {data:result,error}=await data.client.auth.getUser();
- if(error||!result?.user){data.user=null;data.profile=null;data.goals=[];data.tasks=[];data.essays=[];setStatus('Conta necessária');renderAuth();return;}
+ if(generation!==authGeneration)return;
+ if(error||!result?.user){erasePrivateState();setStatus('Conta necessária');renderAuth();return;}
+ if(data.user&&data.user.id!==result.user.id)erasePrivateState();
  data.user=result.user;
- if(!data.user.email_confirmed_at){setStatus('Verifique seu e-mail');renderUnverified();return;}
+ if(!data.user.email_confirmed_at||data.user.is_anonymous){setStatus('Verifique seu e-mail');renderUnverified();return;}
+ const identity=data.user.id;
+ setStatus('Sincronizando...');
+ await loadData(identity);
+ if(generation!==authGeneration||data.user?.id!==identity)return;
  setStatus('Conectado à nuvem');
- await loadData();
  if(!data.profile?.onboarding_complete){renderOnboarding();return;}
  nav();render();
 }
-async function loadTable(table,columns='*'){
- const {data:rows,error}=await data.client.from(table).select(columns).eq('user_id',data.user.id);
+async function loadTable(table,columns='*',ownerId=data.user?.id){
+ if(!ownerId)throw Error('Sessão ausente.');
+ const {data:rows,error}=await data.client.from(table).select(columns).eq('user_id',ownerId);
  if(error)throw error;return rows||[];
 }
-async function loadData(){
+async function loadData(identity=data.user?.id){
+ if(!identity)throw Error('Sessão ausente.');
  const [profiles,goals,diagnostics,tasks,essays]=await Promise.all([
-  loadTable('academy_profiles'),loadTable('academy_goals'),loadTable('academy_diagnostics'),loadTable('academy_study_tasks'),loadTable('academy_essays')
+  loadTable('academy_profiles','*',identity),loadTable('academy_goals','*',identity),
+  loadTable('academy_diagnostics','*',identity),loadTable('academy_study_tasks','*',identity),
+  loadTable('academy_essays','*',identity)
  ]);
+ const fresh=await getVerifiedStudent(data.client);
+ if(!fresh||fresh.id!==identity||data.user?.id!==identity)throw Error('A conta ativa mudou durante o carregamento.');
  data.profile=profiles[0]||null;data.goals=goals;data.diagnostics=diagnostics;
  data.tasks=tasks.sort((a,b)=>String(a.day).localeCompare(String(b.day)));
  data.essays=essays;
  if(!data.profile){
-   const name=String(data.user.user_metadata?.display_name||'Estudante').slice(0,100);
-   const accepted=data.user.user_metadata?.terms_accepted_at;
-   const {data:newProfile,error}=await data.client.from('academy_profiles').insert({user_id:data.user.id,display_name:name,terms_accepted_at:accepted&&Number.isFinite(Date.parse(accepted))?accepted:null}).select().single();
-   if(error)throw error;data.profile=newProfile;
+  const name=String(data.user.user_metadata?.display_name||'Estudante').slice(0,100);
+  const accepted=data.user.user_metadata?.terms_accepted_at;
+  const {data:newProfile,error}=await data.client.from('academy_profiles').insert({user_id:identity,display_name:name,terms_accepted_at:accepted&&Number.isFinite(Date.parse(accepted))?accepted:null}).select().single();
+  if(error)throw error;data.profile=newProfile;
  }
+ data.archives=await listHistory(data.client,identity);
  data.lastSync=new Date();
 }
 async function put(table,payload,filter){

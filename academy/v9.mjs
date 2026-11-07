@@ -93,7 +93,7 @@ function schoolSubjectFields(index,goal){
 function updateSchoolSubjectFields(index){
  const stage=$('#v15-school-stage-'+index)?.value,grade=Number($('#v15-school-year-'+index)?.value);
  const box=$('#v15-school-subjects-'+index);if(!box)return;
- const current=$('input[name="schoolSubject_'+index+'"]:checked').map(input=>input.value);
+ const current=$$('input[name="schoolSubject_'+index+'"]:checked').map(input=>input.value);
  box.outerHTML=schoolSubjectFields(index,{educationStage:stage,schoolYear:grade,subjects:current});
 }
 function isSchoolPath(id){return getLearningPath(id)?.type==='Prova escolar';}
